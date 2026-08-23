@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "discord": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["tools/discord-mcp/run.sh"],
+      "env": {
+        "DISCORD_GUILD_ID": "1524137078038728998"
+      }
+    }
+  }
+}
