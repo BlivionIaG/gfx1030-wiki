@@ -1,0 +1,26 @@
+[project]
+name = "discord-mcp"
+version = "1.0.0"
+description = "Read-only Discord MCP server for listing channels and fetching messages"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28",
+    "mcp[cli]>=1.12",
+    "pydantic>=2.10",
+    "python-dotenv>=1.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24"]
+
+[project.scripts]
+discord-mcp = "discord_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
