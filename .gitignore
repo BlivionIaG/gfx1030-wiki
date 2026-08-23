@@ -14,3 +14,13 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Python / env (tools/discord-mcp)
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/

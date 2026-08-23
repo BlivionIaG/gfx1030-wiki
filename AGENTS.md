@@ -2,11 +2,19 @@
 
 ## Cursor Cloud specific instructions
 
-This repository is a **documentation-only wiki** for AMD gfx1030 (RDNA2 / Navi 21) GPUs, built with
-[mdBook](https://rust-lang.github.io/mdBook/). There is **no application server, database, backend, or
-automated test/lint suite** — the "product" is a static HTML site generated from Markdown.
+This repository has two parts:
 
-### Layout
+- A **documentation-only wiki** for AMD gfx1030 (RDNA2 / Navi 21) GPUs, built with
+  [mdBook](https://rust-lang.github.io/mdBook/) — the "product" is a static HTML site generated from
+  Markdown under `src/`.
+- A small **Discord MCP** tool under `tools/discord-mcp/` used to pull gfx1030 Discord conversations into
+  the agent for wiki research.
+
+### Wiki (mdBook)
+
+There is **no application server, database, backend, or automated test/lint suite** for the wiki.
+
+#### Layout
 - `src/*.md` — the wiki pages (Markdown).
 - `src/SUMMARY.md` — the table of contents; it drives the sidebar. A page only appears in the site if it
   is listed here.
@@ -15,7 +23,7 @@ automated test/lint suite** — the "product" is a static HTML site generated fr
   `master`.
 - `book/` — build output; git-ignored, do not commit.
 
-### Tooling
+#### Tooling
 - The only tool needed is the `mdbook` binary. The startup/update script installs it to
   `/usr/local/cargo/bin/mdbook`, which is already on `PATH` (no `~/.bashrc` changes required). If for
   some reason `mdbook` is missing, re-run the update script or grab a prebuilt binary from
@@ -25,7 +33,7 @@ automated test/lint suite** — the "product" is a static HTML site generated fr
   - Search assets are emitted with hashed filenames (e.g. `searchindex-<hash>.js`), not the old
     `searchindex.js` — this is expected, search still works.
 
-### Build / serve / "test"
+#### Build / serve / "test"
 - Build: `mdbook build` → static site in `./book`. This is also the closest thing to a lint/test:
   it exits non-zero on config errors and reports broken internal links.
 - Preview: `mdbook serve --hostname 127.0.0.1 --port 3000` then open http://127.0.0.1:3000/ .
@@ -33,7 +41,15 @@ automated test/lint suite** — the "product" is a static HTML site generated fr
 - There is no separate lint command and no unit tests; `mdbook build` succeeding cleanly is the
   validation signal.
 
-### Deployment (one-time repo setting)
+#### Deployment (one-time repo setting)
 - GitHub Pages must be set to **Settings → Pages → Source: GitHub Actions** once. After that, every push
   to `master` auto-deploys via `.github/workflows/mdbook.yml` to
   `https://blivioniag.github.io/gfx1030-wiki/`.
+
+### Discord MCP (`tools/discord-mcp/`)
+
+- Discord MCP is stdio: `bash tools/discord-mcp/run.sh`
+- Token comes from the Cloud Agent secret `DISCORD_BOT_TOKEN`. Never write it to the repo.
+- Reads are locked to guild `DISCORD_GUILD_ID` from `.cursor/mcp.json`.
+- Private Discord channels return Missing Access until the bot role is added on that channel.
+- Do not vendor `.env` files. Use `.env.example` only.
