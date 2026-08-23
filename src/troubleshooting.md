@@ -40,6 +40,50 @@ RDNA2 has no fast BF16. Force **FP16** everywhere (`--dtype float16` in vLLM, `d
 PyTorch). See [Reference](./reference.md). The [`rdna2_extras`](./vllm_fork.md) images also add quantized
 RDNA2 kernels (W4A16 / FP8) that avoid BF16 hot paths.
 
+## vLLM crashes on hybrid GDN models (Qwen3.5+, Qwen3.8)
+
+Symptom: crash during startup or first generation at `GDN _output_projection all-reduce` /
+`_SimpleCData.__new__`, regardless of attention backend.
+
+Cause: `torch.compile` CUDA-graph capture fails on the GDN linear-attention all-reduce path in v0.27.1.
+
+Fix: add `--enforce-eager` to your `vllm serve` command. This is mandatory for hybrid GDN models on
+v0.27.1 `-extras` images. If throughput is still much lower than expected (~4–5 t/s on a 27B), check
+whether you're on AWQ (Triton path) vs GPTQ (native `RDNA2W4A16LinearKernel`) — see
+[Running vLLM](./vllm.md#quantization-gptq-vs-awq-on-gfx1030).
+
+## vLLM GPTQ not using RDNA2 kernels
+
+Check logs for `Using RDNA2W4A16LinearKernel`. If you see `TritonW4A16LinearKernel` or
+`ExllamaLinearKernel` instead:
+
+```bash
+export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
+```
+
+Also confirm you're using an `-extras` image and a **GPTQ** model (AWQ won't hit this kernel). See
+[The rdna2_extras Fork](./vllm_fork.md#kernel-dispatch-on-gfx1030).
+
+## llama.cpp KV checkpoint crash on tensor split
+
+Symptom: fatal error in `ggml-backend-meta.cpp` during warmup with tensor split enabled.
+
+Fix: disable checkpoints with `--ctx-checkpoints 0`. This is a known issue on both stock llama.cpp and
+the RDNA2 fork when using `--split-mode tensor`. See
+[RDNA2-optimized fork](./llama_cpp_rdna2_fork.md#notable-limits).
+
+## llama.cpp RCCL all-reduce fails (HIP "operation cannot be performed")
+
+Symptom: `ggml_backend_cuda_comm_allreduce_nccl` crash, `NCCL WARN HIP failure`.
+
+Try in order:
+
+1. Confirm [PCIe P2P](./tuning_p2p.md) is actually working (`rocminfo --support` or P2P test).
+2. Set `NCCL_P2P_LEVEL=PHB` (all cards on same root port) or `NCCL_P2P_DISABLE=1`.
+3. On the RDNA2 fork: `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none` (slower but
+   stable).
+4. Check ACS — CPU root-port ACS can block GPU-direct P2P even with `pcie_acs_override` on PCH ports.
+
 ## vLLM picks the wrong platform / doesn't see my Radeon
 
 Consumer Radeon cards sometimes aren't detected by stock vLLM's platform logic. The

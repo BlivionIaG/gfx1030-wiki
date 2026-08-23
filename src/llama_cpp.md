@@ -1,9 +1,9 @@
 # llama.cpp on gfx1030
 
 [llama.cpp](https://github.com/ggml-org/llama.cpp) is a fast, low-dependency way to run GGUF LLMs on
-gfx1030. This page is a build-from-source recipe validated by the gfx1030 community (the `#llama.cpp`
-channel), on **Fedora** with **ROCm 7.2.0** targeting `gfx1030`. A **Vulkan** path is included as an
-alternative that doesn't require ROCm.
+gfx1030. This page is a build-from-source recipe validated by the gfx1030 community (the `#llamacpp`
+Discord channel), on **Fedora** with **ROCm 7.2.0** targeting `gfx1030`. A **Vulkan** path is included
+as an alternative that doesn't require ROCm.
 
 > Commands are shown as used on Fedora. Adjust package names for your distro and tweak versions/paths as
 > needed.
@@ -138,6 +138,12 @@ Flag notes (tune to your setup):
   [Multi-GPU PCIe P2P](./tuning_p2p.md)).
 - `--spec-type draft-mtp --spec-draft-n-max N` — Multi-Token-Prediction speculative decoding; the Vulkan
   example above uses a larger `N` (6) than the ROCm one (2).
+- `--spec-draft-device ROCm0` — run the MTP draft model on a single GPU while the main model is
+  tensor-split across multiple cards (community-validated on TP2).
 - `--no-mmap`, `-dio` — memory/IO tuning; `-np 1` sets the number of parallel sequences.
+
+For RDNA2-tuned multi-GPU serving (DFlash2, RCCL all-reduce, higher throughput), see the
+[RDNA2-optimized fork](./llama_cpp_rdna2_fork.md) — that's where most `#llamacpp` performance work
+happens.
 
 Adjust the model, quant, device list, and speculative-decoding settings for your hardware.

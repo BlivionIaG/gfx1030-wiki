@@ -32,6 +32,7 @@ normal llama.cpp behavior. Headline areas:
 - **Embedding-sharded Qwen output head** (122B and 35B).
 - **RDNA2 Top-10 MoE routing** + compact routed MMQ tiles.
 - **Laguna S.2 support** with DFlash.
+- **DFlash2** speculative decoding with ngram-map and ngram-mod combos (see below).
 - **RDNA2-specific K-quant / MMQ LDS-tile optimizations** for **Q4 / Q5**.
 - **Parallel multi-GPU weight uploads** with configurable buffer size (faster server startup).
 - **AMD checkpoint handling** — backports several unmerged upstream PRs that fix AMD checkpoint issues
@@ -254,16 +255,84 @@ Note this profile pairs `GGML_CUDA_ALLREDUCE=nccl` with `GGML_CUDA_DISABLE_GRAPH
 
 `--spec-draft-n-max` is a workload knob; start at the draft model's block size and tune.
 
+### DFlash2 + ngram speculative decoding (community-tested)
+
+Recent `#llamacpp` work added **DFlash2** with optional ngram helpers. These configs held generation speed
+well at long context on TP2 (reported ~52 t/s coding at 0–31k context, ~40 t/s at 64k):
+
+**Coding / ngram-map-k4v** (Edwin B, Aug 2026):
+
+```bash
+--spec-type draft-dflash,ngram-map-k4v \
+  --spec-draft-n-max 5 \
+  --spec-ngram-map-k4v-size-n 12 \
+  --spec-ngram-map-k4v-size-m 48
+```
+
+**General / ngram-mod**:
+
+```bash
+--spec-type draft-dflash,ngram-mod \
+  --spec-draft-n-max 5 \
+  --spec-ngram-mod-n-match 24 \
+  --spec-ngram-mod-n-min 48 \
+  --spec-ngram-mod-n-max 64
+```
+
+Combine with the standard RDNA2 env prefix (`HSA_OVERRIDE_GFX_VERSION=10.3.0`, `GGML_HIP_RDNA2_AUTO=1`,
+etc.). DFlash2 alone (without ngram) is also worth A/B testing against MTP on your model/quant.
+
+### MTP on tensor-split setups
+
+On TP2+, you can keep the main model tensor-split but pin the MTP draft to one GPU:
+
+```bash
+--spec-type draft-mtp --spec-draft-n-max 4 --spec-draft-ngl 999 --spec-draft-device ROCm0
+```
+
+This runs the draft model on `ROCm0` while the main weights stay split across all cards.
+
+## Docker serving example (community-validated)
+
+A working TP2 + MTP4 setup from `#llamacpp` (ROCm 7.14, MXFP4 Qwen3.8-27B):
+
+```yaml
+environment:
+  HSA_NO_SCRATCH_RECLAIM: "1"
+  GGML_HIP_RDNA2_AUTO: "1"
+  GGML_HIP_SAFE_STATE_IO: "1"
+  GGML_TP_SHARDED_OUTPUT: "1"
+  HSA_OVERRIDE_GFX_VERSION: "10.3.0"
+command: >
+  llama-server
+  -hf quark75/Qwen3.8-27B-MXFP4-GGUF:MXFP4
+  -ngl 999 -fa on -sm tensor -ts 1,1 -fit off
+  --flash-attn on --ctx-size 32768
+  --cache-type-k f16 --cache-type-v f16
+  --batch-size 4096 --ubatch-size 4096 --parallel 1 --cont-batching
+  --host 0.0.0.0 --port 8091 --temp 0.7 --jinja --metrics -kvu
+  --reasoning-preserve
+  --chat-template-kwargs '{"preserve_thinking": true}'
+  --spec-type draft-mtp --spec-draft-n-max 4 --spec-draft-ngl 999
+  --ctx-checkpoints 0
+```
+
+Build the image with `./scripts/build-rdna2-portable.sh` from the fork repo. RCCL needs working
+[PCIe P2P](./tuning_p2p.md) — if all-reduce fails, try `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or
+`GGML_CUDA_ALLREDUCE=none` (slower, but stable on broken P2P topologies).
+
 ## Notable limits
 
 - Validated primarily on **4× V620 gfx1030, ROCm 7.14** and a specific PCIe topology; other systems keep
   conservative fallbacks.
+- **KV checkpoints** can crash on tensor-split setups (upstream and fork). Use `--ctx-checkpoints 0` to
+  disable them if you hit `ggml-backend-meta.cpp` fatals during warmup.
 - `GGML_TP_SHARDED_OUTPUT` and `GGML_TP_VOCAB_SHARDED_OUTPUT` are different, incompatible output-head
   modes; an external draft model can force a shared head to stay mirrored.
 - After a ROCm illegal-memory fault, reset the affected GPUs or reboot before trusting later numbers.
 - Most single-flag `GGML_HIP_GFX1030_*` variables are redundant when the `HSA_OVERRIDE_GFX_VERSION=10.3.0`
   umbrella is active — leave them unset except for A/B testing (`GGML_HIP_RDNA2_AUTO=0` disables the
-  profile).
+  profile). If RCCL all-reduce misbehaves on your topology, try `GGML_HIP_GFX1030_P2P_ALLREDUCE=off`.
 
 For a plain, non-fork build see [Building & Running llama.cpp](./llama_cpp.md). Multi-GPU TP benefits
 greatly from [PCIe P2P](./tuning_p2p.md).

@@ -15,6 +15,37 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `ROCM_PATH` | `/opt/rocm` | Where ROCm is installed; used by many build systems. |
 | `HSA_ENABLE_SDMA` | `0` | Occasionally needed to work around DMA issues on some setups. |
 
+### vLLM on gfx1030 (`#vllm-rdna`)
+
+| Variable | Example | What it does |
+| --- | --- | --- |
+| `VLLM_ROCM_USE_AITER` | `0` | Disable aiter fused kernels (community default on RDNA2). |
+| `VLLM_RDNA_FORCE_FP16` | `1` | Force FP16 compute paths — avoids slow BF16 emulation on RDNA2. |
+| `VLLM_USE_RDNA2_FA` | `1` | Enable native RDNA2 FlashAttention (`-extras` images). |
+| `VLLM_USE_V2_MODEL_RUNNER` | `1` | Use the v2 model runner (recommended on recent images). |
+| `VLLM_DISABLED_KERNELS` | `ExllamaLinearKernel,TritonW4A16LinearKernel` | Force GPTQ onto `RDNA2W4A16LinearKernel`. |
+| `VLLM_DISABLE_CUSTOM_ALL_REDUCE` | `1` | Disable custom all-reduce (stability on some topologies). |
+| `VLLM_WORKER_MULTIPROC_METHOD` | `spawn` | Worker spawn method — avoids fork issues with ROCm. |
+| `GPU_MAX_HW_QUEUES` | `2` | Limit HIP hardware queues (stability tuning). |
+| `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. |
+| `PYTORCH_TUNABLEOP_ENABLED` | `0` / `1` | `0` for reproducible benches; `1` for runtime autotuning. |
+| `PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED` | `0` | Disable hipBLASLt in tunableop (pair with `TORCH_BLAS_PREFER_HIPBLASLT=0`). |
+
+### llama.cpp RDNA2 fork (`#llamacpp`)
+
+| Variable | Example | What it does |
+| --- | --- | --- |
+| `HSA_OVERRIDE_GFX_VERSION` | `10.3.0` | **Required** to activate the V620/gfx1030 native RDNA2 profile. |
+| `HSA_NO_SCRATCH_RECLAIM` | `1` | Avoid scratch reclaim issues on long-context runs. |
+| `GGML_HIP_RDNA2_AUTO` | `1` | Enable automatic RDNA2 kernel selection. |
+| `GGML_HIP_SAFE_STATE_IO` | `1` | Safer HIP state I/O (recommended on V620). |
+| `GGML_TP_SHARDED_OUTPUT` | `1` | Sharded output head for tensor parallel (TP2+). |
+| `GGML_CUDA_ALLREDUCE` | `nccl` | Use RCCL for tensor-parallel all-reduce (+10% tgen reported). |
+| `GGML_HIP_GFX1030_P2P_ALLREDUCE` | `off` / `auto-expanded` | P2P all-reduce tuning; set `off` if RCCL misbehaves. |
+| `GGML_CUDA_DISABLE_GRAPHS` | `1` | Disable HIP graphs (some benchmark profiles use this). |
+| `NCCL_P2P_LEVEL` | `PXB` / `PHB` | RCCL P2P topology level for all-reduce. |
+| `NCCL_P2P_DISABLE` | `0` / `1` | Disable P2P in RCCL (fallback when topology is broken). |
+
 > `10.3.0` is the magic value for gfx1030 because the target decodes as
 > `gfx` + `10` (major) `3` (minor) `0` (stepping) → `gfx1030`.
 

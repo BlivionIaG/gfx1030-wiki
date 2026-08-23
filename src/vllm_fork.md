@@ -69,6 +69,39 @@ docker run -it --rm \
 See [Running vLLM (Docker)](./vllm.md) for the full run recipe and [Building the Images](./vllm_images.md)
 for how the `-extras` variant is produced (`VLLM_VARIANT=extras-fork`, `VLLM_REF=rdna2_extras`).
 
+## Kernel dispatch on gfx1030
+
+On `-extras` images, vLLM picks kernels based on quantization format:
+
+| Quant method | Kernel selected | How to force |
+|---|---|---|
+| GPTQ (`AutoGPTQLinearMethod`) | `RDNA2W4A16LinearKernel` | `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel` |
+| AWQ | Triton AWQ / Exllama | No native RDNA2 AWQ kernel yet — community patches in progress |
+| FP8 W8A16 / W8A8 | `gemm_w8a16_fp8_rdna2` etc. | Automatic on `-extras` when model uses FP8 |
+
+Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLinearMethod`. If you see
+`TritonW4A16LinearKernel` or `ExllamaLinearKernel` instead, the RDNA2 quant path isn't active.
+
+### Attention backends
+
+- `VLLM_USE_RDNA2_FA=1` — enables the custom `fa_rdna2.cu` FlashAttention backend.
+- `--attention-backend RDNA_ATTN` — alternative RDNA-tuned attention path (useful for Qwen models with
+  head size 256 where generic AMD Triton FA is slow or broken).
+- `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE` — enables AMD Triton FA as a fallback; often slower on gfx1030.
+
+On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1`. That's
+expected — the GDN layers use Triton FLA kernels regardless. The critical flag for these models is
+`--enforce-eager` (see [Running vLLM](./vllm.md)).
+
+### Disabling fallback kernels
+
+```bash
+export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
+```
+
+This is the main lever for forcing GPTQ onto the native RDNA2 W4A16 path. The variable accepts a
+comma-separated list of kernel class names registered in vLLM's linear-kernel registry.
+
 ## Building from source (advanced)
 
 ```bash
