@@ -1,0 +1,15 @@
+[book]
+title = "Wiki GFX1030"
+authors = ["gfx1030-wiki contributors"]
+description = "Documentation and wiki for running ML inference & training on AMD gfx1030 (RDNA2 / Navi 21) GPUs"
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/blivioniag/gfx1030-wiki"
+edit-url-template = "https://github.com/blivioniag/gfx1030-wiki/edit/master/{path}"
+
+[output.html.search]
+enable = true

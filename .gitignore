@@ -1,3 +1,21 @@
+# Built site
+/book/
+/target/
+/**/target/
+
+# mdBook cache
+/.cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / editor files
+.idea/
+.vscode/
+*.swp
+
+# Python / env (tools/discord-mcp)
 .env
 .env.*
 !.env.example
