@@ -84,6 +84,14 @@ export VLLM_USE_V2_MODEL_RUNNER=1
 export FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
 ```
 
+For **multi-GPU TP** on current `rdna2_extras` images, if AOT compile cache replay causes device-bound
+errors, add:
+
+```bash
+export VLLM_USE_AOT_COMPILE=0
+export VLLM_DISABLE_COMPILE_CACHE=1
+```
+
 `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` steer vLLM away from the generic AMD Triton flash-attention path,
 which can be slower or crash on some Qwen head sizes. See [The rdna2_extras Fork](./vllm_fork.md) for
 kernel details.
@@ -98,7 +106,7 @@ On current `-extras` images, **CUDA graphs are the fast path** — you generally
 `--enforce-eager`. Graph capture can take a while on first boot (Triton JIT + torch-compile cache), but
 steady-state throughput is much higher once warmed up.
 
-Recommended graph config (community-validated on GPTQ 27B, TP4):
+Recommended graph config (community-validated on Qwen3.8-27B-AWQ-INT4, TP4, 4× V620):
 
 ```bash
 vllm serve /path/to/model \
@@ -111,6 +119,14 @@ vllm serve /path/to/model \
   --trust-remote-code \
   --compilation-config '{"cudagraph_mode": "FULL_AND_PIECEWISE", "compile_ranges_endpoints": []}'
 ```
+
+Reported steady-state throughput on current `rdna2_extras` (1024/512 bench, TP4):
+
+| Graph mode | Total tok/s | Output tok/s |
+|---|---|---|
+| PIECEWISE 1024/512 | 277.99 | 92.66 |
+| FULL 1024/512 | 280.34 | 93.45 |
+| PIECEWISE 16k/512, c=8 | 330.97 | — (prefill peak ~1573 tok/s) |
 
 Alternative that also avoids `--enforce-eager`:
 
@@ -197,14 +213,14 @@ capture fails, add `--enforce-eager` as a fallback (see [Troubleshooting](./trou
 
 | Format | `-extras` kernel path | Notes |
 |---|---|---|
-| **GPTQ** (e.g. `btbtyler09/Qwen3.8-27B-GPTQ-4bit`) | `RDNA2W4A16LinearKernel` — native gfx1030 HIP | Best `-extras` throughput today. Force with `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel`. |
-| **AWQ** | Triton AWQ / Exllama fallback | Does **not** use `RDNA2W4A16LinearKernel`. Community AWQ-native RDNA2 kernel work is in progress on the fork. |
-| **compressed-tensors** (e.g. `cyankiwi/Qwen3.8-27B-AWQ-INT4`) | Mixed — use `--quantization compressed-tensors` | Custom int4 re-quants; benchmark against GPTQ. |
-| **AWQ-vd** (e.g. `ikantkode/Qwen3.8-27B-AWQ-vd`) | Triton / Exllama | Community-tuned AWQ variant; test with auto-selected backends. |
+| **GPTQ** (e.g. `btbtyler09/Qwen3.8-27B-GPTQ-4bit`) | `RDNA2W4A16LinearKernel` — native gfx1030 HIP | Best `-extras` throughput. Force with `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel`. |
+| **AWQ** (e.g. `Qwen3.8-27B-AWQ-INT4`) | `RDNA2W4A16LinearKernel` on gfx10x | As of Aug 2026 `rdna2_extras`, AWQ dense routes through the same native W4A16 kernel as GPTQ (~151 output t/s confirmed). Use same `VLLM_DISABLED_KERNELS` to force it. |
+| **compressed-tensors** (e.g. `cyankiwi/Qwen3.8-27B-AWQ-INT4`) | Mixed — use `--quantization compressed-tensors` | Custom int4 re-quants; benchmark against GPTQ/AWQ. |
+| **AWQ-vd** (e.g. `ikantkode/Qwen3.8-27B-AWQ-vd`) | `RDNA2W4A16LinearKernel` when dense | Community-tuned AWQ variant; confirm kernel in logs. |
 
-If AWQ performance on v0.27.1 is poor (~4–5 t/s on a 27B), check whether you're hitting the Triton AWQ
-path instead of native RDNA2 kernels. GPTQ on `-extras` is the proven fast path today; `v0.26.0` remains
-a fallback for some AWQ workloads while kernel support matures.
+On **older images** (before the AWQ→RDNA2 dispatch fix), AWQ fell through to Triton/Exllama and could
+stall at ~4–5 t/s on a 27B. Pull the latest `-extras` image and confirm
+`Using RDNA2W4A16LinearKernel` in startup logs. `v0.26.0` remains a fallback for edge-case AWQ formats.
 
 ### KV-cache dtype
 
@@ -221,11 +237,12 @@ base decode speed remains good — worth testing on your model.
 ### INT4 on gfx1030 (no native int4 ALUs)
 
 RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly
-dequant** — int4 weights packed and processed via `dp4a`-style instructions. This is why GPTQ on `-extras`
-outperforms AWQ (which still routes through Triton/Exllama): the native HIP kernel avoids the slow paths.
+dequant** — int4 weights packed and processed via `dp4a`-style instructions. Both GPTQ and AWQ dense now
+hit the same native HIP kernel on current `rdna2_extras` images.
 
-Recent fork work on hybrid GDN models (Qwen3.8-27B) reported **~1624 tok/s prefill** and **~22 tok/s
-generation** at 8 concurrent requests (16k input / 1k output) with the HIP GDN chain on current images.
+Recent fork work on hybrid GDN models (Qwen3.8-27B-AWQ-INT4, TP4) reported **~93 output tok/s** with CUDA
+graphs (1024/512), **~331 total tok/s** at 8 concurrent requests (16k/512), and prefill peaks of
+**1450–1573 tok/s** — with the full HIP GDN prefill + decode chain replacing Triton JIT.
 
 ## Tips
 
@@ -234,10 +251,10 @@ generation** at 8 concurrent requests (16k input / 1k output) with the HIP GDN c
   or fall back to the default attention backend.
 - **Prefer CUDA graphs** (`--compilation-config`) over `--enforce-eager` on current images. Only use
   `--enforce-eager` when graph capture fails after pulling the latest image.
-- For GPTQ on `-extras`: set `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel` and
+- For GPTQ or AWQ on `-extras`: set `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel` and
   watch logs for `RDNA2W4A16LinearKernel`.
-- AWQ on gfx1030 is still catching up to GPTQ on `-extras`. If throughput is unexpectedly low (~4–5 t/s
-  on a 27B), check whether you're on AWQ (Triton path) vs GPTQ (native RDNA2 kernel).
+- On older images, AWQ could fall through to Triton (~4–5 t/s on a 27B). Pull latest `-extras` and confirm
+  the native kernel is active before blaming the quant format.
 - Don't force `--attention-backend` or `--quantization` — let vLLM auto-select from the model config
   unless you're deliberately A/B testing kernels.
 - Mount Triton and torch-compile caches as volumes (see above) — first boot compiles kernels and is much

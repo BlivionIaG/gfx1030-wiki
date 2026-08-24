@@ -31,6 +31,8 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 
 - `fa_rdna2.cu` — a **FlashAttention** kernel tuned for RDNA2, exposed via
   `vllm/v1/attention/ops/fa_rdna2_backend.py` and the `vllm/v1/attention/backends/rdna_attn.py` backend.
+  Now supports **`head_size=256`** on gfx10x (needed for Qwen3.8-27B-AWQ-INT4; previously capped at 128
+  and caused Triton GDN compile hangs).
 - `sparse_mla_rdna2.cu` + `rocm_rdna2_mla_sparse.py` — **sparse MLA** (multi-head latent attention,
   DeepSeek-style).
 - `indexer_paged_mqa_rdna2.cu` — paged **MQA** indexer.
@@ -52,11 +54,21 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 
 ### GDN (gated delta-net / linear attention)
 
-Kernels for gated-delta-net models (e.g. Qwen3-Next-style linear attention):
+Kernels for gated-delta-net models (e.g. Qwen3.8-27B hybrid linear attention). As of Aug 2026 the
+full GDN chain is **hand-ported to HIP** — no Triton JIT on the hot path:
 
-- `gdn_decode_rdna2.cu` and the prefill pipeline `gdn_prefill_prep_rdna2.cu`,
-  `gdn_prefill_kkt_rdna2.cu`, `gdn_prefill_delta_h_rdna2.cu`, `gdn_prefill_solve_wy_rdna2.cu`,
-  `gdn_prefill_o_rdna2.cu`.
+| Kernel | File | Role |
+|---|---|---|
+| Decode | `gdn_decode_rdna2.cu` | Packed decode; ~9.3× faster than Triton at B=1 |
+| Prefill prep | `gdn_prefill_prep_rdna2.cu` | Q/K/V staging |
+| Prefill KKT | `gdn_prefill_kkt_rdna2.cu` | KKT accumulation |
+| Prefill solve WY | `gdn_prefill_solve_wy_rdna2.cu` | WY solve |
+| Prefill delta_h | `gdn_prefill_delta_h_rdna2.cu` | Delta-h update |
+| Prefill output | `gdn_prefill_o_rdna2.cu` | Output projection |
+
+This replaces the Triton FLA GDN path that previously caused 16k/1k prefill hangs and slow decode on
+hybrid models. Recent tuning commits improved delta_h register pressure, o-kernel block-vector width,
+and prep-kernel vectorization.
 
 ## Using it
 
@@ -80,7 +92,7 @@ On `-extras` images, vLLM picks kernels based on quantization format:
 | Quant method | Kernel selected | How to force |
 |---|---|---|
 | GPTQ (`AutoGPTQLinearMethod`) | `RDNA2W4A16LinearKernel` | `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel` |
-| AWQ | Triton AWQ / Exllama | No native RDNA2 AWQ kernel yet — community patches in progress |
+| AWQ (dense, gfx10x) | `RDNA2W4A16LinearKernel` | Same `VLLM_DISABLED_KERNELS` as GPTQ; AWQ dense now routes through the native W4A16 kernel |
 | FP8 W8A16 / W8A8 | `gemm_w8a16_fp8_rdna2` etc. | Automatic on `-extras` when model uses FP8 |
 
 Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLinearMethod`. If you see
@@ -93,10 +105,19 @@ Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLine
   head size 256 where generic AMD Triton FA is slow or broken).
 - `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE` — enables AMD Triton FA as a fallback; often slower on gfx1030.
 
-On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1`. That's
-expected — the GDN layers use Triton FLA kernels regardless. For graph capture issues, see
+On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1` for the
+attention layers — that's expected. The GDN linear-attention layers now use the native HIP kernels above
+(not Triton FLA). For graph capture issues, see
 [CUDA graphs](./vllm.md#cuda-graphs-preferred-over---enforce-eager) and
 [Troubleshooting](./troubleshooting.md#vllm-cuda-graph-capture-crashes-hybrid-gdn-models).
+
+### CUDA graph capture (TP comm fix)
+
+A common `_SimpleCData.__new__` crash during V2 cudagraph capture on multi-GPU TP setups was fixed by
+marking TP communication wrappers with `allow_in_graph`. With current `rdna2_extras` images, CUDA graphs
+are the preferred fast path — you should not need `--enforce-eager` for this class of failure anymore.
+On multi-GPU, if AOT compile cache replay misbehaves, try
+`VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1`.
 
 ### Disabling fallback kernels
 

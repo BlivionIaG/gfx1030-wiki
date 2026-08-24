@@ -30,6 +30,8 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. |
 | `PYTORCH_TUNABLEOP_ENABLED` | `0` / `1` | `0` for reproducible benches; `1` for runtime autotuning. |
 | `PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED` | `0` | Disable hipBLASLt in tunableop (pair with `TORCH_BLAS_PREFER_HIPBLASLT=0`). |
+| `VLLM_USE_AOT_COMPILE` | `0` | Disable AOT compile on multi-GPU if cache replay causes device-bound errors. |
+| `VLLM_DISABLE_COMPILE_CACHE` | `1` | Disable torch.compile cache (pair with `VLLM_USE_AOT_COMPILE=0` for TP stability). |
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
 

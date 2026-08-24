@@ -45,6 +45,11 @@ RDNA2 kernels (W4A16 / FP8) that avoid BF16 hot paths.
 Symptom: crash during startup or first generation at `GDN _output_projection all-reduce` /
 `_SimpleCData.__new__`, or OOM trying to allocate huge KV cache during graph capture.
 
+**Root cause (fixed in current `rdna2_extras`):** TP communication wrappers were not marked
+`allow_in_graph`, so V2 cudagraph capture failed on multi-GPU tensor-parallel setups. The fork fix
+(`fix(distributed): allow TP comm ops in torch.compile graph capture`) resolves the `_SimpleCData.__new__`
+class of crashes.
+
 **First, pull the latest image** — tags are refreshed in place and recent builds fix many graph issues:
 
 ```bash
@@ -72,8 +77,11 @@ volumes (see [Running vLLM](./vllm.md#cache-volumes-first-boot-is-slow)).
 --enforce-eager
 ```
 
-If throughput is still much lower than expected (~4–5 t/s on a 27B), check whether you're on AWQ (Triton
-path) vs GPTQ (native `RDNA2W4A16LinearKernel`) — see
+On multi-GPU, if AOT compile cache replay misbehaves, try
+`VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1` before falling back to eager mode.
+
+If throughput is still much lower than expected (~4–5 t/s on a 27B), check whether you're on an **older
+image** where AWQ still fell through to Triton instead of `RDNA2W4A16LinearKernel` — see
 [Running vLLM](./vllm.md#quantization-gptq-vs-awq-on-gfx1030).
 
 ## vLLM first boot is extremely slow
@@ -82,7 +90,7 @@ Triton and torch.compile generate kernels on first run. This is normal — mount
 Typical cache sizes: `~/.triton/cache` (~3 GB), `~/.cache/vllm/torch_compile_cache` (~700 MB). Subsequent
 boots reuse them. See [Running vLLM](./vllm.md#cache-volumes-first-boot-is-slow).
 
-## vLLM GPTQ not using RDNA2 kernels
+## vLLM GPTQ/AWQ not using RDNA2 kernels
 
 Check logs for `Using RDNA2W4A16LinearKernel`. If you see `TritonW4A16LinearKernel` or
 `ExllamaLinearKernel` instead:
@@ -91,7 +99,8 @@ Check logs for `Using RDNA2W4A16LinearKernel`. If you see `TritonW4A16LinearKern
 export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
 ```
 
-Also confirm you're using an `-extras` image and a **GPTQ** model (AWQ won't hit this kernel). See
+Also confirm you're using an `-extras` image built from current `rdna2_extras`. Both **GPTQ and AWQ dense**
+on gfx10x should hit this kernel as of Aug 2026. See
 [The rdna2_extras Fork](./vllm_fork.md#kernel-dispatch-on-gfx1030).
 
 ## llama.cpp KV checkpoint crash on tensor split
