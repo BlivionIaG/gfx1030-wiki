@@ -45,7 +45,7 @@ performance work happens first.
 
 | Project | What it is |
 |---|---|
-| [`blivioniag/v620_toolbox`](https://github.com/blivioniag/v620_toolbox) | V620 power cap + PCIe P2P scripts — see [Tuning](../tuning/power.md) |
+| [`blivioniag/v620_toolbox`](https://github.com/blivioniag/v620_toolbox) | V620 power cap + PCIe P2P — [`powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning) (Fedora), [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning) (Ubuntu 26.04); see [Power tuning](../tuning/power.md) |
 | [`blivioniag/vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker) | Docker build system for `rocm-rdna` / `vllm-rdna` images |
 | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | vLLM fork with RDNA2 HIP kernels — see [rdna2_extras fork](../vllm/fork.md) |
 | [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community vLLM serving recipes for RDNA2 |

@@ -8,6 +8,10 @@ This page summarizes the
 
 > Validated end-to-end on **Fedora 43 + AMD CPU** (EPYC 7452), **4× Radeon PRO V620**. Result:
 > `rocminfo` enumerates 5 HSA agents and `amd-smi topology` shows **12/12 GPU↔GPU P2P ENABLED**.
+>
+> Power-cap tuning on **Ubuntu 26.04** is supported separately via
+> [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning) — P2P
+> recipes here remain Fedora-validated for now.
 
 ## Two validated kernel paths
 

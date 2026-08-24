@@ -19,7 +19,7 @@ kernels) takes a bit of extra work. That's what this wiki documents.
 
 - **[Tuning](./tuning/power.md)** — the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox)
   recipes: lowering the V620's VBIOS-locked 250 W floor to **120 W**, and enabling **GPU↔GPU PCIe
-  Peer-to-Peer** between multiple V620s on Fedora + AMD hosts.
+  Peer-to-Peer** between multiple V620s (Fedora + AMD hosts; power tuning also on **Ubuntu 26.04**).
 - **[vLLM on RDNA](./vllm/overview.md)** — ready-to-run Docker images
   ([`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) on a
   [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base), how they are

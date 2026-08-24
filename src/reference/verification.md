@@ -111,7 +111,9 @@
 |---|---|---|
 | `reference/env-vars.md` tables | **Community** | Cheat-sheet; not exhaustive upstream API |
 | `troubleshooting/vllm.md` graph fix | **Fork-source** | Same image-lag caveat |
-| `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on specific hardware |
+| `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
+| `tuning/power.md` Ubuntu 26.04 path | **Community** | `ubuntu_powertuning/` — validated kernel `7.0.0-30-generic`; re-verify after kernel upgrades |
+| `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |
 
 ---
