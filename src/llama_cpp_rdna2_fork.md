@@ -271,10 +271,20 @@ Note this profile pairs `GGML_CUDA_ALLREDUCE=nccl` with `GGML_CUDA_DISABLE_GRAPH
 
 ### DFlash2 + ngram speculative decoding (community-tested)
 
-Recent `#llamacpp` work added **DFlash2** with optional ngram helpers. These configs held generation speed
-well at long context on TP2 (reported ~52 t/s coding at 0–31k context, ~40 t/s at 64k):
+Recent `#llamacpp` work added **DFlash2** with optional ngram helpers. DFlash2 shines on **real workloads**
+(coding, agents, long context) more than short synthetic benches — community members saw DFlash2 alone
+score lower than MTP on a 20k bench (~30 vs ~40 t/s) but win on actual agent/coding sessions (~47 t/s
+with 700+ t/s prefill).
 
-**Coding / ngram-map-k4v** (Edwin B, Aug 2026):
+**Draft model quant:** use **Q4_K_M** for the DFlash2 draft GGUF — do **not** use Q8_0 for the drafter
+(same acceptance, slower). Main model can stay Q4_0 / AutoRound for code.
+
+**Recommended draft GGUFs** (Aug 2026):
+
+- [`incoai/Qwen3.8-27B-DFlash2-GGUF`](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2-GGUF)
+- [`webhie/Qwen3.8-27B-Q4-AutoRound-Code-GGUF`](https://huggingface.co/webhie/Qwen3.8-27B-Q4-AutoRound-Code-GGUF) — code-calibrated Q4_0 main model
+
+**Coding / ngram-map-k4v**:
 
 ```bash
 --spec-type draft-dflash,ngram-map-k4v \
@@ -293,12 +303,36 @@ well at long context on TP2 (reported ~52 t/s coding at 0–31k context, ~40 t/s
   --spec-ngram-mod-n-max 64
 ```
 
-Combine with the standard RDNA2 env prefix (`HSA_OVERRIDE_GFX_VERSION=10.3.0`, `GGML_HIP_RDNA2_AUTO=1`,
-etc.). DFlash2 alone (without ngram) is also worth A/B testing against MTP on your model/quant. On older
-models, ngram-mod and MTP can be combined for extra gain.
+DFlash2 is **more consistent at long context**; MTP acceptance tends to fall off. Combining DFlash2 +
+ngram + MTP is possible but may not be worth the complexity. Use **tg1024+** (not tg32) for realistic
+decode benchmarks — ngram pattern matching needs enough output tokens to show its value.
 
-**MXFP4** quants (e.g. `quark75/Qwen3.8-27B-MXFP4-GGUF`) are supported on the fork and pair well with
-MTP on TP2 — see the Docker serving example below.
+### Full DFlash2 serve example (TP4, Qwen3.8-27B)
+
+Production command from the fork author (Aug 2026):
+
+```bash
+HSA_NO_SCRATCH_RECLAIM=1 GGML_HIP_RDNA2_AUTO=1 GGML_HIP_SAFE_STATE_IO=1 \
+GGML_TP_SHARDED_OUTPUT=1 HSA_OVERRIDE_GFX_VERSION=10.3.0 \
+./build/bin/llama-server \
+  -m ./models/qwen38-27b-q4s8/autoround/Qwen3.8-27B-Q4_0.gguf \
+  -ngl all --split-mode tensor --tensor-split 1,1,1,1 \
+  --device ROCm0,ROCm1,ROCm2,ROCm3 --flash-attn on \
+  --ctx-size 262144 --batch-size 8192 --ubatch-size 4096 \
+  --host 0.0.0.0 --port 8080 --metrics \
+  --reasoning-effort xhigh --reasoning-preserve \
+  --spec-type draft-dflash,ngram-map-k4v \
+  --spec-ngram-map-k4v-size-n 12 --spec-ngram-map-k4v-size-m 48 \
+  --spec-draft-n-max 5 \
+  -md ./models/qwen38-27b-q4s8/dflash2/Qwen3.8-27B-DFlash2-Q4_K_M.gguf \
+  --device-draft ROCm0 --parallel 1 --spec-draft-ubatch-size 4096 \
+  --cache-ram 65535
+```
+
+Recent fork builds report DFlash2 ~8% faster than earlier DFlash paths. Pull and rebuild regularly.
+
+Combine with the standard RDNA2 env prefix. **MXFP4** quants (e.g. `quark75/Qwen3.8-27B-MXFP4-GGUF`)
+are supported on the fork and pair well with MTP on TP2 — see the Docker serving example below.
 
 ### MTP on tensor-split setups
 
@@ -336,10 +370,12 @@ command: >
 ```
 
 Build the image with `./scripts/build-rdna2-portable.sh` from the fork repo. RCCL needs working
-[PCIe P2P](./tuning_p2p.md) — if all-reduce fails, try `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or
-`GGML_CUDA_ALLREDUCE=none` (slower, but stable on broken P2P topologies). Note that P2P can actually be
-**slower than non-P2P** on bad PCIe topologies (e.g. gen3 links, ACS-blocked root ports) — always benchmark
-on your hardware.
+[PCIe P2P](./tuning_p2p.md) for tensor split — use the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox)
+P2P scripts to enable and verify it. If P2P is enabled but **slower** than without (common on gen3 x4
+links), set `NCCL_P2P_DISABLE=1` or use the fork's P2P disable flag in the README. If all-reduce fails,
+try `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none` (slower, but stable on broken
+topologies). Always benchmark on your hardware — verified P2P bandwidth (~25 GB/s between V620 pairs) does
+not guarantee faster inference if links are narrow or ACS-blocked.
 
 ## Notable limits
 
@@ -351,7 +387,8 @@ on your hardware.
   disable them if you hit `ggml-backend-meta.cpp` fatals during warmup.
 - `GGML_TP_SHARDED_OUTPUT` and `GGML_TP_VOCAB_SHARDED_OUTPUT` are different, incompatible output-head
   modes; an external draft model can force a shared head to stay mirrored.
-- After a ROCm illegal-memory fault, reset the affected GPUs or reboot before trusting later numbers.
+- **Tensor-split prefill can spike power** — if your PSU trips on tensor mode but layer split is fine, try
+  lowering the power cap to 160 W (see [Power Tuning](./tuning_power.md); ~2–4% perf loss vs 180 W).
 - Most single-flag `GGML_HIP_GFX1030_*` variables are redundant when the `HSA_OVERRIDE_GFX_VERSION=10.3.0`
   umbrella is active — leave them unset except for A/B testing (`GGML_HIP_RDNA2_AUTO=0` disables the
   profile). If RCCL all-reduce misbehaves on your topology, try `GGML_HIP_GFX1030_P2P_ALLREDUCE=off`.

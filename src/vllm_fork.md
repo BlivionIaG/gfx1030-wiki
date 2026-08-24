@@ -8,6 +8,10 @@ Why it exists: RDNA2 (gfx1030) has **no matrix/WMMA cores** — those arrived wi
 quantized GEMM, attention, and MoE have to be implemented efficiently on RDNA2's regular vector ALUs.
 This fork does exactly that (with RDNA3 WMMA variants where it makes sense).
 
+**INT4/W4A16 on gfx1030** does not use native int4 compute. The RDNA2 kernels dequant on the fly using
+**vdot2 fp16** instructions with int4 packed via `dp4a`. Community testing found no faster INT8-based
+HIP kernel vs fp16 for these paths — fp16 dequant is the winning approach on V620.
+
 ## Branches
 
 | Branch | Purpose |

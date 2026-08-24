@@ -218,6 +218,15 @@ MTP (`--speculative-config '{"method":"mtp","num_speculative_tokens":N}'`) can b
 models with CUDA graphs enabled. Acceptance rates dropped after a v0.27.1 speculator update (~0.25), but
 base decode speed remains good — worth testing on your model.
 
+### INT4 on gfx1030 (no native int4 ALUs)
+
+RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly
+dequant** — int4 weights packed and processed via `dp4a`-style instructions. This is why GPTQ on `-extras`
+outperforms AWQ (which still routes through Triton/Exllama): the native HIP kernel avoids the slow paths.
+
+Recent fork work on hybrid GDN models (Qwen3.8-27B) reported **~1624 tok/s prefill** and **~22 tok/s
+generation** at 8 concurrent requests (16k input / 1k output) with the HIP GDN chain on current images.
+
 ## Tips
 
 - Lower `--gpu-memory-utilization` (e.g. `0.9` → `0.8`) if KV-cache allocation OOMs on 16 GB cards.
