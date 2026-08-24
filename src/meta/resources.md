@@ -31,7 +31,7 @@ Docker Hub:
 - [vLLM](https://github.com/vllm-project/vllm) — the upstream serving engine this fork tracks.
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) — GGUF LLM inference (HIP/ROCm and Vulkan backends).
 - [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) — RDNA2/V620-optimized
-  llama.cpp fork (tensor-parallel + MMQ); see [the fork page](./llama_cpp_rdna2_fork.md).
+  llama.cpp fork (tensor-parallel + MMQ); see [the fork page](../llama-cpp/rdna2-overview.md).
 - [TheRock: adding support for RDNA2 (gfx103X) cards](https://github.com/ROCm/TheRock/pull/1629)
 - [ROCm Device Support Wishlist (community-tracked support matrix)](https://github.com/ROCm/ROCm/discussions/4276)
 

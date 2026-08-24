@@ -21,7 +21,7 @@ All of these are on the **officially supported** list for recent ROCm releases o
 
 The rest of the RDNA2 line uses a different LLVM target but shares the same ISA family. They are **not**
 on the official support matrix, but in practice they run gfx1030 kernels once you set
-`HSA_OVERRIDE_GFX_VERSION=10.3.0` (see [HSA_OVERRIDE for RDNA2 Cousins](./hsa_override.md)).
+`HSA_OVERRIDE_GFX_VERSION=10.3.0` (see [HSA_OVERRIDE for RDNA2 Cousins](./hsa-override.md)).
 
 | Card | LLVM target | Die |
 | --- | --- | --- |
@@ -49,4 +49,4 @@ rocminfo | grep -m1 -o 'gfx[0-9]*'
 ```
 
 If the output shows `gfx1030`, everything in this wiki applies directly. If it shows `gfx1031`,
-`gfx1032`, etc., head to [HSA_OVERRIDE for RDNA2 Cousins](./hsa_override.md) first.
+`gfx1032`, etc., head to [HSA_OVERRIDE for RDNA2 Cousins](./hsa-override.md) first.

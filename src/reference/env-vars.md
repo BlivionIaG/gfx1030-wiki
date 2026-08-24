@@ -9,7 +9,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 
 | Variable | Example | What it does |
 | --- | --- | --- |
-| `HSA_OVERRIDE_GFX_VERSION` | `10.3.0` | Makes non-Navi-21 RDNA2 cards run gfx1030 kernels. See [override guide](./hsa_override.md). |
+| `HSA_OVERRIDE_GFX_VERSION` | `10.3.0` | Makes non-Navi-21 RDNA2 cards run gfx1030 kernels. See [override guide](../setup/hsa-override.md). |
 | `HIP_VISIBLE_DEVICES` | `0` | Restrict which GPUs a HIP program sees (hide an iGPU or pick one card). |
 | `ROCR_VISIBLE_DEVICES` | `0` | Same idea, at the ROCr runtime level. |
 | `PYTORCH_ROCM_ARCH` | `gfx1030;gfx1100;…` | Target arch(es) when **building** PyTorch/vLLM/extensions from source. The RDNA images bake `gfx1030;gfx1100;gfx1101;gfx1150;gfx1151;gfx1200;gfx1201`. |
@@ -65,7 +65,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 
 ## V620 / gfx1030 PCI identity
 
-Used by the [tuning](./tuning_power.md) scripts to match the right board:
+Used by the [tuning](../tuning/power.md) scripts to match the right board:
 
 | Board | PCI device | Subsystem | 4-tuple |
 | --- | --- | --- | --- |
@@ -99,6 +99,6 @@ clinfo | grep -i board                # OpenCL board name
 RDNA2 has **no fast BF16**. Always prefer **FP16** for hot paths:
 
 - PyTorch: pass `dtype=torch.float16`.
-- vLLM: `--dtype float16` (see [Running vLLM](./vllm.md)).
-- The [`rdna2_extras`](./vllm_fork.md) fork adds quantized (W4A16 / FP8) RDNA2 kernels to cut VRAM and
+- vLLM: `--dtype float16` (see [Running vLLM](../vllm/overview.md)).
+- The [`rdna2_extras`](../vllm/fork.md) fork adds quantized (W4A16 / FP8) RDNA2 kernels to cut VRAM and
   sidestep BF16 entirely.

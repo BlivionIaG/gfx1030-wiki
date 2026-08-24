@@ -18,7 +18,7 @@ This page summarizes the
 
 Both kernels can be installed on the same host simultaneously; toggle the default with
 `grubby --set-default /boot/vmlinuz-<evr>`. Both boot with the **180 W** power cap from
-[Power Tuning](./tuning_power.md).
+[Power Tuning](./power.md).
 
 ## Key prerequisites
 

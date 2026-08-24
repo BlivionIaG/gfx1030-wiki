@@ -1,7 +1,7 @@
 # The rdna2_extras Fork
 
 > **WIP:** Kernel behavior below is traced to **fork source commits**; published `-extras` Docker images
-> may lag HEAD until rebuilt. See [Verification status](./verification.md#vllm_forkmd).
+> may lag HEAD until rebuilt. See [Verification status](../../reference/verification.md#vllm-forkmd).
 
 The `-extras` images are built from the
 [`blivioniag/vllm`](https://github.com/blivioniag/vllm) fork on the **`rdna2_extras`** branch. It adds
@@ -85,7 +85,7 @@ docker run -it --rm \
   vllm serve <model> --dtype float16
 ```
 
-See [Running vLLM (Docker)](./vllm.md) for the full run recipe and [Building the Images](./vllm_images.md)
+See [Running (Docker)](../running.md) for the full run recipe and [Building images](../images.md)
 for how the `-extras` variant is produced (`VLLM_VARIANT=extras-fork`, `VLLM_REF=rdna2_extras`).
 
 ## Kernel dispatch on gfx1030
@@ -111,8 +111,8 @@ Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLine
 On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1` for the
 attention layers — that's expected. The GDN linear-attention layers now use the native HIP kernels above
 (not Triton FLA). For graph capture issues, see
-[CUDA graphs](./vllm.md#cuda-graphs-preferred-over---enforce-eager) and
-[Troubleshooting](./troubleshooting.md#vllm-cuda-graph-capture-crashes-hybrid-gdn-models).
+[CUDA graphs](../configuration.md#cuda-graphs-preferred-over---enforce-eager) and
+[vLLM troubleshooting](../../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
 ### CUDA graph capture (TP comm fix)
 
