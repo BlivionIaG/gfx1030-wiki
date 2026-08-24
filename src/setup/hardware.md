@@ -14,9 +14,26 @@ as `gfx1030`.
 | Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | |
 | Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | |
 | Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | |
-| AMD BC-250 | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
 
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
+
+## AMD BC-250 (`gfx1013`)
+
+The **BC-250** is a headless mining APU board (Cyan Skillfish / Oberon-class), **not** Navi 21. It reports
+as **`gfx1013`**, not `gfx1030` — most of this wiki targets Navi 21 cards, but the BC-250 has an active
+community around ROCm and Vulkan inference.
+
+| | Stock | Unlocked (community) |
+|---|---|---|
+| LLVM target | `gfx1013` | `gfx1013` |
+| Compute units | **24** (factory) | **40** (kernel/firmware unlock) |
+| Stream processors | 1,536 | 2,560 |
+| Memory | 16 GB GDDR6 UMA (CPU + GPU shared) | same |
+| Notes | | |
+
+Do **not** list BC-250 in the native `gfx1030` table — die, target, and CU count differ from Navi 21.
+Community references: [AMD BC-250 docs](https://elektricm.github.io/amd-bc250-docs/),
+[akandr/bc250-rocm](https://github.com/akandr/bc250-rocm).
 
 ## RDNA2 relatives that can run gfx1030 code
 
