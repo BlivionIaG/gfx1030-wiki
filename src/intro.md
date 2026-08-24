@@ -1,5 +1,10 @@
 # Introduction
 
+> **Work in progress:** This wiki is being actively expanded from Discord research and fork release
+> notes. Many tuning recipes and throughput numbers are **community-reported** and have not been
+> independently reproduced here. See [Verification status](./verification.md) for what is solid vs what
+> still needs checking on your hardware.
+
 Welcome to the **GFX1030 Wiki** — a focused, hands-on knowledge base for running LLM inference on AMD
 **gfx1030** (RDNA2 / Navi 21) GPUs, with a strong bias toward the **Radeon PRO V620** and the
 purpose-built tooling collected here.

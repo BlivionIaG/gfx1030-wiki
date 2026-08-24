@@ -1,5 +1,8 @@
 # llama.cpp on gfx1030
 
+> **WIP:** Tips marked community-validated in this page come from `#llamacpp` — see
+> [Verification status](./verification.md#llama_cppmd).
+
 [llama.cpp](https://github.com/ggml-org/llama.cpp) is a fast, low-dependency way to run GGUF LLMs on
 gfx1030. This page is a build-from-source recipe validated by the gfx1030 community (the `#llamacpp`
 Discord channel), on **Fedora** with **ROCm 7.2.0** targeting `gfx1030`. A **Vulkan** path is included

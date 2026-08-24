@@ -1,5 +1,8 @@
 # Environment Variables & Quick Reference
 
+> **WIP:** vLLM and llama.cpp tables include Discord-sourced defaults — see
+> [Verification status](./verification.md#referencemd).
+
 A cheat-sheet of the settings that matter most when running ML workloads on gfx1030 / RDNA2.
 
 ## Key environment variables

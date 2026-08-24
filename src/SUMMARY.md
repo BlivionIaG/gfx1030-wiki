@@ -27,6 +27,7 @@
 
 # More
 
+- [Verification status (WIP)](./verification.md)
 - [Environment Variables & Quick Reference](./reference.md)
 - [Troubleshooting](./troubleshooting.md)
 - [Useful Resources](./resources.md)

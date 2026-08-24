@@ -1,5 +1,8 @@
 # The rdna2_extras Fork
 
+> **WIP:** Kernel behavior below is traced to **fork source commits**; published `-extras` Docker images
+> may lag HEAD until rebuilt. See [Verification status](./verification.md#vllm_forkmd).
+
 The `-extras` images are built from the
 [`blivioniag/vllm`](https://github.com/blivioniag/vllm) fork on the **`rdna2_extras`** branch. It adds
 hand-written **RDNA2 HIP kernels** and the vLLM plumbing to dispatch to them.
@@ -59,7 +62,7 @@ full GDN chain is **hand-ported to HIP** — no Triton JIT on the hot path:
 
 | Kernel | File | Role |
 |---|---|---|
-| Decode | `gdn_decode_rdna2.cu` | Packed decode; ~9.3× faster than Triton at B=1 |
+| Decode | `gdn_decode_rdna2.cu` | Packed decode; fork microbench reports ~9.3× vs Triton at B=1 (**community**) |
 | Prefill prep | `gdn_prefill_prep_rdna2.cu` | Q/K/V staging |
 | Prefill KKT | `gdn_prefill_kkt_rdna2.cu` | KKT accumulation |
 | Prefill solve WY | `gdn_prefill_solve_wy_rdna2.cu` | WY solve |

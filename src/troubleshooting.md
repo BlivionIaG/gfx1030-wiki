@@ -1,5 +1,8 @@
 # Troubleshooting
 
+> **WIP:** Fixes involving latest `rdna2_extras` images (CUDA graphs, AWQ kernel dispatch) assume a
+> current image pull — see [Verification status](./verification.md#troubleshootingmd).
+
 Common errors on gfx1030 / RDNA2 and how to fix them.
 
 ## `torch.cuda.is_available()` returns `False`

@@ -51,6 +51,11 @@ RDNA2 tooling moves quickly. When you add a command, note the ROCm / library ver
 if it might matter, and prefer linking to official docs over pasting version-specific numbers that will
 age.
 
+For pages sourced from Discord or fork release notes, add or update entries in
+[Verification status](./verification.md) so readers know what is **solid**, **fork-source**,
+**community-reported**, or **needs verify**. Mark unconfirmed throughput claims as community-reported
+rather than presenting them as wiki-tested facts.
+
 ## Deployment
 
 Merges to `master` are built and published to GitHub Pages automatically by the

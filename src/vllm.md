@@ -1,5 +1,9 @@
 # Running vLLM (Docker)
 
+> **WIP:** Performance numbers and env recipes below are mostly **community-reported**. See
+> [Verification status](./verification.md#vllmmd) before treating benchmarks as gospel. Confirm your
+> `-extras` image includes the latest `rdna2_extras` commits (AWQ dispatch, GDN HIP, TP graph fix).
+
 The quickest way to serve LLMs on gfx1030 / RDNA is the prebuilt
 [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) images. They are built on a
 [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) ROCm + PyTorch base and target
@@ -106,7 +110,7 @@ On current `-extras` images, **CUDA graphs are the fast path** — you generally
 `--enforce-eager`. Graph capture can take a while on first boot (Triton JIT + torch-compile cache), but
 steady-state throughput is much higher once warmed up.
 
-Recommended graph config (community-validated on Qwen3.8-27B-AWQ-INT4, TP4, 4× V620):
+Recommended graph config (fork-author reported on Qwen3.8-27B-AWQ-INT4, TP4, 4× V620 — **not wiki-reproduced**):
 
 ```bash
 vllm serve /path/to/model \
@@ -214,7 +218,7 @@ capture fails, add `--enforce-eager` as a fallback (see [Troubleshooting](./trou
 | Format | `-extras` kernel path | Notes |
 |---|---|---|
 | **GPTQ** (e.g. `btbtyler09/Qwen3.8-27B-GPTQ-4bit`) | `RDNA2W4A16LinearKernel` — native gfx1030 HIP | Best `-extras` throughput. Force with `VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel`. |
-| **AWQ** (e.g. `Qwen3.8-27B-AWQ-INT4`) | `RDNA2W4A16LinearKernel` on gfx10x | As of Aug 2026 `rdna2_extras`, AWQ dense routes through the same native W4A16 kernel as GPTQ (~151 output t/s confirmed). Use same `VLLM_DISABLED_KERNELS` to force it. |
+| **AWQ** (e.g. `Qwen3.8-27B-AWQ-INT4`) | `RDNA2W4A16LinearKernel` on gfx10x | As of Aug 2026 `rdna2_extras`, AWQ dense routes through the same native W4A16 kernel as GPTQ (fork-author reported ~151 output t/s; **needs verify** on your image). Use same `VLLM_DISABLED_KERNELS` to force it. |
 | **compressed-tensors** (e.g. `cyankiwi/Qwen3.8-27B-AWQ-INT4`) | Mixed — use `--quantization compressed-tensors` | Custom int4 re-quants; benchmark against GPTQ/AWQ. |
 | **AWQ-vd** (e.g. `ikantkode/Qwen3.8-27B-AWQ-vd`) | `RDNA2W4A16LinearKernel` when dense | Community-tuned AWQ variant; confirm kernel in logs. |
 
@@ -240,9 +244,10 @@ RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2
 dequant** — int4 weights packed and processed via `dp4a`-style instructions. Both GPTQ and AWQ dense now
 hit the same native HIP kernel on current `rdna2_extras` images.
 
-Recent fork work on hybrid GDN models (Qwen3.8-27B-AWQ-INT4, TP4) reported **~93 output tok/s** with CUDA
+Recent fork work on hybrid GDN models (Qwen3.8-27B-AWQ-INT4, TP4) **reported** **~93 output tok/s** with CUDA
 graphs (1024/512), **~331 total tok/s** at 8 concurrent requests (16k/512), and prefill peaks of
-**1450–1573 tok/s** — with the full HIP GDN prefill + decode chain replacing Triton JIT.
+**1450–1573 tok/s** — with the full HIP GDN prefill + decode chain replacing Triton JIT. See
+[Verification status](./verification.md#vllmmd).
 
 ## Tips
 

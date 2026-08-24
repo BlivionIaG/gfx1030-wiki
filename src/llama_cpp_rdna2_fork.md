@@ -1,5 +1,8 @@
 # RDNA2-optimized fork (llama.cpp-rdna2)
 
+> **WIP:** Benchmarks and DFlash2 recipes are **author- or Discord-reported**. The page already warns
+> to run matched before/after tests — see also [Verification status](./verification.md#llama_cpp_rdna2_forkmd).
+
 [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) is a community fork of
 [llama.cpp](https://github.com/ggml-org/llama.cpp) with weeks of RDNA2-specific optimization work,
 developed on **ROCm 7.14 / Ubuntu Server 26** and validated primarily on **four Radeon PRO V620
