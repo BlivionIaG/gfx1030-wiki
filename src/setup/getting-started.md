@@ -5,7 +5,7 @@ explains how to preview this wiki locally.
 
 ## 1. Confirm your hardware
 
-Make sure your card is a Navi 21 gfx1030 (or a [related RDNA2 card](./hsa_override.md)):
+Make sure your card is a Navi 21 gfx1030 (or a [related RDNA2 card](./hsa-override.md)):
 
 ```sh
 lspci | grep -i vga
@@ -17,7 +17,7 @@ See [Supported Hardware](./hardware.md) for the full card list.
 
 ## 2. Install ROCm
 
-Follow [Installing ROCm](./installing_rocm.md). At a high level:
+Follow [Installing ROCm](./installing-rocm.md). At a high level:
 
 ```sh
 # Add the amdgpu repo, then:
@@ -32,8 +32,8 @@ clinfo | grep -i 'gfx\|Board'
 
 If you run one or more **Radeon PRO V620** cards, two tweaks are worth doing before you load models:
 
-- [Power Tuning](./tuning_power.md) — drop the VBIOS-locked 250 W floor to 120 W and boot-cap at 180 W.
-- [Multi-GPU PCIe P2P](./tuning_p2p.md) — enable GPU↔GPU peer-to-peer for multi-card setups.
+- [Power Tuning](../tuning/power.md) — drop the VBIOS-locked 250 W floor to 120 W and boot-cap at 180 W.
+- [Multi-GPU PCIe P2P](../tuning/p2p.md) — enable GPU↔GPU peer-to-peer for multi-card setups.
 
 Both come from the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox) repo.
 
@@ -41,13 +41,13 @@ Both come from the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox) 
 
 The fastest path is the prebuilt images — no local ROCm/PyTorch/vLLM build required:
 
-- [Running vLLM (Docker)](./vllm.md) — [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna)
+- [Running vLLM (Docker)](../vllm/overview.md) — [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna)
   on a [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base.
 
-Prefer GGUF and building from source? See [Building & Running llama.cpp](./llama_cpp.md) (ROCm or Vulkan).
+Prefer GGUF and building from source? See [Building & Running llama.cpp](../llama-cpp/building.md) (ROCm or Vulkan).
 
 Want to build the images yourself, or use the RDNA-tuned kernels? See
-[Building the Images](./vllm_images.md) and [The rdna2_extras Fork](./vllm_fork.md).
+[Building the Images](../vllm/images.md) and [The rdna2_extras Fork](../vllm/fork.md).
 
 ## 5. Smoke test
 
@@ -56,7 +56,7 @@ Want to build the images yourself, or use the RDNA-tuned kernels? See
 python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
 
-You should see `True` and your Radeon card's name. If not, see [Troubleshooting](./troubleshooting.md).
+You should see `True` and your Radeon card's name. If not, see [Troubleshooting](../troubleshooting/index.md).
 
 ---
 
@@ -103,4 +103,4 @@ mdbook serve      # live-reloading preview at http://localhost:3000
 3. Re-run `mdbook serve` to preview.
 4. Open a pull request against `master`.
 
-See [Contributing](./contributing.md) for the full guidelines.
+See [Contributing](../meta/contributing.md) for the full guidelines.

@@ -1,14 +1,17 @@
 # llama.cpp on gfx1030
 
+> **WIP:** Tips marked community-validated in this page come from `#llamacpp` — see
+> [Verification status](../reference/verification.md#llama-cpp).
+
 [llama.cpp](https://github.com/ggml-org/llama.cpp) is a fast, low-dependency way to run GGUF LLMs on
-gfx1030. This page is a build-from-source recipe validated by the gfx1030 community (the `#llama.cpp`
-channel), on **Fedora** with **ROCm 7.2.0** targeting `gfx1030`. A **Vulkan** path is included as an
-alternative that doesn't require ROCm.
+gfx1030. This page is a build-from-source recipe validated by the gfx1030 community (the `#llamacpp`
+Discord channel), on **Fedora** with **ROCm 7.2.0** targeting `gfx1030`. A **Vulkan** path is included
+as an alternative that doesn't require ROCm.
 
 > Commands are shown as used on Fedora. Adjust package names for your distro and tweak versions/paths as
 > needed.
 
-> Looking for heavy multi-GPU tuning? See the [RDNA2-optimized fork](./llama_cpp_rdna2_fork.md)
+> Looking for heavy multi-GPU tuning? See the [RDNA2-optimized fork](./rdna2-overview.md)
 > (`edwinbrowwn/llama.cpp-rdna2`) with RDNA2/V620 tensor-parallel and MMQ optimizations.
 
 ## Dependencies (Fedora)
@@ -48,7 +51,7 @@ sudo usermod -a -G render,video $LOGNAME
 # log out / back in (or reboot) so the group change takes effect
 ```
 
-See [Installing ROCm](./installing_rocm.md) for more detail and for non-Fedora distros.
+See [Installing ROCm](../setup/installing-rocm.md) for more detail and for non-Fedora distros.
 
 ### Build llama.cpp with ROCm (HIP)
 
@@ -65,7 +68,7 @@ HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
 ```
 
 `-DGPU_TARGETS=gfx1030` targets Navi 21. For a non-Navi-21 RDNA2 card, build for its real target (e.g.
-`gfx1031`/`gfx1032`) or add it to the list; see [HSA_OVERRIDE for RDNA2 Cousins](./hsa_override.md).
+`gfx1031`/`gfx1032`) or add it to the list; see [HSA_OVERRIDE for RDNA2 Cousins](../setup/hsa-override.md).
 
 ## Vulkan (alternative)
 
@@ -135,9 +138,15 @@ Flag notes (tune to your setup):
 - `-fa on` — flash attention.
 - `--device ROCm0,ROCm1,…` / `Vulkan0,Vulkan1,…` — select the backend devices to use.
 - `--split-mode tensor` — split each tensor across the selected GPUs (needs good inter-GPU bandwidth; see
-  [Multi-GPU PCIe P2P](./tuning_p2p.md)).
+  [Multi-GPU PCIe P2P](../tuning/p2p.md)).
 - `--spec-type draft-mtp --spec-draft-n-max N` — Multi-Token-Prediction speculative decoding; the Vulkan
   example above uses a larger `N` (6) than the ROCm one (2).
+- `--spec-draft-device ROCm0` — run the MTP draft model on a single GPU while the main model is
+  tensor-split across multiple cards (community-validated on TP2).
 - `--no-mmap`, `-dio` — memory/IO tuning; `-np 1` sets the number of parallel sequences.
+
+For RDNA2-tuned multi-GPU serving (DFlash2, RCCL all-reduce, higher throughput), see the
+[RDNA2-optimized fork](./rdna2-overview.md) — that's where most `#llamacpp` performance work
+happens.
 
 Adjust the model, quant, device list, and speculative-decoding settings for your hardware.

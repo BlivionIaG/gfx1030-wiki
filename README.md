@@ -19,7 +19,7 @@ can preview your changes. The basics:
 - Optionally run `mdbook build` / `mdbook serve` to preview.
 - Open a pull request against `master`.
 
-See [`src/contributing.md`](./src/contributing.md) for full guidelines.
+See [`src/contributing.md`](./src/meta/contributing.md) for full guidelines.
 
 ## Local preview
 

@@ -31,18 +31,17 @@ mdbook serve   # live preview at http://localhost:3000
 
 ## Adding a new page
 
-1. Create a markdown file under `src/`, e.g. `src/my_topic.md`.
-2. Add a link to it in `src/SUMMARY.md` under the appropriate section — the sidebar is generated from
-   this file.
-3. Run `mdbook build` (or `mdbook serve`) to confirm it renders and there are no broken links.
-4. Open a pull request against `master`.
+1. Read [Wiki structure](./structure.md) — pick the right folder and naming convention.
+2. Create a markdown file under `src/<section>/`, e.g. `src/vllm/my-topic.md`.
+3. Add a link in `src/SUMMARY.md` and the section `overview.md` if one exists.
+4. Run `mdbook build` to confirm it renders and there are no broken links.
+5. Update [Verification status](../reference/verification.md) for benchmarks or community claims.
 
 ## Markdown style
 
 - Use ATX headings (`#`, `##`, …) and start each page with a single `#` title.
 - Wrap shell commands in fenced code blocks with a language hint (```` ```sh ````).
-- Prefer relative links between wiki pages (e.g. `./reference.md`) so they work both locally and once
-  deployed.
+- Prefer relative links between wiki pages (e.g. `../vllm/overview.md`) so they work locally and deployed.
 - Keep lines readable; hard-wrapping around ~100 columns is fine but not required.
 
 ## Accuracy
@@ -50,6 +49,11 @@ mdbook serve   # live preview at http://localhost:3000
 RDNA2 tooling moves quickly. When you add a command, note the ROCm / library version you tested it with
 if it might matter, and prefer linking to official docs over pasting version-specific numbers that will
 age.
+
+For pages sourced from Discord or fork release notes, add or update entries in
+[Verification status](../reference/verification.md) so readers know what is **solid**, **fork-source**,
+**community-reported**, or **needs verify**. Mark unconfirmed throughput claims as community-reported
+rather than presenting them as wiki-tested facts.
 
 ## Deployment
 

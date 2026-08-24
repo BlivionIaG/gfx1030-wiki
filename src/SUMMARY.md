@@ -2,32 +2,50 @@
 
 [Introduction](./intro.md)
 
-# Hardware & Setup
+# Setup
 
-- [Supported Hardware](./hardware.md)
-- [Getting Started](./getting_started.md)
-- [Installing ROCm](./installing_rocm.md)
-- [HSA_OVERRIDE for RDNA2 Cousins](./hsa_override.md)
+- [Supported Hardware](./setup/hardware.md)
+- [Getting Started](./setup/getting-started.md)
+- [Installing ROCm](./setup/installing-rocm.md)
+- [HSA_OVERRIDE for RDNA2 Cousins](./setup/hsa-override.md)
 
-# V620 / gfx1030 Tuning
+# Tuning (V620 / gfx1030)
 
-- [Power Tuning (120 W floor)](./tuning_power.md)
-- [Multi-GPU PCIe P2P](./tuning_p2p.md)
+- [Power Tuning (120 W floor)](./tuning/power.md)
+- [Multi-GPU PCIe P2P](./tuning/p2p.md)
 
 # vLLM on RDNA
 
-- [Running vLLM (Docker)](./vllm.md)
-- [Building the Images](./vllm_images.md)
-- [The rdna2_extras Fork](./vllm_fork.md)
+- [Overview](./vllm/overview.md)
+- [Running (Docker)](./vllm/running.md)
+- [Configuration](./vllm/configuration.md)
+- [Quantization](./vllm/quantization.md)
+- [rdna2_extras fork](./vllm/fork.md)
+- [Building images](./vllm/images.md)
 
 # llama.cpp
 
-- [Building & Running llama.cpp](./llama_cpp.md)
-- [RDNA2-optimized fork](./llama_cpp_rdna2_fork.md)
+- [Overview](./llama-cpp/overview.md)
+- [Building & running (stock)](./llama-cpp/building.md)
+- [RDNA2 fork — overview](./llama-cpp/rdna2-overview.md)
+- [RDNA2 fork — benchmarks](./llama-cpp/rdna2-benchmarks.md)
+- [RDNA2 fork — speculative decoding](./llama-cpp/rdna2-speculative.md)
+- [RDNA2 fork — serving](./llama-cpp/rdna2-serving.md)
 
-# More
+# Reference
 
-- [Environment Variables & Quick Reference](./reference.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Useful Resources](./resources.md)
-- [Contributing](./contributing.md)
+- [Environment variables](./reference/env-vars.md)
+- [Verification status (WIP)](./reference/verification.md)
+
+# Troubleshooting
+
+- [Overview](./troubleshooting/index.md)
+- [General](./troubleshooting/general.md)
+- [vLLM](./troubleshooting/vllm.md)
+- [llama.cpp](./troubleshooting/llama-cpp.md)
+
+# Meta
+
+- [Wiki structure](./meta/structure.md)
+- [Useful resources](./meta/resources.md)
+- [Contributing](./meta/contributing.md)

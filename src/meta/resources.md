@@ -8,6 +8,10 @@
   base and vLLM images.
 - [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) — vLLM fork
   with custom RDNA2 HIP kernels.
+- [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) — community vLLM
+  serving recipes for RDNA2.
+- [vLLM upstream PR #52391](https://github.com/vllm-project/vllm/pull/52391) — RDNA gfx1030 platform
+  detection (aims to make gfx1030 work from upstream vLLM CI).
 
 Docker Hub:
 
@@ -27,7 +31,7 @@ Docker Hub:
 - [vLLM](https://github.com/vllm-project/vllm) — the upstream serving engine this fork tracks.
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) — GGUF LLM inference (HIP/ROCm and Vulkan backends).
 - [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) — RDNA2/V620-optimized
-  llama.cpp fork (tensor-parallel + MMQ); see [the fork page](./llama_cpp_rdna2_fork.md).
+  llama.cpp fork (tensor-parallel + MMQ); see [the fork page](../llama-cpp/rdna2-overview.md).
 - [TheRock: adding support for RDNA2 (gfx103X) cards](https://github.com/ROCm/TheRock/pull/1629)
 - [ROCm Device Support Wishlist (community-tracked support matrix)](https://github.com/ROCm/ROCm/discussions/4276)
 

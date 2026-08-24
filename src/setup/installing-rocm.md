@@ -46,7 +46,7 @@ rocm-smi                       # live clocks, temps, VRAM, power
 ```
 
 If `rocminfo` shows `Name: gfx1030`, you're done. If it shows `gfx1031`/`gfx1032`/etc., your card is a
-smaller RDNA2 die — continue to [HSA_OVERRIDE for RDNA2 Cousins](./hsa_override.md).
+smaller RDNA2 die — continue to [HSA_OVERRIDE for RDNA2 Cousins](./hsa-override.md).
 
 ## Notes & gotchas
 
@@ -56,6 +56,6 @@ smaller RDNA2 die — continue to [HSA_OVERRIDE for RDNA2 Cousins](./hsa_overrid
 - **Secure Boot:** if Secure Boot is enabled, the DKMS module must be signed or it will fail to load.
   The easiest path for a dev box is to disable Secure Boot.
 - **Multiple GPUs / iGPU present:** if your CPU also has an RDNA2 iGPU, ROCm may enumerate it. Pin the
-  discrete card with `HIP_VISIBLE_DEVICES` (see [Reference](./reference.md)).
+  discrete card with `HIP_VISIBLE_DEVICES` (see [Reference](../reference/env-vars.md)).
 - **hipBLASLt:** some libraries assume hipBLASLt, which historically had gaps on Navi 21. If a workload
   complains, try `TORCH_BLAS_PREFER_HIPBLASLT=0` (PyTorch) or the workload's equivalent flag.

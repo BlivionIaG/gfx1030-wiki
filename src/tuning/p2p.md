@@ -18,7 +18,7 @@ This page summarizes the
 
 Both kernels can be installed on the same host simultaneously; toggle the default with
 `grubby --set-default /boot/vmlinuz-<evr>`. Both boot with the **180 W** power cap from
-[Power Tuning](./tuning_power.md).
+[Power Tuning](./power.md).
 
 ## Key prerequisites
 
@@ -62,3 +62,19 @@ For the full recipe (kernel config deltas, BIOS/IOMMU settings, what can go wron
 [`pcie_p2p/README.md`](https://github.com/blivioniag/v620_toolbox/blob/master/pcie_p2p/README.md) and the
 knowledge base
 [`powertuning/docs/AMD_P2P.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/AMD_P2P.md).
+
+## When P2P is enabled but inference is slower
+
+P2P can be **slower than non-P2P** on bad topologies — gen3 x4 links, southbridge-routed slots, or
+ACS-blocked CPU root ports. `#llamacpp` reports include cards training at PCIe gen3 and tensor split
+running faster with P2P disabled.
+
+If bandwidth tests pass but inference regresses:
+
+```bash
+export NCCL_P2P_DISABLE=1          # llama.cpp / RCCL tensor parallel
+```
+
+On the RDNA2 fork, the README also documents a flag to disable P2P all-reduce fusion
+(`GGML_HIP_GFX1030_P2P_ALLREDUCE=off`). Always A/B test — verified ~25 GB/s P2P between V620 pairs does
+not guarantee faster token generation if links are narrow.
