@@ -8,6 +8,10 @@
   base and vLLM images.
 - [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) — vLLM fork
   with custom RDNA2 HIP kernels.
+- [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) — community vLLM
+  serving recipes for RDNA2.
+- [vLLM upstream PR #52391](https://github.com/vllm-project/vllm/pull/52391) — RDNA gfx1030 platform
+  detection (aims to make gfx1030 work from upstream vLLM CI).
 
 Docker Hub:
 

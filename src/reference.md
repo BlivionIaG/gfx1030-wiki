@@ -46,6 +46,15 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `NCCL_P2P_LEVEL` | `PXB` / `PHB` | RCCL P2P topology level for all-reduce. |
 | `NCCL_P2P_DISABLE` | `0` / `1` | Disable P2P in RCCL (fallback when topology is broken). |
 
+### vLLM compilation / CUDA graphs
+
+| Flag | Example | What it does |
+| --- | --- | --- |
+| `--compilation-config` | `'{"cudagraph_mode":"FULL_AND_PIECEWISE","compile_ranges_endpoints":[]}'` | Enable CUDA graphs (preferred fast path on current images). |
+| `--compilation-config` | `'{"mode":"NONE","cudagraph_mode":"FULL","compile_ranges_endpoints":[]}'` | Alternative graph mode without torch.compile. |
+| `--compilation-config` | `'{"cudagraph_mode":"NONE"}'` | Disable graphs entirely. |
+| `--enforce-eager` | — | Fallback: disable all graph capture. Use only when graphs crash. |
+
 > `10.3.0` is the magic value for gfx1030 because the target decodes as
 > `gfx` + `10` (major) `3` (minor) `0` (stepping) → `gfx1030`.
 

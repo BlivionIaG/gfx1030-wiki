@@ -33,6 +33,7 @@ normal llama.cpp behavior. Headline areas:
 - **RDNA2 Top-10 MoE routing** + compact routed MMQ tiles.
 - **Laguna S.2 support** with DFlash.
 - **DFlash2** speculative decoding with ngram-map and ngram-mod combos (see below).
+- **RCCL autotuner** with custom all-reduce (recent `#llamacpp` update).
 - **RDNA2-specific K-quant / MMQ LDS-tile optimizations** for **Q4 / Q5**.
 - **Parallel multi-GPU weight uploads** with configurable buffer size (faster server startup).
 - **AMD checkpoint handling** — backports several unmerged upstream PRs that fix AMD checkpoint issues
@@ -66,6 +67,19 @@ Reported by another community member on a 2-GPU tensor-split setup with the same
 |---|---|---|---:|---:|
 | Qwen3.6-27B (DavidAU/Fable) | Q4_K_M | tensor | 707.14 | 25.63 |
 | Qwen3.6-27B | F16 | tensor | 448.02 | 13.15 |
+
+### Latest fork update (Aug 2026, `#llamacpp`)
+
+Recent push to the fork added DFlash2, RCCL autotuner, and spec-decoding optimizations. Author-reported
+MTP-4 TP4 numbers on a pelican prompt:
+
+| Quant | Average t/s | Peak t/s |
+|---|---:|---:|
+| Q4_0 + MTP-4 | 85 | 115 |
+| Q8_0 + MTP-4@Q4_0 | 75 | 105 |
+
+DFlash2 on TP2 held ~52 t/s coding at 0–31k context and ~40 t/s at 64k. Checkpoint fix + MTP
+optimization in [PR #12](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/12) (in review).
 
 > `pp512` = prompt/prefill throughput (512-token prompt); `tg128` = token-generation throughput
 > (128 tokens). For the A3B MoE model, **layer split** beats tensor split here; for the dense/large
@@ -280,7 +294,11 @@ well at long context on TP2 (reported ~52 t/s coding at 0–31k context, ~40 t/s
 ```
 
 Combine with the standard RDNA2 env prefix (`HSA_OVERRIDE_GFX_VERSION=10.3.0`, `GGML_HIP_RDNA2_AUTO=1`,
-etc.). DFlash2 alone (without ngram) is also worth A/B testing against MTP on your model/quant.
+etc.). DFlash2 alone (without ngram) is also worth A/B testing against MTP on your model/quant. On older
+models, ngram-mod and MTP can be combined for extra gain.
+
+**MXFP4** quants (e.g. `quark75/Qwen3.8-27B-MXFP4-GGUF`) are supported on the fork and pair well with
+MTP on TP2 — see the Docker serving example below.
 
 ### MTP on tensor-split setups
 
@@ -319,12 +337,16 @@ command: >
 
 Build the image with `./scripts/build-rdna2-portable.sh` from the fork repo. RCCL needs working
 [PCIe P2P](./tuning_p2p.md) — if all-reduce fails, try `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or
-`GGML_CUDA_ALLREDUCE=none` (slower, but stable on broken P2P topologies).
+`GGML_CUDA_ALLREDUCE=none` (slower, but stable on broken P2P topologies). Note that P2P can actually be
+**slower than non-P2P** on bad PCIe topologies (e.g. gen3 links, ACS-blocked root ports) — always benchmark
+on your hardware.
 
 ## Notable limits
 
 - Validated primarily on **4× V620 gfx1030, ROCm 7.14** and a specific PCIe topology; other systems keep
   conservative fallbacks.
+- **Multi-socket** hosts (e.g. dual Xeon) can hurt TP performance — SP3/Epyc single-socket boards are
+  preferred for multi-GPU tensor parallel in `#llamacpp` testing.
 - **KV checkpoints** can crash on tensor-split setups (upstream and fork). Use `--ctx-checkpoints 0` to
   disable them if you hit `ggml-backend-meta.cpp` fatals during warmup.
 - `GGML_TP_SHARDED_OUTPUT` and `GGML_TP_VOCAB_SHARDED_OUTPUT` are different, incompatible output-head

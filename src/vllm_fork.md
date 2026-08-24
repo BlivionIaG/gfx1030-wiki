@@ -90,8 +90,9 @@ Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLine
 - `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE` — enables AMD Triton FA as a fallback; often slower on gfx1030.
 
 On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1`. That's
-expected — the GDN layers use Triton FLA kernels regardless. The critical flag for these models is
-`--enforce-eager` (see [Running vLLM](./vllm.md)).
+expected — the GDN layers use Triton FLA kernels regardless. For graph capture issues, see
+[CUDA graphs](./vllm.md#cuda-graphs-preferred-over---enforce-eager) and
+[Troubleshooting](./troubleshooting.md#vllm-cuda-graph-capture-crashes-hybrid-gdn-models).
 
 ### Disabling fallback kernels
 
@@ -101,6 +102,14 @@ export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
 
 This is the main lever for forcing GPTQ onto the native RDNA2 W4A16 path. The variable accepts a
 comma-separated list of kernel class names registered in vLLM's linear-kernel registry.
+
+To test Exllama instead (still relevant on some quants per `#general`):
+
+```bash
+--linear-backend exllama
+```
+
+Omit `VLLM_DISABLED_KERNELS` when testing Exllama — it competes with the RDNA2 kernel for dispatch.
 
 ## Building from source (advanced)
 

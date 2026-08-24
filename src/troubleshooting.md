@@ -40,17 +40,47 @@ RDNA2 has no fast BF16. Force **FP16** everywhere (`--dtype float16` in vLLM, `d
 PyTorch). See [Reference](./reference.md). The [`rdna2_extras`](./vllm_fork.md) images also add quantized
 RDNA2 kernels (W4A16 / FP8) that avoid BF16 hot paths.
 
-## vLLM crashes on hybrid GDN models (Qwen3.5+, Qwen3.8)
+## vLLM CUDA-graph capture crashes (hybrid GDN models)
 
 Symptom: crash during startup or first generation at `GDN _output_projection all-reduce` /
-`_SimpleCData.__new__`, regardless of attention backend.
+`_SimpleCData.__new__`, or OOM trying to allocate huge KV cache during graph capture.
 
-Cause: `torch.compile` CUDA-graph capture fails on the GDN linear-attention all-reduce path in v0.27.1.
+**First, pull the latest image** — tags are refreshed in place and recent builds fix many graph issues:
 
-Fix: add `--enforce-eager` to your `vllm serve` command. This is mandatory for hybrid GDN models on
-v0.27.1 `-extras` images. If throughput is still much lower than expected (~4–5 t/s on a 27B), check
-whether you're on AWQ (Triton path) vs GPTQ (native `RDNA2W4A16LinearKernel`) — see
+```bash
+docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0
+```
+
+Then try CUDA graphs (the fast path — do **not** default to `--enforce-eager`):
+
+```bash
+--compilation-config '{"cudagraph_mode": "FULL_AND_PIECEWISE", "compile_ranges_endpoints": []}'
+```
+
+Alternative:
+
+```bash
+--compilation-config '{"mode": "NONE", "cudagraph_mode": "FULL", "compile_ranges_endpoints": []}'
+```
+
+Be patient on first boot — Triton JIT + torch-compile cache warmup can take many minutes. Mount cache
+volumes (see [Running vLLM](./vllm.md#cache-volumes-first-boot-is-slow)).
+
+**Fallback** if graphs still fail after updating the image:
+
+```bash
+--enforce-eager
+```
+
+If throughput is still much lower than expected (~4–5 t/s on a 27B), check whether you're on AWQ (Triton
+path) vs GPTQ (native `RDNA2W4A16LinearKernel`) — see
 [Running vLLM](./vllm.md#quantization-gptq-vs-awq-on-gfx1030).
+
+## vLLM first boot is extremely slow
+
+Triton and torch.compile generate kernels on first run. This is normal — mount cache volumes and wait.
+Typical cache sizes: `~/.triton/cache` (~3 GB), `~/.cache/vllm/torch_compile_cache` (~700 MB). Subsequent
+boots reuse them. See [Running vLLM](./vllm.md#cache-volumes-first-boot-is-slow).
 
 ## vLLM GPTQ not using RDNA2 kernels
 
