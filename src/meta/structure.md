@@ -93,4 +93,4 @@ src/
 | Env var tables | `reference/env-vars.md` |
 | Claim audit / WIP status | `reference/verification.md` |
 | Error messages and fixes | `troubleshooting/` |
-| External repos, Discord, PR links | `meta/resources.md` |
+| External links (official / Docker / upstream / community) | `meta/resources.md` |
