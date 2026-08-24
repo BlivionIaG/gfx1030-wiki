@@ -30,7 +30,8 @@ clinfo | grep -i 'gfx\|Board'
 
 ## 3. (Optional) Tune the card
 
-If you run one or more **Radeon PRO V620** cards, two tweaks are worth doing before you load models:
+If you run one or more **Radeon PRO V620** cards, two tweaks are worth doing before you load models
+(Fedora or Ubuntu 26.04 for power cap; P2P is Fedora-validated today):
 
 - [Power Tuning](../tuning/power.md) — drop the VBIOS-locked 250 W floor to 120 W and boot-cap at 180 W.
 - [Multi-GPU PCIe P2P](../tuning/p2p.md) — enable GPU↔GPU peer-to-peer for multi-card setups.

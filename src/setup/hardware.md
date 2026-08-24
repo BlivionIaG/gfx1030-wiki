@@ -8,14 +8,26 @@ as `gfx1030`.
 
 | Card | Architecture | VRAM | Compute Units | Notes |
 | --- | --- | --- | --- | --- |
-| Radeon RX 6950 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | Highest-clocked Navi 21 |
+| Radeon RX 6950 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
 | Radeon RX 6900 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
 | Radeon RX 6800 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 72 | |
-| Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | Best price/VRAM for LLMs |
-| Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | Workstation, 32 GB is great for larger models |
-| Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | Data-center / cloud card |
+| Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | |
+| Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | |
+| Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | |
 
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
+
+## AMD BC-250 (`gfx1013`)
+
+Headless mining APU board (Cyan Skillfish). **RDNA2**, reports as **`gfx1013`** — not Navi 21 / `gfx1030`.
+Community ROCm and Vulkan work exists; most of this wiki still targets Navi 21.
+
+| Card | Architecture | VRAM | Compute Units | Notes |
+| --- | --- | --- | --- | --- |
+| AMD BC-250 | RDNA2 / Cyan Skillfish | 16 GB GDDR6 UMA | 24 (40 unlocked) | |
+
+Community references: [AMD BC-250 docs](https://elektricm.github.io/amd-bc250-docs/),
+[akandr/bc250-rocm](https://github.com/akandr/bc250-rocm).
 
 ## RDNA2 relatives that can run gfx1030 code
 

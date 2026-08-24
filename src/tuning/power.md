@@ -6,8 +6,9 @@ how to unlock a **120 W floor** and apply a **180 W boot cap**, following the
 [`powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning) feature of the
 [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox) repo.
 
-> Validated on **Fedora 43**, kernels **6.17.6** (pre-7) and **7.1.7** (post-7). This involves patching
-> and rebuilding a kernel module — do it at your own risk.
+> Validated on **Fedora 43** (kernels **6.17.6** pre-7 / **7.1.7** post-7) and **Ubuntu 26.04 LTS**
+> (kernel `7.0.0-30-generic`). This involves patching and rebuilding a kernel module — do it at your own
+> risk.
 
 ## Why it's needed
 
@@ -45,7 +46,42 @@ number of V620s in the host. The canonical patch is
 > **Other gfx1030 boards** (RX 6900 XT / 6800 use device `0x73bf`) have different PCI IDs. To power-tune
 > those, change the identity match in the patch accordingly.
 
-## Two ways to apply it
+## Platform paths
+
+| Platform | Toolbox path | How the patch lands |
+|---|---|---|
+| **Fedora 43** | [`powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning) | Kernel RPM bake or out-of-tree `amdgpu.ko` override |
+| **Ubuntu 26.04** | [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning) | `v620-rebuild-amdgpu` — patches Ubuntu `amdgpu` source and installs to `/lib/modules/.../updates/` |
+
+Both platforms share the same **120 W floor** patch logic, the same
+[`v620-cap-apply.sh`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/scripts/v620-cap-apply.sh)
+runtime script, and the same
+[`v620-powercap.service`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/systemd/v620-powercap.service)
+boot cap. Follow the README in the folder for your distro.
+
+### Ubuntu quick path
+
+```bash
+git clone https://github.com/blivioniag/v620_toolbox.git
+cd v620_toolbox/ubuntu_powertuning
+
+# Install deps (see ubuntu_powertuning/README.md), then:
+sudo cp v620-rebuild-amdgpu /usr/local/sbin/
+sudo cp ../powertuning/scripts/v620-cap-apply.sh /usr/local/sbin/
+sudo chmod 755 /usr/local/sbin/v620-rebuild-amdgpu /usr/local/sbin/v620-cap-apply.sh
+
+sudo /usr/local/sbin/v620-rebuild-amdgpu "$(uname -r)"
+sudo reboot
+```
+
+After reboot: `sudo dmesg | grep -i 'V620 powerfix'` and
+`../powertuning/scripts/v620-verify.sh`. Install the systemd unit and optional
+`kernel/postinst.d/v620-amdgpu` hook so future kernel updates rebuild the module —
+see [`ubuntu_powertuning/README.md`](https://github.com/blivioniag/v620_toolbox/blob/master/ubuntu_powertuning/README.md).
+
+> **Secure Boot:** disable it or sign the rebuilt module — unsigned overrides won't load with SB on.
+
+## Two ways to apply it (Fedora)
 
 The toolbox provides scripts under
 [`powertuning/scripts/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning/scripts):
