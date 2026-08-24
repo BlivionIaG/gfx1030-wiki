@@ -8,12 +8,14 @@ as `gfx1030`.
 
 | Card | Architecture | VRAM | Compute Units | Notes |
 | --- | --- | --- | --- | --- |
-| Radeon RX 6950 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
-| Radeon RX 6900 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
-| Radeon RX 6800 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 72 | |
-| Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | |
-| Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | |
-| Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | |
+| Radeon RX 6950 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | No ECC |
+| Radeon RX 6900 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | No ECC |
+| Radeon RX 6800 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 72 | Same CU count as V620; 16 GB, no ECC |
+| Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | No ECC |
+| Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | ECC on by default (~30 GB visible) |
+| Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | Data-center; ECC on by default (~30 GB visible) |
+
+Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you want the full 32 GB.
 
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
 

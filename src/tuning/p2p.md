@@ -82,3 +82,16 @@ export NCCL_P2P_DISABLE=1          # llama.cpp / RCCL tensor parallel
 On the RDNA2 fork, the README also documents a flag to disable P2P all-reduce fusion
 (`GGML_HIP_GFX1030_P2P_ALLREDUCE=off`). Always A/B test — verified ~25 GB/s P2P between V620 pairs does
 not guarantee faster token generation if links are narrow.
+
+## Host topology
+
+Community reports, not wiki-benched:
+
+| Topology | What people report |
+|---|---|
+| **PCIe 4.0 x16** per card (CPU root ports) | Best case for TP4. Known-good llama.cpp TP4: Gigabyte **MC62-G40**. |
+| **PCIe 4.0 x8** per card | Practical floor for 8× V620 without a switch; expected to still scale. |
+| **PCIe 3.0 x4** | Throughput often **stops scaling at 3 cards** and can regress at 4. |
+| **PLX / PCIe switch** | Intra-switch P2P can stay full-width (e.g. 4× Gen4 x16 per switch). Host↔switch link is the bottleneck. |
+| **Dual-socket (NUMA)** | TP across sockets can **halve prefill**. Bind workers to the NUMA node of their GPUs. P2P is typically **per socket**. vLLM with NUMA-aware TP workers is less painful than llama.cpp crossing UPI/Infinity Fabric. |
+| **Odd GPU counts (TP3)** | llama.cpp tensor-split on **3** cards has caused driver crashes; prefer 2 or 4. |

@@ -39,8 +39,10 @@
 | Statement | Status | Verify how |
 |---|---|---|
 | Recommended env block | **Community** | Discord default stack |
+| `VLLM_USE_V2_MODEL_RUNNER` +17% vs V1 | **Community** | `#vllm-rdna` bench comment |
 | `VLLM_USE_AOT_COMPILE=0` / `VLLM_DISABLE_COMPILE_CACHE=1` | **Fork-source** | Multi-GPU TP workaround |
 | CUDA graphs preferred over `--enforce-eager` | **Fork-source** | TP `allow_in_graph` fix; **needs verify** on image |
+| `ROCM_ATTN` Triton hang | **Community** | Hours-long compile; use `RDNA_ATTN` |
 | Throughput table (277/93/331 tok/s) | **Community** | Fork author, TP4, 4× V620 |
 | Docker Compose ~24 t/s TP2 | **Community** | `#vllm-rdna` report |
 | Cache sizes ~3 GB / ~700 MB | **Community** | Order-of-magnitude |
@@ -52,8 +54,11 @@
 | GPTQ → `RDNA2W4A16LinearKernel` | **Fork-source** | Startup logs |
 | AWQ dense → `RDNA2W4A16LinearKernel` | **Fork-source** | Commits `73eb04a`/`5ac31e4`; **needs verify** on image |
 | Older AWQ ~4–5 t/s (Triton) | **Community** | True on old images only |
-| KV cache prefer float16 | **Opinion** | Community quality report |
+| KV cache prefer float16 | **Opinion** | Community quality / agents |
+| `int8_per_token_head` vs fp8 | **Community** | Faster TG than fp8 in limited `#vllm-rdna` testing |
+| KVarN | **Community** | Skip for tool calling |
 | MTP acceptance ~0.25 | **Community** | Model-dependent |
+| MTP-2 hurts high concurrency (35B-A3B) | **Community** | TP4 `#vllm-rdna` 4-cell matrix |
 | INT4 vdot2 fp16 dequant | **Solid** | ISA + fork code |
 | GDN hybrid ~93/331 tok/s | **Community** | Fork author bench |
 
@@ -101,7 +106,8 @@
 | Docker compose TP2 MTP4 | **Community** | `#llamacpp` example |
 | KV checkpoint workaround | **Community** | `--ctx-checkpoints 0` |
 | Multi-socket hurts TP | **Community** | Topology advice |
-| 160 W power cap workaround | **Community** | PSU-specific |
+| 160 W / 140 W PSU workaround | **Community** | Transients on TP prefill; miner PSU / P620 cables |
+| TP3 driver crash | **Community** | Prefer 2 or 4 GPUs |
 
 ---
 
@@ -111,10 +117,13 @@
 |---|---|---|
 | `reference/env-vars.md` tables | **Community** | Cheat-sheet; not exhaustive upstream API |
 | `troubleshooting/vllm.md` graph fix | **Fork-source** | Same image-lag caveat |
+| `troubleshooting/vllm.md` AMDSMI / missing `render` | **Community** | `#vllm-rdna` Docker compose |
 | `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
 | `tuning/power.md` Ubuntu 26.04 path | **Community** | `ubuntu_powertuning/` — validated kernel `7.0.0-30-generic`; re-verify after kernel upgrades |
+| `tuning/ecc.md` two-reboot `ras_enable=0` | **Community** | lunnova on W6800; Discord reports V620 ECC-on (~30 GB). Confirm `rocm-smi` after two reboots |
 | `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |
+| `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 
 ---
 

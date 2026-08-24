@@ -30,13 +30,14 @@ clinfo | grep -i 'gfx\|Board'
 
 ## 3. (Optional) Tune the card
 
-If you run one or more **Radeon PRO V620** cards, two tweaks are worth doing before you load models
-(Fedora or Ubuntu 26.04 for power cap; P2P is Fedora-validated today):
+If you run one or more **Radeon PRO V620** (or **PRO W6800**) cards, these tweaks are worth doing
+before you load models (Fedora or Ubuntu 26.04 for power cap; P2P is Fedora-validated today):
 
 - [Power Tuning](../tuning/power.md) — drop the VBIOS-locked 250 W floor to 120 W and boot-cap at 180 W.
+- [Disabling ECC](../tuning/ecc.md) — Pro cards hide ~2 GB behind ECC; optional extra VRAM.
 - [Multi-GPU PCIe P2P](../tuning/p2p.md) — enable GPU↔GPU peer-to-peer for multi-card setups.
 
-Both come from the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox) repo.
+Power and P2P come from the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox) repo.
 
 ## 4. Run an inference stack (Docker)
 

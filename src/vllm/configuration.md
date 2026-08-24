@@ -8,7 +8,9 @@
 These settings are commonly used in the gfx1030 Discord for `-extras` images on ROCm 7.14:
 
 ```bash
+export VLLM_TARGET_DEVICE=rocm
 export VLLM_ROCM_USE_AITER=0
+export VLLM_ROCM_USE_AITER_MOE=0
 export VLLM_RDNA_FORCE_FP16=1
 export TORCH_BLAS_PREFER_HIPBLASLT=0
 export PYTORCH_TUNABLEOP_ENABLED=0          # or 1 for autotuning (see compose below)
@@ -16,10 +18,18 @@ export PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED=0
 export GPU_MAX_HW_QUEUES=2
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export VLLM_DISABLE_CUSTOM_ALL_REDUCE=1
+export VLLM_BATCH_INVARIANT=0
+export HIP_FORCE_DEV_KERNARG=1
+export RCCL_MSCCL_ENABLE=0
 export VLLM_USE_RDNA2_FA=1                  # extras images: native RDNA2 FlashAttention
-export VLLM_USE_V2_MODEL_RUNNER=1
+export VLLM_USE_V2_MODEL_RUNNER=1           # +17% vs V1 reported on gfx1030
 export FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
 ```
+
+Prefer **`--attention-backend RDNA_ATTN`** (or `VLLM_USE_RDNA2_FA=1`) over **`ROCM_ATTN`** on `-extras`.
+`#vllm-rdna` reports `ROCM_ATTN` sitting in AMD Triton flash-attention compile for **hours** (RCCL and
+Triton also fight each other). `FA_RDNA2` may not show up on older `-extras` images or GPTQ models that
+still auto-select `ROCM_ATTN` — that is expected on hybrid GDN; see [fork](../fork.md#attention-backends).
 
 For **multi-GPU TP** on current `rdna2_extras` images, if AOT compile cache replay causes device-bound
 errors, add:
@@ -33,8 +43,9 @@ export VLLM_DISABLE_COMPILE_CACHE=1
 which can be slower or crash on some Qwen head sizes. See [rdna2_extras fork](../fork.md) for kernel
 details. Full env cheat-sheet: [Reference](../../reference/env-vars.md).
 
-**Don't force backends or quantization** unless you're A/B testing — let vLLM read the model's
-`config.json` and auto-select the attention backend and quant method.
+**Don't force backends or quantization** unless you're A/B testing — or avoiding a
+[`ROCM_ATTN` Triton hang](../../troubleshooting/vllm.md#rocm_attn-hangs-for-hours-triton-compile).
+Let vLLM read the model's `config.json` unless that auto-selects the slow AMD Triton FA path.
 
 ## CUDA graphs (preferred over `--enforce-eager`)
 
@@ -108,7 +119,7 @@ services:
     network_mode: host
     ipc: host
     devices: [/dev/kfd, /dev/dri]
-    group_add: [video]
+    group_add: [video, render]
     security_opt: [label=disable]
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
