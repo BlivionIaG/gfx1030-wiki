@@ -47,5 +47,6 @@
 # Meta
 
 - [Wiki structure](./meta/structure.md)
+- [GitHub Pages setup](./meta/github-pages.md)
 - [Useful resources](./meta/resources.md)
 - [Contributing](./meta/contributing.md)

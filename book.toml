@@ -8,8 +8,9 @@ src = "src"
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
-git-repository-url = "https://github.com/blivioniag/gfx1030-wiki"
-edit-url-template = "https://github.com/blivioniag/gfx1030-wiki/edit/master/{path}"
+site-url = "/gfx1030-wiki/"
+git-repository-url = "https://github.com/BlivionIaG/gfx1030-wiki"
+edit-url-template = "https://github.com/BlivionIaG/gfx1030-wiki/edit/master/{path}"
 
 [output.html.search]
 enable = true

@@ -48,6 +48,7 @@ src/
   meta/                    # Wiki maintenance
     resources.md           # External links
     contributing.md
+    github-pages.md        # Pages deploy setup
     structure.md           # This page
 ```
 

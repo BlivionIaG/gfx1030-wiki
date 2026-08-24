@@ -7,7 +7,9 @@ P2P) and **vLLM** via the `blivioniag/vllm-rdna` Docker images and the `rdna2_ex
 Powered by **[mdBook](https://rust-lang.github.io/mdBook/)** and automatically deployed to GitHub Pages
 via GitHub Actions. Anyone is welcome to contribute — just open a pull request.
 
-**Live site:** https://blivioniag.github.io/gfx1030-wiki/ (after the first Pages deployment)
+**Live site:** https://blivioniag.github.io/gfx1030-wiki/
+
+If the site is blank or the deploy workflow failed, see [GitHub Pages setup](./src/meta/github-pages.md).
 
 ## Contributing
 
@@ -57,8 +59,14 @@ gfx1030-wiki/
 ## CI / Deployment
 
 `.github/workflows/mdbook.yml` builds the book and publishes `./book` to GitHub Pages on every push to
-`master`. Enable **Settings → Pages → Source: GitHub Actions** once, and every merge deploys
-automatically.
+`master`. Pull requests get a build-only check (no deploy).
+
+**One-time setup (repo admin):**
+
+1. **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**
+2. Push to `master` or run the workflow manually from the **Actions** tab
+
+Full walkthrough: [`src/meta/github-pages.md`](./src/meta/github-pages.md)
 
 ## Discord MCP (Cursor Cloud Agents)
 
