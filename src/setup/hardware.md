@@ -19,19 +19,13 @@ All of these are on the **officially supported** list for recent ROCm releases o
 
 ## AMD BC-250 (`gfx1013`)
 
-The **BC-250** is a headless mining APU board (Cyan Skillfish / Oberon-class), **not** Navi 21. It reports
-as **`gfx1013`**, not `gfx1030` — most of this wiki targets Navi 21 cards, but the BC-250 has an active
-community around ROCm and Vulkan inference.
+Headless mining APU board (Cyan Skillfish). **RDNA2**, reports as **`gfx1013`** — not Navi 21 / `gfx1030`.
+Community ROCm and Vulkan work exists; most of this wiki still targets Navi 21.
 
-| | Stock | Unlocked (community) |
-|---|---|---|
-| LLVM target | `gfx1013` | `gfx1013` |
-| Compute units | **24** (factory) | **40** (kernel/firmware unlock) |
-| Stream processors | 1,536 | 2,560 |
-| Memory | 16 GB GDDR6 UMA (CPU + GPU shared) | same |
-| Notes | | |
+| Card | Architecture | VRAM | Compute Units | Notes |
+| --- | --- | --- | --- | --- |
+| AMD BC-250 | RDNA2 / Cyan Skillfish | 16 GB GDDR6 UMA | 24 (40 unlocked) | |
 
-Do **not** list BC-250 in the native `gfx1030` table — die, target, and CU count differ from Navi 21.
 Community references: [AMD BC-250 docs](https://elektricm.github.io/amd-bc250-docs/),
 [akandr/bc250-rocm](https://github.com/akandr/bc250-rocm).
 
