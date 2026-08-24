@@ -8,12 +8,13 @@ as `gfx1030`.
 
 | Card | Architecture | VRAM | Compute Units | Notes |
 | --- | --- | --- | --- | --- |
-| Radeon RX 6950 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | Highest-clocked Navi 21 |
+| Radeon RX 6950 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
 | Radeon RX 6900 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
 | Radeon RX 6800 XT | RDNA2 / Navi 21 | 16 GB GDDR6 | 72 | |
-| Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | Best price/VRAM for LLMs |
-| Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | Workstation, 32 GB is great for larger models |
-| Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | Data-center / cloud card |
+| Radeon RX 6800 | RDNA2 / Navi 21 | 16 GB GDDR6 | 60 | |
+| Radeon PRO W6800 | RDNA2 / Navi 21 | 32 GB GDDR6 | 60 | |
+| Radeon PRO V620 | RDNA2 / Navi 21 | 32 GB GDDR6 | 72 | |
+| AMD BC-250 | RDNA2 / Navi 21 | 16 GB GDDR6 | 80 | |
 
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
 
