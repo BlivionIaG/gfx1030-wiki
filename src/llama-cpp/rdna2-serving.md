@@ -38,8 +38,8 @@ GGML_HIP_SAFE_STATE_IO=1 \
 ```bash
 GGML_CUDA_DISABLE_GRAPHS=1 GGML_CUDA_ALLREDUCE=nccl HSA_OVERRIDE_GFX_VERSION=10.3.0 \
 HSA_NO_SCRATCH_RECLAIM=1 LD_LIBRARY_PATH=/opt/rocm/core-7.14/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} \
-~/llama-cpp-mirrored/build/bin/llama-server \
-  -m ~/models/Qwen3.5-122B-A10B-MTP-UD-Q4_K_M/UD-Q4_K_M/Qwen3.5-122B-A10B-UD-Q4_K_M-00001-of-00003.gguf \
+./build/bin/llama-server \
+  -m /path/to/Qwen3.5-122B-A10B-MTP-UD-Q4_K_M.gguf \
   -ngl all --split-mode tensor --tensor-split 1,1,1,1 --main-gpu 0 \
   --ctx-size 262144 --cache-type-k f16 --cache-type-v f16 --kv-unified \
   --batch-size 2048 --ubatch-size 256 --parallel 4 \

@@ -72,7 +72,7 @@ knowledge base
 ## When P2P helps — and when it does not
 
 `amd-smi topology` saying **P2P ENABLED** is not the same as faster tokens. Always A/B with
-`NCCL_P2P_DISABLE=1`. Community reports (`#general`, forum thread *Ice Lake + Optane + 4× V620*):
+`NCCL_P2P_DISABLE=1`. Community reports (`#general`, Ice Lake 4× V620 host):
 
 | Host | What people report |
 |---|---|
