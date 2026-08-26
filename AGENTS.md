@@ -36,6 +36,8 @@ There is **no application server, database, backend, or automated test/lint suit
 #### Build / serve / "test"
 - Build: `mdbook build` → static site in `./book`. This is also the closest thing to a lint/test:
   it exits non-zero on config errors and reports broken internal links.
+- Pull requests to `master` run the same build in CI (`.github/workflows/mdbook-check.yml`);
+  merge is blocked only if you enable the **mdBook build check** required status in branch protection.
 - Preview: `mdbook serve --hostname 127.0.0.1 --port 3000` then open http://127.0.0.1:3000/ .
   `mdbook serve` live-reloads on file changes. Run it in a tmux session for the browser preview.
 - There is no separate lint command and no unit tests; `mdbook build` succeeding cleanly is the
