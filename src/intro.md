@@ -18,8 +18,10 @@ kernels) takes a bit of extra work. That's what this wiki documents.
 ## What this wiki focuses on
 
 - **[Tuning](./tuning/power.md)** — the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox)
-  recipes: lowering the V620's VBIOS-locked 250 W floor to **120 W**, and enabling **GPU↔GPU PCIe
-  Peer-to-Peer** between multiple V620s (Fedora + AMD hosts; power tuning also on **Ubuntu 26.04**).
+  recipes: lowering the V620's VBIOS-locked 250 W floor to **120 W**, enabling **GPU↔GPU PCIe
+  Peer-to-Peer** between multiple V620s (Fedora + AMD hosts; power tuning also on **Ubuntu 26.04**;
+  Intel Ice Lake often sees no P2P win — [A/B it](./tuning/p2p.md#when-p2p-helps--and-when-it-does-not)),
+  and optionally [disabling Pro-card ECC](./tuning/ecc.md) for ~2 GB extra VRAM.
 - **[vLLM on RDNA](./vllm/overview.md)** — ready-to-run Docker images
   ([`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) on a
   [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base), how they are

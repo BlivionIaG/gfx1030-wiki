@@ -38,8 +38,8 @@ GGML_HIP_SAFE_STATE_IO=1 \
 ```bash
 GGML_CUDA_DISABLE_GRAPHS=1 GGML_CUDA_ALLREDUCE=nccl HSA_OVERRIDE_GFX_VERSION=10.3.0 \
 HSA_NO_SCRATCH_RECLAIM=1 LD_LIBRARY_PATH=/opt/rocm/core-7.14/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} \
-~/llama-cpp-mirrored/build/bin/llama-server \
-  -m ~/models/Qwen3.5-122B-A10B-MTP-UD-Q4_K_M/UD-Q4_K_M/Qwen3.5-122B-A10B-UD-Q4_K_M-00001-of-00003.gguf \
+./build/bin/llama-server \
+  -m /path/to/Qwen3.5-122B-A10B-MTP-UD-Q4_K_M.gguf \
   -ngl all --split-mode tensor --tensor-split 1,1,1,1 --main-gpu 0 \
   --ctx-size 262144 --cache-type-k f16 --cache-type-v f16 --kv-unified \
   --batch-size 2048 --ubatch-size 256 --parallel 4 \
@@ -81,10 +81,17 @@ is enabled but slower, set `NCCL_P2P_DISABLE=1`. If all-reduce fails, try
 ## Notable limits
 
 - Validated primarily on **4× V620 gfx1030, ROCm 7.14**; other systems use conservative fallbacks.
-- **Multi-socket** hosts can hurt TP — single-socket Epyc preferred in `#llamacpp` testing.
+  **TP4 does work** (author: Gigabyte MC62-G40; others on Broadwell-EP across two NUMA nodes). Most
+  successful TP4 + P2P reports are on **AMD CPUs**.
+- **Multi-socket** hosts can hurt TP — single-socket Epyc preferred. Dual-Xeon UPI traffic has
+  **halved prefill** in `#general` even when theoretical cross-socket bandwidth looked fine.
 - **KV checkpoints** crash on tensor split — use `--ctx-checkpoints 0`.
 - `GGML_TP_SHARDED_OUTPUT` and `GGML_TP_VOCAB_SHARDED_OUTPUT` are incompatible modes.
-- **Tensor-split prefill can spike power** — try 160 W cap (see [Power Tuning](../../tuning/power.md)).
+- **Tensor-split prefill spikes current** — layer split can look fine while TP shuts the PSU off at
+  prefill start (transient on the +12 V rail, classic with old miner PSUs). Try **160 W** (~2–4%
+  slower) or **140 W** (~8–10% slower vs unlocked) before blaming the fork. See
+  [Power Tuning](../../tuning/power.md).
+- **TP3** (three cards) has caused driver crashes; stick to 2 or 4.
 - Most `GGML_HIP_GFX1030_*` flags are redundant with `HSA_OVERRIDE_GFX_VERSION=10.3.0` unless A/B testing.
 
 For stock builds see [Building & running](../building.md). Speculative decoding configs:

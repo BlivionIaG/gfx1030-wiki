@@ -34,6 +34,9 @@ See the fork's `README.md` and `docs/gfx1030-*` / `docs/rdna2-*` for the authori
 - Linux, CMake, ROCm with HIP clang and **RCCL**.
 - Validated path: four V620 / `gfx1030` with tensor splitting.
 - Compatible main GGUF; optional DFlash/MTP draft GGUF.
+- Fastest fork quants in `#llamacpp` / `#harnesses` are **Q4_0** and **Q8_0** (native MMVQ paths).
+  Q6 / UD-Q4_K can be slower even when they "fit". **MXFP4** has been reported a bit faster than
+  Q4_0 on some 27B runs — A/B on your cards.
 
 ## Build
 

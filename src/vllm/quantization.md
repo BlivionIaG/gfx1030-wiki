@@ -14,15 +14,21 @@
 
 On **older images** (before the AWQ→RDNA2 dispatch fix), AWQ fell through to Triton/Exllama and could
 stall at ~4–5 t/s on a 27B. Pull the latest `-extras` image and confirm
-`Using RDNA2W4A16LinearKernel` in startup logs.
+`Using RDNA2W4A16LinearKernel` in startup logs. Qwen3.8-27B AWQ also needs the fork's
+**`head_size=256`** FlashAttention path — without it, FA falls back or never lists `RDNA_ATTN`.
 
 Kernel dispatch details: [rdna2_extras fork](../fork.md#kernel-dispatch-on-gfx1030).
 
 ## KV-cache dtype
 
-Prefer **`float16`** for the KV cache on long-context / agentic workloads. Community testing found
-`int8` / `fp8` KV-cache quantization hurts quality on long sessions. `VLLM_USE_FA_RDNA2=1` currently
-requires fp16 KV cache.
+| Dtype | When people use it | `#vllm-rdna` notes |
+|---|---|---|
+| **`float16`** | Long-context / agents / tool calling | Default recommendation. `VLLM_USE_FA_RDNA2=1` currently needs fp16 KV. |
+| **`int8_per_token_head`** | Throughput on GPTQ | Reported **5–10 t/s above fp8** in TG (and higher PP) in limited testing. One report that it misbehaves with chunked prefill. |
+| **`fp8`** | VRAM savings | Often slower than `int8_per_token_head` on these cards. Quality drops on long sessions. |
+| **KVarN** | Third-party KV compression | Raised concurrency on Qwen, **broke tool calling**, failed on Gemma 4. Community verdict: skip for agents. |
+
+Prefer **`float16`** unless you are A/B testing a quantized KV for a non-agentic workload.
 
 ## MTP speculative decoding
 
@@ -30,6 +36,10 @@ MTP (`--speculative-config '{"method":"mtp","num_speculative_tokens":N}'`) can b
 models with CUDA graphs enabled. Acceptance rates dropped after a v0.27.1 speculator update (~0.25), but
 base decode speed remains good — worth testing on your model. Example in
 [Configuration](../configuration.md#docker-compose-example-gptq--mtp--cuda-graphs).
+
+MTP is **not free at high concurrency**. A `#vllm-rdna` TP4 matrix on **Qwen3.6-35B-A3B-FP16**
+(4× V620, `--enforce-eager`, 16k/1k-style bench) reported MTP-2 **+17%** output tok/s at `c=1`, but
+**−53%** at `c=8`. Use MTP for latency-critical single-stream; leave it off for batched throughput.
 
 ## INT4 on gfx1030 (no native int4 ALUs)
 

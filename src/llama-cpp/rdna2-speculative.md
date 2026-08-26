@@ -46,7 +46,8 @@ agent/coding sessions (~47 t/s with 700+ t/s prefill).
 ```
 
 Use **tg1024+** (not tg32) for realistic decode benchmarks. DFlash2 is more consistent at long context;
-MTP acceptance tends to fall off.
+MTP acceptance tends to fall off. `#llamacpp` (Aug 26 2026): prefer the **DFlash2 Q4_K_M drafter**
+over MTP when context grows — same advice as the draft-quant row above.
 
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
 

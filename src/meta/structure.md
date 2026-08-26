@@ -17,6 +17,7 @@ src/
 
   tuning/                  # V620-specific host tuning
     power.md
+    ecc.md                 # Optional Pro-card ECC disable (~2 GB)
     p2p.md
 
   vllm/                    # vLLM serving on RDNA
@@ -84,7 +85,7 @@ src/
 | Content type | Location |
 |---|---|
 | Install ROCm, hardware list | `setup/` |
-| Power cap, P2P enablement | `tuning/` |
+| Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
 | Kernel source, fork branches | `vllm/fork.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |

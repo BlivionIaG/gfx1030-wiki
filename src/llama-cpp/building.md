@@ -72,7 +72,17 @@ HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
 
 ## Vulkan (alternative)
 
-The Vulkan backend works without ROCm and runs across many GPUs/drivers.
+The Vulkan backend works without ROCm and runs across many GPUs/drivers. For **multi-GPU tensor
+split**, prefer the [ROCm build](#rocm-recommended) (or the [RDNA2 fork](./rdna2-overview.md)) —
+`#llamacpp` finds HIP/`-sm tensor` faster, and RCCL TP is a ROCm path.
+
+Mesa **RADV** has been reported to **hard-crash** V620 llama.cpp; **AMDVLK** can stay up but is
+severely slower. If you must use Vulkan, pin the ICD explicitly:
+
+```bash
+export VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json   # AMDVLK, not RADV
+export GGML_VULKAN_DEVICE=0
+```
 
 ### Vulkan SDK from your distro
 

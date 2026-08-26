@@ -14,6 +14,8 @@ ROCm's RDNA2 support targets specific LTS releases. As of recent ROCm versions t
 - Ubuntu 22.04 / 24.04 LTS
 - RHEL / Rocky 9.x
 - Debian 12 (community, less tested)
+- Fedora 43 (wiki-validated for [power](../tuning/power.md) / [P2P](../tuning/p2p.md)); Fedora Server
+  44 + kernel 6.19 reported working for the V620 powerfix (community)
 
 Check the [system requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 page for the version you plan to install.
@@ -47,6 +49,17 @@ rocm-smi                       # live clocks, temps, VRAM, power
 
 If `rocminfo` shows `Name: gfx1030`, you're done. If it shows `gfx1031`/`gfx1032`/etc., your card is a
 smaller RDNA2 die — continue to [HSA_OVERRIDE for RDNA2 Cousins](./hsa-override.md).
+
+## Multi-GPU: pin ROCm 7.2.0 or 7.14.0
+
+For **more than one card**, stay on **ROCm 7.2.0** (not 7.2.1+) **or jump to 7.14.0**.
+`#vllm-rdna` reports an **RCCL bug from 7.2.1 upward** that shows up as soon as you leave a single
+GPU — tensor-parallel hangs, comm failures, or cards dropping offline. The published
+[`vllm-rdna`](../vllm/running.md#image-matrix) images already sit on those two bases for that reason.
+
+Do **not** "upgrade within 7.2.x" on a multi-GPU box. If you are already on a broken 7.2.1–7.13
+userspace, rebuild or pull a **7.2.0** or **7.14.0** image rather than debugging RCCL on the
+in-between releases.
 
 ## Notes & gotchas
 

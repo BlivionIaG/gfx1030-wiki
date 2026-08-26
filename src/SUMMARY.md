@@ -12,6 +12,7 @@
 # Tuning (V620 / gfx1030)
 
 - [Power Tuning (120 W floor)](./tuning/power.md)
+- [Disabling ECC (Pro VRAM)](./tuning/ecc.md)
 - [Multi-GPU PCIe P2P](./tuning/p2p.md)
 
 # vLLM on RDNA

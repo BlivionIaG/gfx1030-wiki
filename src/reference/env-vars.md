@@ -1,7 +1,7 @@
 # Environment Variables & Quick Reference
 
 > **WIP:** vLLM and llama.cpp tables include Discord-sourced defaults — see
-> [Verification status](./verification.md#referencemd).
+> [Verification status](./verification.md#reference--troubleshooting).
 
 A cheat-sheet of the settings that matter most when running ML workloads on gfx1030 / RDNA2.
 
@@ -22,19 +22,28 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 
 | Variable | Example | What it does |
 | --- | --- | --- |
-| `VLLM_ROCM_USE_AITER` | `0` | Disable aiter fused kernels (community default on RDNA2). |
+| `VLLM_TARGET_DEVICE` | `rocm` | Pin the ROCm platform (Compose / CI; avoids CUDA autodetection). |
+| `VLLM_ROCM_USE_AITER` | `0` | Disable aiter fused kernels (CDNA-oriented; community default on RDNA2). |
+| `VLLM_ROCM_USE_AITER_MOE` | `0` | Disable AITER MoE (same reason). |
 | `VLLM_RDNA_FORCE_FP16` | `1` | Force FP16 compute paths — avoids slow BF16 emulation on RDNA2. |
 | `VLLM_USE_RDNA2_FA` | `1` | Enable native RDNA2 FlashAttention (`-extras` images). |
-| `VLLM_USE_V2_MODEL_RUNNER` | `1` | Use the v2 model runner (recommended on recent images). |
+| `VLLM_USE_V2_MODEL_RUNNER` | `1` | V2 runner; `#vllm-rdna` reported **+17%** vs V1 on gfx1030. |
 | `VLLM_DISABLED_KERNELS` | `ExllamaLinearKernel,TritonW4A16LinearKernel` | Force GPTQ onto `RDNA2W4A16LinearKernel`. |
 | `VLLM_DISABLE_CUSTOM_ALL_REDUCE` | `1` | Disable custom all-reduce (stability on some topologies). |
 | `VLLM_WORKER_MULTIPROC_METHOD` | `spawn` | Worker spawn method — avoids fork issues with ROCm. |
-| `GPU_MAX_HW_QUEUES` | `2` | Limit HIP hardware queues (stability tuning). |
-| `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. |
+| `VLLM_BATCH_INVARIANT` | `0` | Batch-invariant mode forces hipBLASLt; keep off on gfx1030. |
+| `GPU_MAX_HW_QUEUES` | `2` | RDNA2 has 8 HQDs; cap streams to 2 per process. |
+| `HIP_FORCE_DEV_KERNARG` | `1` | HIP kernel-arg in device memory (common `#vllm-rdna` stack). |
+| `RCCL_MSCCL_ENABLE` | `0` | Disable MSCCL (stream-hungry; conflicts with Triton on some TP hosts). |
+| `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. Prefer `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` on `-extras`. |
 | `PYTORCH_TUNABLEOP_ENABLED` | `0` / `1` | `0` for reproducible benches; `1` for runtime autotuning. |
 | `PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED` | `0` | Disable hipBLASLt in tunableop (pair with `TORCH_BLAS_PREFER_HIPBLASLT=0`). |
+| `PYTORCH_ALLOC_CONF` | `expandable_segments:True` | Reduces CUDA/HIP allocator fragmentation. |
+| `VLLM_USE_DEEP_GEMM` | `0` | Disable DeepGEMM (NVIDIA-oriented). |
+| `VLLM_USE_FLASHINFER_SAMPLER` | `0` | Disable FlashInfer sampler (not useful on RDNA2). |
 | `VLLM_USE_AOT_COMPILE` | `0` | Disable AOT compile on multi-GPU if cache replay causes device-bound errors. |
 | `VLLM_DISABLE_COMPILE_CACHE` | `1` | Disable torch.compile cache (pair with `VLLM_USE_AOT_COMPILE=0` for TP stability). |
+| `TORCHINDUCTOR_COMPILE_THREADS` | `1` | Limit inductor threads (stability during first-boot compile). |
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
 
@@ -92,7 +101,10 @@ clinfo | grep -i board                # OpenCL board name
 | Card VRAM | Comfortable 4-bit model size |
 | --- | --- |
 | 16 GB (RX 6800/6800 XT/6900 XT/6950 XT) | 7B–13B, some 14B |
-| 32 GB (PRO W6800 / V620) | up to ~30B–34B |
+| ~30 GB (PRO W6800 / V620, **ECC on**) | up to ~30B–34B |
+| 32 GB (same cards, [ECC off](../tuning/ecc.md)) | same class, extra KV / longer context |
+
+Pro cards show ~30 GB until you disable ECC.
 
 ## FP16 vs BF16
 

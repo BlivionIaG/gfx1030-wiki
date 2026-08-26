@@ -37,6 +37,20 @@ MTP-4 TP4 on a pelican prompt:
 DFlash2 on TP2: ~52 t/s coding at 0–31k context, ~40 t/s at 64k. Checkpoint fix in
 [PR #12](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/12) (in review).
 
+## Stock llama.cpp vs this fork (community A/B)
+
+`#llamacpp` matched run on **Qwen3.8-27B Q6_K** + MTP (same prompts, temp 0, seed 42, 400 tok,
+3 runs). Outputs were **byte-identical**; the fork was faster:
+
+| Lane | Mean t/s | Spread |
+|---|---:|---:|
+| Stock / "production" llama.cpp | 24.22 | 1.9% |
+| `llama.cpp-rdna2` TP2 | 37.98 | 0.3% |
+
+**+56.8%** on that workload. Stock + llama-swap in the mid-20s t/s on 27B is a common
+"I have not switched to the fork" report; 2× V620 + fork + Q4_0 has been quoted at **500–600 PP**
+and **40–50 t/s** decode.
+
 > `pp512` = prefill (512-token prompt); `tg128` = generation (128 tokens). For A3B MoE, **layer split**
 > beats tensor split; dense models use tensor split.
 

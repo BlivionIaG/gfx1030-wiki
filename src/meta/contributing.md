@@ -55,6 +55,21 @@ For pages sourced from Discord or fork release notes, add or update entries in
 **community-reported**, or **needs verify**. Mark unconfirmed throughput claims as community-reported
 rather than presenting them as wiki-tested facts.
 
+## Privacy (Discord → wiki)
+
+This wiki is public on GitHub Pages. When turning Discord messages into docs:
+
+| Do | Don't |
+|---|---|
+| Summarize operational facts (env vars, topology, bench numbers) | Paste message URLs, message IDs, or `@mentions` |
+| Attribute with channel names (`#vllm-rdna`) or "community report" | Copy Discord usernames, display names, or avatars |
+| Use `/path/to/model`, `./build/bin/…`, `-hf org/model` | Copy someone's home directory, hostnames, or internal IPs |
+| Link public repos (GitHub, Hugging Face, lunnova.dev) | Commit bot tokens, guild IDs, or channel IDs |
+| Generalize hardware ("Ice Lake 4× V620 host") | Quote forum thread titles that include a member's name |
+
+**Never commit:** `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `.env` files, or screenshots of private
+channels. Cloud Agents should set token + guild ID in **Secrets** only (see repo `README.md`).
+
 ## Deployment
 
 Merges to `master` are built and published to GitHub Pages automatically by the

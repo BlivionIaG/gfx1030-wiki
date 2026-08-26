@@ -27,7 +27,12 @@ working `torch` on a Radeon card.
 
 The **`-extras`** tags use the [`rdna2_extras` fork](../fork.md), which adds hand-written RDNA2 HIP
 kernels (FlashAttention, quantized GEMM, MoE, GDN, …). Check
-[Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list.
+[Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list. Tags are
+refreshed in place — `docker pull` before debugging.
+
+**Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
+those in-between releases is reported broken with more than one card — see
+[Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 Every image bakes these `PYTORCH_ROCM_ARCH` targets:
 `gfx1030;gfx1100;gfx1101;gfx1150;gfx1151;gfx1200;gfx1201`.
@@ -45,7 +50,9 @@ docker run -it --rm \
   vllm serve Qwen/Qwen2.5-7B-Instruct --dtype float16 --max-model-len 8192
 ```
 
-- Give the container the GPU with `--device /dev/kfd --device /dev/dri` and the `video`/`render` groups.
+- Give the container the GPU with `--device /dev/kfd --device /dev/dri` and the `video` **and**
+  `render` groups. Missing `render` is a common `#vllm-rdna` cause of
+  [`Failed to infer device type`](../../troubleshooting/vllm.md#failed-to-infer-device-type--amdsmi_status_not_init).
 - **Prefer `--dtype float16`.** RDNA2 has weak/emulated BF16; letting vLLM pick bf16 from a model's
   `config.json` can trigger slow float32 fallbacks.
 - For a **non-Navi-21** RDNA2 card (gfx1031/1032/…), add `-e HSA_OVERRIDE_GFX_VERSION=10.3.0`. See
