@@ -124,14 +124,14 @@
 | `troubleshooting/vllm.md` AMDSMI / missing `render` | **Community** | `#vllm-rdna` Docker compose |
 | `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
 | `tuning/power.md` Ubuntu 26.04 path | **Community** | `ubuntu_powertuning/` — validated kernel `7.0.0-30-generic`; re-verify after kernel upgrades |
-| `tuning/power.md` Fedora Server 44 / kernel 6.19 | **Community** | Forum *Ice Lake + 4× V620* — powerfix + 180 W + ~7 W idle |
+| `tuning/power.md` Fedora Server 44 / kernel 6.19 | **Community** | Ice Lake 4× V620 host — powerfix + 180 W + ~7 W idle |
 | `tuning/power.md` V620 slot-power / `setperflevel` | **Community** | `#llamacpp` — TDP from slot, not 8-pin |
 | `tuning/ecc.md` two-reboot `ras_enable=0` | **Community** | lunnova on W6800; Discord reports V620 ECC-on (~30 GB). Confirm `rocm-smi` after two reboots |
 | `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 | `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Ice Lake 4× V620 host — llama.cpp + vLLM |
-| `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Same thread; opposite of some generic docs |
+| `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
 
