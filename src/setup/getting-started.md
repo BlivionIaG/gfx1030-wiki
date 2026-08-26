@@ -31,7 +31,8 @@ clinfo | grep -i 'gfx\|Board'
 ## 3. (Optional) Tune the card
 
 If you run one or more **Radeon PRO V620** (or **PRO W6800**) cards, these tweaks are worth doing
-before you load models (Fedora or Ubuntu 26.04 for power cap; P2P is Fedora-validated today):
+before you load models (Fedora or Ubuntu 26.04 for power cap; P2P is Fedora + AMD-validated — A/B
+on Intel, see [When P2P helps](../tuning/p2p.md#when-p2p-helps--and-when-it-does-not)):
 
 - [Power Tuning](../tuning/power.md) — drop the VBIOS-locked 250 W floor to 120 W and boot-cap at 180 W.
 - [Disabling ECC](../tuning/ecc.md) — Pro cards hide ~2 GB behind ECC; optional extra VRAM.

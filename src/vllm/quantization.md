@@ -14,7 +14,8 @@
 
 On **older images** (before the AWQ→RDNA2 dispatch fix), AWQ fell through to Triton/Exllama and could
 stall at ~4–5 t/s on a 27B. Pull the latest `-extras` image and confirm
-`Using RDNA2W4A16LinearKernel` in startup logs.
+`Using RDNA2W4A16LinearKernel` in startup logs. Qwen3.8-27B AWQ also needs the fork's
+**`head_size=256`** FlashAttention path — without it, FA falls back or never lists `RDNA_ATTN`.
 
 Kernel dispatch details: [rdna2_extras fork](../fork.md#kernel-dispatch-on-gfx1030).
 

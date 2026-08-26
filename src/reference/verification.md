@@ -21,6 +21,7 @@
 | Docker `-extras` images vs `rdna2_extras` HEAD | **Needs verify** | Wiki documents Aug 2026 fork commits. Images refreshed in place but **not confirmed** to include `0fdb1884+`. Re-pull and check logs. |
 | Performance numbers (tok/s, × speedups) | **Community** | Unless marked **Solid**, treat throughput tables as single-host snapshots. |
 | Env-var recipes | **Community** | Common stacks from Discord; A/B on your topology. |
+| ROCm 7.2.1+ multi-card RCCL bug | **Community** | `#vllm-rdna` (fork author): stay on **7.2.0** or **7.14.0** |
 
 ---
 
@@ -60,6 +61,7 @@
 | MTP acceptance ~0.25 | **Community** | Model-dependent |
 | MTP-2 hurts high concurrency (35B-A3B) | **Community** | TP4 `#vllm-rdna` 4-cell matrix |
 | INT4 vdot2 fp16 dequant | **Solid** | ISA + fork code |
+| Qwen3.8-27B AWQ needs `head_size=256` | **Fork-source** | Same as `fa_rdna2` commit; confirm on image |
 | GDN hybrid ~93/331 tok/s | **Community** | Fork author bench |
 
 ### `fork.md`
@@ -89,6 +91,8 @@
 | Statement | Status | Verify how |
 |---|---|---|
 | All benchmark tables | **Community** | Author-reported; run your own before/after |
+| Stock vs fork +56.8% (Qwen3.8-27B Q6_K MTP) | **Community** | `#llamacpp` matched A/B, byte-identical outputs |
+| Q4_0 / Q8_0 fastest on fork | **Community** | `#harnesses` / `#llamacpp` |
 | PR #10 / #12 status | **Needs verify** | Re-check fork PRs |
 
 ### `rdna2-speculative.md`
@@ -120,10 +124,16 @@
 | `troubleshooting/vllm.md` AMDSMI / missing `render` | **Community** | `#vllm-rdna` Docker compose |
 | `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
 | `tuning/power.md` Ubuntu 26.04 path | **Community** | `ubuntu_powertuning/` — validated kernel `7.0.0-30-generic`; re-verify after kernel upgrades |
+| `tuning/power.md` Fedora Server 44 / kernel 6.19 | **Community** | Forum *Ice Lake + 4× V620* — powerfix + 180 W + ~7 W idle |
+| `tuning/power.md` V620 slot-power / `setperflevel` | **Community** | `#llamacpp` — TDP from slot, not 8-pin |
 | `tuning/ecc.md` two-reboot `ras_enable=0` | **Community** | lunnova on W6800; Discord reports V620 ECC-on (~30 GB). Confirm `rocm-smi` after two reboots |
 | `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
+| `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Forum *Ice Lake + Optane + 4× V620* — llama.cpp + vLLM |
+| `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Same thread; opposite of some generic docs |
+| `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
+| `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
 
 ---
 

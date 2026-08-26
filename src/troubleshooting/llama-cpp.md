@@ -39,3 +39,14 @@ proprietary GPU cables (that chassis PSU often only feeds **two** cards).
 Pin llama.cpp to one socket (`numactl --cpunodebind=0 --membind=0`) and keep all TP GPUs on that
 socket. Crossing NUMA for tensor split is a known prefill killer — see
 [Host topology](../../tuning/p2p.md#host-topology).
+
+## Vulkan RADV hard-crashes; AMDVLK is slow
+
+`#llamacpp`: Mesa **RADV** can hard-reboot or crash the host on V620 llama.cpp; switching the ICD to
+**AMDVLK** (`VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json`) can get inference running but is
+**much slower**. For multi-GPU **`--split-mode tensor`**, the community path is **ROCm / HIP**, not
+Vulkan — tensor parallel needs RCCL. See [Building llama.cpp](../../llama-cpp/building.md#vulkan-alternative).
+
+If a **new V620** hard-reboots a box that was stable with a 3080, read
+[Slot power and PSU transients](../../tuning/power.md#slot-power-and-psu-transients) before chasing
+Vulkan ICDs.

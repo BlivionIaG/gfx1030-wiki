@@ -7,8 +7,9 @@ how to unlock a **120 W floor** and apply a **180 W boot cap**, following the
 [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox) repo.
 
 > Validated on **Fedora 43** (kernels **6.17.6** pre-7 / **7.1.7** post-7) and **Ubuntu 26.04 LTS**
-> (kernel `7.0.0-30-generic`). This involves patching and rebuilding a kernel module — do it at your own
-> risk.
+> (kernel `7.0.0-30-generic`). Community confirmation: **Fedora Server 44** + kernel **6.19**, 4× V620,
+> powerfix + 180 W cap (`cap_min=120 W`). This involves patching and rebuilding a kernel module — do it
+> at your own risk.
 
 ## Why it's needed
 
@@ -110,6 +111,23 @@ sudo ./powertuning/scripts/v620-verify.sh
 ```
 
 `v620-verify.sh` confirms both the `V620 powerfix` dmesg marker and `power1_cap_min=120000000`.
+After the override, idle around **~7 W per card** has been reported (Fedora 44, 4× V620).
+
+## Slot power and PSU transients
+
+Unlike many gaming cards, a **V620 reaches TDP from the PCIe slot**, not from extra 8-pin cables.
+That makes the **+12 V rail** and slot power delivery more sensitive than a 3080-class swap-in:
+
+- Prefill / tensor-split can trip old or miner PSUs even when average watts look fine — see
+  [llama.cpp PSU troubleshooting](../troubleshooting/llama-cpp.md#psu-dies-the-moment-tensor-split-prefill-starts).
+- If a new card hard-reboots the host on load, try a gentler SMU ramp before blaming the kernel:
+
+  ```bash
+  sudo rocm-smi --setperflevel standard   # community: ~80 W min / ~150 W max, softer ramp
+  ```
+
+  (`STANDARD` / `standard` — check `rocm-smi --help` on your ROCm; the enum name varies.)
+- Cap at **160 W** or **140 W** if 180 W still trips protection.
 
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))

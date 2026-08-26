@@ -72,3 +72,14 @@ image — a bad rebuild can also fail AMDSMI init.
 AMD Triton flash-attention compile on gfx1030 can sit there for **hours** (RCCL vs Triton). On `-extras`,
 use `--attention-backend RDNA_ATTN` and/or `VLLM_USE_RDNA2_FA=1` instead of `ROCM_ATTN`. See
 [Configuration](../../vllm/configuration.md).
+
+`FA_RDNA2` / `RDNA_ATTN` may not appear in the backend list on older `-extras` images or some GPTQ
+models (logs only show Triton / ROCM / TurboQuant). Pull the latest `-extras` tag and confirm
+`Using RDNA2W4A16LinearKernel` / native FA in startup logs. Qwen3.8-27B AWQ needs **head size 256**
+on the fork — see [Quantization](../../vllm/quantization.md#int4-on-gfx1030-no-native-int4-alus).
+
+## Multi-GPU RCCL hangs or cards drop offline
+
+If TP works on one image and dies after a host ROCm bump, check the **ROCm version** before the
+model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
+**7.14.0** — see [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).

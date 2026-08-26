@@ -27,7 +27,12 @@ working `torch` on a Radeon card.
 
 The **`-extras`** tags use the [`rdna2_extras` fork](../fork.md), which adds hand-written RDNA2 HIP
 kernels (FlashAttention, quantized GEMM, MoE, GDN, …). Check
-[Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list.
+[Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list. Tags are
+refreshed in place — `docker pull` before debugging.
+
+**Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
+those in-between releases is reported broken with more than one card — see
+[Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 Every image bakes these `PYTORCH_ROCM_ARCH` targets:
 `gfx1030;gfx1100;gfx1101;gfx1150;gfx1151;gfx1200;gfx1201`.
