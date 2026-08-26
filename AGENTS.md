@@ -41,10 +41,12 @@ There is **no application server, database, backend, or automated test/lint suit
 - There is no separate lint command and no unit tests; `mdbook build` succeeding cleanly is the
   validation signal.
 
-#### Deployment (one-time repo setting)
-- GitHub Pages must be set to **Settings → Pages → Source: GitHub Actions** once. After that, every push
-  to `master` auto-deploys via `.github/workflows/mdbook.yml` to
+#### Deployment
+- Pushes to `master` auto-deploy via `.github/workflows/mdbook.yml` to
   `https://blivioniag.github.io/gfx1030-wiki/`.
+- The workflow sets `enablement: true` on `configure-pages` so the first deploy can turn on
+  GitHub Pages without a manual **Settings → Pages → Source: GitHub Actions** step. If auto-enable
+  fails (repo permissions), set that source once by hand.
 
 ### Discord MCP (`tools/discord-mcp/`)
 
