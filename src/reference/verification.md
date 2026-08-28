@@ -101,17 +101,24 @@
 |---|---|---|
 | DFlash2 draft Q4_K_M not Q8_0 | **Community** | Discord consensus |
 | DFlash2 vs MTP bench (~30 vs ~40) | **Community** | Synthetic bench caveat documented |
+| DFlash hurts PP more than MTP | **Community** | `#llamacpp` Aug 28 |
+| MTP n=3 often beats n=4 (27B Q8 TP4) | **Community** | Real-prompt A/B; acceptance dropped at n=4 |
+| Flash-Next TP experimental / deferred | **Community** | Fork update + forum benches; layer-split only |
 | Full DFlash2 TP4 command | **Community** | Author production recipe |
 
 ### `rdna2-serving.md`
 
 | Statement | Status | Verify how |
 |---|---|---|
+| Short env stack preferred | **Community** | `#llamacpp` — long `GFX1030_*` lists can clash with RCCL |
+| `GGML_HIP_SAFE_STATE_IO=1` FA workaround | **Community** | Fork maintainer note |
+| ubatch ~1024 per GPU | **Community** | `#llamacpp` PP tuning tip |
 | Docker compose TP2 MTP4 | **Community** | `#llamacpp` example |
 | KV checkpoint workaround | **Community** | `--ctx-checkpoints 0` |
 | Multi-socket hurts TP | **Community** | Topology advice |
 | 160 W / 140 W PSU workaround | **Community** | Transients on TP prefill; miner PSU / P620 cables |
 | TP3 driver crash | **Community** | Prefer 2 or 4 GPUs |
+| `hipcub-devel` for GPU sampling | **Community** | Forum / `#llamacpp` build note |
 
 ---
 
@@ -134,6 +141,8 @@
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
+| `troubleshooting/llama-cpp.md` FA `max_blocks_per_sm` abort | **Community** | head-256 occupancy 0 on gfx1030; q8 KV needs FA |
+| `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
 
 ---
 

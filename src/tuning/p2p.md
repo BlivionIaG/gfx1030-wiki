@@ -118,7 +118,7 @@ Community reports, not wiki-benched:
 
 | Topology | What people report |
 |---|---|
-| **PCIe 4.0 x16** per card (CPU root ports) | Best case for TP4. Known-good llama.cpp TP4: Gigabyte **MC62-G40**. |
+| **PCIe 4.0 x16** per card (CPU root ports) | Best case for TP4. Community known-good llama.cpp TP4 board: Gigabyte **MC62-G40**. |
 | **PCIe 4.0 x8** per card | Practical floor for 8× V620 without a switch; expected to still scale. |
 | **PCIe 3.0 x4** | Throughput often **stops scaling at 3 cards** and can regress at 4. |
 | **PLX / PCIe switch** | See [PLX / PCIe switches](#plx--pcie-switches). |

@@ -47,15 +47,19 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
 
+Prefer the **short stack** below. Long lists of `GGML_HIP_GFX1030_*` knobs are usually redundant with
+`HSA_OVERRIDE_GFX_VERSION=10.3.0` and can clash with RCCL autotune — see
+[Serving](../llama-cpp/rdna2-serving.md#recommended-env-stack).
+
 | Variable | Example | What it does |
 | --- | --- | --- |
 | `HSA_OVERRIDE_GFX_VERSION` | `10.3.0` | **Required** to activate the V620/gfx1030 native RDNA2 profile. |
 | `HSA_NO_SCRATCH_RECLAIM` | `1` | Avoid scratch reclaim issues on long-context runs. |
 | `GGML_HIP_RDNA2_AUTO` | `1` | Enable automatic RDNA2 kernel selection. |
-| `GGML_HIP_SAFE_STATE_IO` | `1` | Safer HIP state I/O (recommended on V620). |
+| `GGML_HIP_SAFE_STATE_IO` | `1` | Safer HIP state I/O; mitigates a known ROCm FA crash class (recommended default). |
 | `GGML_TP_SHARDED_OUTPUT` | `1` | Sharded output head for tensor parallel (TP2+). |
 | `GGML_CUDA_ALLREDUCE` | `nccl` | Use RCCL for tensor-parallel all-reduce (+10% tgen reported). |
-| `GGML_HIP_GFX1030_P2P_ALLREDUCE` | `off` / `auto-expanded` | P2P all-reduce tuning; set `off` if RCCL misbehaves. |
+| `GGML_HIP_GFX1030_P2P_ALLREDUCE` | `off` / `auto-expanded` | P2P all-reduce tuning; set `off` if RCCL misbehaves. Optional — not part of the short stack. |
 | `GGML_CUDA_DISABLE_GRAPHS` | `1` | Disable HIP graphs (some benchmark profiles use this). |
 | `NCCL_P2P_LEVEL` | `PXB` / `PHB` | RCCL P2P topology level for all-reduce. |
 | `NCCL_P2P_DISABLE` | `0` / `1` | Disable P2P in RCCL (fallback when topology is broken). |
