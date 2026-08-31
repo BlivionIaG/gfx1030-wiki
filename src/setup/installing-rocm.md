@@ -60,8 +60,10 @@ For **more than one card**, stay on **ROCm 7.2.0** (not 7.2.1+) **or jump to 7.1
 
 Do **not** "upgrade within 7.2.x" on a multi-GPU box. If you are already on a broken 7.2.1–7.13
 userspace, rebuild or pull a **7.2.0** or **7.14.0** image rather than debugging RCCL on the
-in-between releases. ROCm 10 / TheRock packaging is interesting for newer cards, but community
-advice for gfx1030 today is: **stay on 7.14** unless you are deliberately lab-testing.
+in-between releases. ROCm **10** / TheRock packaging is interesting for newer cards; community
+llama.cpp benches on Ice Lake have run ROCm **10.0** with numbers close to 7.1 on that host, but
+day-to-day advice for gfx1030 multi-GPU is still: **prefer 7.14.0** (or 7.2.0) unless you are
+deliberately lab-testing 10.x.
 
 ## Notes & gotchas
 

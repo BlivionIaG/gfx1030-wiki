@@ -29,7 +29,12 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_USE_RDNA2_FA` | `1` | Enable native RDNA2 FlashAttention (`-extras` images). |
 | `VLLM_USE_V2_MODEL_RUNNER` | `1` | V2 runner; `#vllm-rdna` reported **+17%** vs V1 on gfx1030. |
 | `VLLM_DISABLED_KERNELS` | `ExllamaLinearKernel,TritonW4A16LinearKernel` | Force GPTQ onto `RDNA2W4A16LinearKernel`. |
-| `VLLM_DISABLE_CUSTOM_ALL_REDUCE` | `1` | Disable custom all-reduce (stability on some topologies). |
+| `VLLM_DISABLE_CUSTOM_ALL_REDUCE` | `1` | Disable custom all-reduce (safer when P2P is broken / Ice Lake). |
+| `VLLM_FORCE_CUSTOM_ALL_REDUCE` | `1` | Force custom all-reduce when P2P works (`#vllm-rdna` PIX stack). Mutually exclusive intent with disable. |
+| `NCCL_P2P_LEVEL` | `pix` / `PXB` / `PHB` | RCCL P2P topology level — `pix` used with the force-custom stack. |
+| `RCCL_P2P_NET_DISABLE` | `1` | Pair with PIX custom all-reduce benches. |
+| `RCCL_P2P_BATCH_ENABLE` | `1` | Pair with PIX custom all-reduce benches. |
+| `NCCL_PROTO` | `Simple` | Protocol pin used in PIX custom all-reduce benches. |
 | `VLLM_WORKER_MULTIPROC_METHOD` | `spawn` | Worker spawn method — avoids fork issues with ROCm. |
 | `VLLM_BATCH_INVARIANT` | `0` | Batch-invariant mode forces hipBLASLt; keep off on gfx1030. |
 | `GPU_MAX_HW_QUEUES` | `2` | RDNA2 has 8 HQDs; cap streams to 2 per process. |

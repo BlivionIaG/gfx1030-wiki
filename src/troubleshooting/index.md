@@ -4,9 +4,9 @@ Common errors on gfx1030 / RDNA2 and how to fix them. Pick the section that matc
 
 | Stack | Page |
 |---|---|
-| ROCm install, hipBLASLt, BF16, iGPU, Secure Boot | [General](./general.md) |
-| vLLM Docker, CUDA graphs, kernel dispatch, AMDSMI, RCCL 7.2.1+ | [vLLM](./vllm.md) |
-| llama.cpp RCCL, KV checkpoints, FA occupancy abort, tensor split, PSU, Vulkan ICD | [llama.cpp](./llama-cpp.md) |
+| ROCm install, hipBLASLt, BF16, iGPU, Secure Boot, CPU governor | [General](./general.md) |
+| vLLM Docker, CUDA graphs, kernel dispatch, AMDSMI, RCCL 7.2.1+, MTP stalls | [vLLM](./vllm.md) |
+| llama.cpp RCCL, KV checkpoints, FA occupancy abort, DAX mmap, tensor split, PSU, Vulkan ICD | [llama.cpp](./llama-cpp.md) |
 
 > **WIP:** Fixes involving latest `rdna2_extras` images assume a current image pull — see
 > [Verification status](../reference/verification.md).

@@ -40,6 +40,7 @@
 | Statement | Status | Verify how |
 |---|---|---|
 | Recommended env block | **Community** | Discord default stack |
+| Custom AR disable vs PIX force | **Community** | `#vllm-rdna` Aug 2026 — pick by P2P topology |
 | `VLLM_USE_V2_MODEL_RUNNER` +17% vs V1 | **Community** | `#vllm-rdna` bench comment |
 | `VLLM_USE_AOT_COMPILE=0` / `VLLM_DISABLE_COMPILE_CACHE=1` | **Fork-source** | Multi-GPU TP workaround |
 | CUDA graphs preferred over `--enforce-eager` | **Fork-source** | TP `allow_in_graph` fix; **needs verify** on image |
@@ -47,6 +48,7 @@
 | Throughput table (277/93/331 tok/s) | **Community** | Fork author, TP4, 4× V620 |
 | Docker Compose ~24 t/s TP2 | **Community** | `#vllm-rdna` report |
 | Cache sizes ~3 GB / ~700 MB | **Community** | Order-of-magnitude |
+| Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep `-extras` |
 
 ### `quantization.md`
 
@@ -93,6 +95,9 @@
 | All benchmark tables | **Community** | Author-reported; run your own before/after |
 | Stock vs fork +56.8% (Qwen3.8-27B Q6_K MTP) | **Community** | `#llamacpp` matched A/B, byte-identical outputs |
 | Q4_0 / Q8_0 fastest on fork | **Community** | `#harnesses` / `#llamacpp` |
+| Long-context quant sweep (Q8 wins) | **Community** | `#benchmarks` Aug 30 — single host |
+| ROCm 7.1 vs 10.0 Ice Lake sweep | **Community** | Close numbers; prefer 7.14 for RCCL day-to-day |
+| Flash-Next ~28 t/s llama.cpp vs ~60 t/s vLLM | **Community** | `#llamacpp` 4× V620 comparison |
 | PR #10 / #12 status | **Needs verify** | Re-check fork PRs |
 
 ### `rdna2-speculative.md`
@@ -142,6 +147,11 @@
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
 | `troubleshooting/llama-cpp.md` FA `max_blocks_per_sm` abort | **Community** | head-256 occupancy 0 on gfx1030; q8 KV needs FA |
+| `troubleshooting/llama-cpp.md` DAX mmap SVM oops | **Community** | `--no-mmap` mandatory on `dax=always` |
+| `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris-in-box ROCm skip |
+| `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
+| `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |
+| `tuning/p2p.md` SlimSAS / passive riser notes | **Community** | `#general` cabling |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
 
 ---

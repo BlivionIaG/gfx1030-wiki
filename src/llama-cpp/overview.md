@@ -22,4 +22,17 @@ gfx1030. This section covers stock builds and the community RDNA2-optimized fork
   Most `#llamacpp` performance work happens here. A matched A/B on Qwen3.8-27B Q6_K + MTP reported
   **+57%** vs stock with identical outputs — see [Benchmarks](../rdna2-benchmarks.md#stock-llamacpp-vs-this-fork-community-ab).
 
+## llama.cpp vs vLLM on V620 (`#llamacpp` / `#vllm-rdna`)
+
+Community rule of thumb (Aug 2026):
+
+| Workload | Prefer |
+|---|---|
+| Getting ROCm + multi-GPU working; GGUF; single-stream / low concurrency | **llama.cpp** (RDNA2 fork) — more battle-tested on V620 |
+| Multi-stream / agentic loads with prefix caching | **vLLM `-extras`** — caching + concurrency usually win |
+| Qwen3.8 **Flash-Next** on 4× V620 | Community: ~28–30 t/s on the llama.cpp fork vs ~59–60 t/s on vLLM (same card count; architecture still experimental) |
+
+Neither stack is "finished" for every model. New to the cards? Start with
+[RDNA2 serving](../rdna2-serving.md), then try [vLLM](../../vllm/overview.md) when you need concurrency.
+
 Multi-GPU tensor parallel benefits greatly from [PCIe P2P](../../tuning/p2p.md).

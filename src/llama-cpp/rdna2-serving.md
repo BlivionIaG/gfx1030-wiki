@@ -57,6 +57,20 @@ For tensor-split prefill, `#llamacpp` often does better with **larger ubatch** t
 `2048/256` bench defaults — roughly **~1024 ubatch per GPU** (e.g. TP4 → `--ubatch-size 4096`) while
 keeping `--batch-size` ≥ ubatch. Small prompts may regress slightly; long prompts usually win.
 
+Recent long-context community recipes commonly use `--batch-size 16384 --ubatch-size 1024` on TP4
+(see [Benchmarks](../rdna2-benchmarks.md#long-context-community-sweeps-aug-2930-2026)).
+
+### Host tips that affect llama-server
+
+- **CPU governor:** if any hot path stays on the host (Flash-Next n-gram tables, `--override-tensor …=CPU`,
+  MoE/KV offload), `powersave` can lag bursty PP. Community: switching Intel `intel_pstate` to
+  `performance` improved Flash-Next PP ~33% while VRAM-resident 27B was unchanged. Check
+  `/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`. See
+  [General troubleshooting](../../troubleshooting/general.md#cpu-governor-hurts-host-resident-models).
+- **DAX / Optane model store:** fast loads are nice for swap-testing; **never mmap** GGUFs from
+  `dax=always` mounts into ROCm — use `--no-mmap` / `--load-mode none`. See
+  [troubleshooting](../../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm).
+
 ### Full validated example (4× V620, Qwen3.5-122B-A10B-MTP)
 
 ```bash

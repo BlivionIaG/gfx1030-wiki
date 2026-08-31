@@ -17,7 +17,6 @@ export PYTORCH_TUNABLEOP_ENABLED=0          # or 1 for autotuning (see compose b
 export PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED=0
 export GPU_MAX_HW_QUEUES=2
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
-export VLLM_DISABLE_CUSTOM_ALL_REDUCE=1
 export VLLM_BATCH_INVARIANT=0
 export HIP_FORCE_DEV_KERNARG=1
 export RCCL_MSCCL_ENABLE=0
@@ -25,6 +24,19 @@ export VLLM_USE_RDNA2_FA=1                  # extras images: native RDNA2 FlashA
 export VLLM_USE_V2_MODEL_RUNNER=1           # +17% vs V1 reported on gfx1030
 export FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
 ```
+
+### Custom all-reduce / P2P (two community stacks)
+
+Pick **one** path — do not mix both:
+
+| Topology | Env |
+|---|---|
+| **No working GPU↔GPU P2P** (common on Ice Lake / ACS-blocked hosts) | `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` (previous wiki default) |
+| **P2P works** and you want the fast path (`#vllm-rdna` Aug 2026 benches) | `VLLM_FORCE_CUSTOM_ALL_REDUCE=1`, `NCCL_P2P_LEVEL=pix`, `RCCL_P2P_NET_DISABLE=1`, `RCCL_P2P_BATCH_ENABLE=1`, `NCCL_PROTO=Simple` |
+
+If custom all-reduce misbehaves (stalls, bad latency on V620), fall back to the disable path. Some
+community recipes now run a short all-reduce self-test at boot and auto-fallback — pull latest recipe /
+fork notes.
 
 Prefer **`--attention-backend RDNA_ATTN`** (or `VLLM_USE_RDNA2_FA=1`) over **`ROCM_ATTN`** on `-extras`.
 `#vllm-rdna` reports `ROCM_ATTN` sitting in AMD Triton flash-attention compile for **hours** (RCCL and

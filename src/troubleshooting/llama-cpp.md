@@ -38,6 +38,16 @@ Mitigations to try (in order):
    fork update / local occupancy patch, or temporarily use **layer split** for that model until FA
    occupancy is fixed upstream/fork-side.
 
+## DAX-backed mmap oopses amdgpu SVM
+
+Symptom: loading a GGUF from an Optane / pmem **`dax=always`** mount with default mmap → kernel fault
+in `svm_range_dma_map_dev`, process becomes unkillable, VRAM leaked on all cards, reboot required.
+
+**Fix:** `--no-mmap` and/or `--load-mode none` whenever the model file lives on a DAX mount. Storage
+only affects **load time** (community: Optane DAX ~4 GB/s vs NVMe hundreds of MB/s for a ~30 GB
+GGUF); once weights are in VRAM, inference is unchanged. Great for swap-testing models; useless for a
+single long-lived production load.
+
 ## RCCL all-reduce fails (HIP "operation cannot be performed")
 
 Symptom: `ggml_backend_cuda_comm_allreduce_nccl` crash, `NCCL WARN HIP failure`.

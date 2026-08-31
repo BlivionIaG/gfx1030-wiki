@@ -124,3 +124,15 @@ Community reports, not wiki-benched:
 | **PLX / PCIe switch** | See [PLX / PCIe switches](#plx--pcie-switches). |
 | **Dual-socket (NUMA)** | TP across sockets can **halve prefill**. Bind workers to the NUMA node of their GPUs. P2P is typically **per socket**. vLLM with NUMA-aware TP workers is less painful than llama.cpp crossing UPI/Infinity Fabric. |
 | **Odd GPU counts (TP3)** | llama.cpp tensor-split on **3** cards has caused driver crashes; prefer 2 or 4. |
+
+## Cabling / risers (community)
+
+Not wiki-benched — common `#general` notes:
+
+- **SlimSAS / SFF-8654** cables: **PCIe gen3** is usually fine at ~70 cm; **gen4** needs testing per
+  cable/insulation. Prefer known-good gen4 kits over the cheapest Amazon/eBay passive ribbon risers.
+- **Passive PCIe risers:** several community reports of timeouts / inability to hold **gen4 x16** with
+  cheap passive risers under multi-GPU load, while the same slots work with cards seated directly.
+  Brand-name gen4 risers (e.g. ADT-class) are often the next step — A/B one card first.
+- **V620 + blower shroud length:** community measure ~**37 cm** with a common EFH-08E12W-style fan
+  shroud installed — plan chassis / PLX slot spacing accordingly.
