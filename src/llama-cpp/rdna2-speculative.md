@@ -49,6 +49,17 @@ Use **tg1024+** (not tg32) for realistic decode benchmarks. DFlash2 is more cons
 MTP acceptance tends to fall off. `#llamacpp` (Aug 26 2026): prefer the **DFlash2 Q4_K_M drafter**
 over MTP when context grows — same advice as the draft-quant row above.
 
+**Prefill cost:** DFlash tends to **hurt prompt processing more than MTP**. If PP is the bottleneck
+(short chats, many reconnects), A/B MTP first; if long-context decode matters more, keep DFlash2.
+
+## Qwen3.8 Flash-Next (experimental)
+
+Community benches (4× V620, layer vs tensor split) show Flash-Next **layer-split** can run, while
+**tensor split** on experimental qwen4exp / Flash-Next branches is still rough. Fork maintainers have
+deferred dedicated Flash-Next work until upstream settles — expect **experimental** support via
+upstream merges only, not a polished gfx1030 profile. Prefer stable Qwen3.8-27B / MoE recipes for
+production TP.
+
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
 
 ```bash
@@ -77,5 +88,12 @@ Pin the draft to one GPU while the main model stays tensor-split:
 --spec-type draft-mtp --spec-draft-n-max 4 --spec-draft-ngl 999 --spec-draft-device ROCm0
 ```
 
+Community tuning tip (Qwen3.8-27B Q8, TP4, real prompts): **`--spec-draft-n-max 3`** often beat
+`n=4` (higher acceptance / mean accepted length). A/B on your workload — do not trust 100% draft
+acceptance in synthetic benches (usually a bad prompt).
+
 **MXFP4** quants (e.g. `quark75/Qwen3.8-27B-MXFP4-GGUF`) pair well with MTP on TP2 — see
 [Serving](../rdna2-serving.md#docker-example).
+
+HIP **sidecar** speculative decoding (external process driving MTP/DFlash) is being explored in the
+fork as opt-in experimental work — track the fork README rather than copying unfinished flags here.

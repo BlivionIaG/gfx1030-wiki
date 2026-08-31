@@ -1,8 +1,29 @@
 # RDNA2 fork — Serving
 
-## Launch
+## Recommended env stack {#recommended-env-stack}
 
 `HSA_OVERRIDE_GFX_VERSION=10.3.0` is **required** for the tested V620/`gfx1030` native profile.
+
+Prefer this **short** stack (`#llamacpp`, Aug 2026). Older long lists of `GGML_HIP_GFX1030_*`
+knobs are mostly redundant with the override and can **clash with the RCCL autotune path**:
+
+```bash
+HSA_OVERRIDE_GFX_VERSION=10.3.0 \
+HSA_NO_SCRATCH_RECLAIM=1 \
+GGML_HIP_RDNA2_AUTO=1 \
+GGML_HIP_SAFE_STATE_IO=1 \
+GGML_TP_SHARDED_OUTPUT=1   # TP2+ only
+```
+
+- `GGML_HIP_SAFE_STATE_IO=1` — recommended default; mitigates a known ROCm FA crash class.
+- `GGML_CUDA_ALLREDUCE=nccl` — community reports **+10% tgen / +20% prefill** on Qwen 122B when RCCL
+  is healthy.
+- Optional TP4 mode: `GGML_HIP_GFX1030_P2P_ALLREDUCE=auto-expanded` (topology-gated).
+- If you see `internal AllReduce init failed (n_devices != 2)` or wild PP variance, strip custom
+  `GGML_HIP_GFX1030_*` / P2P knobs back to the short stack and re-test on **ROCm 7.2.0 or 7.14.0**
+  (not mid-7.2.x such as 7.2.4). See [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+
+## Launch
 
 **TP2+** (four-GPU example):
 
@@ -30,8 +51,25 @@ GGML_HIP_SAFE_STATE_IO=1 \
 ./build/bin/llama-server -m /path/to/main.gguf -ngl all --flash-attn on --host 0.0.0.0 --port 8080
 ```
 
-- `GGML_CUDA_ALLREDUCE=nccl` — author reports **+10% tgen / +20% prefill** on Qwen 122B.
-- Optional TP4 mode: `GGML_HIP_GFX1030_P2P_ALLREDUCE=auto-expanded` (topology-gated).
+### Batch / ubatch tips
+
+For tensor-split prefill, `#llamacpp` often does better with **larger ubatch** than the old
+`2048/256` bench defaults — roughly **~1024 ubatch per GPU** (e.g. TP4 → `--ubatch-size 4096`) while
+keeping `--batch-size` ≥ ubatch. Small prompts may regress slightly; long prompts usually win.
+
+Recent long-context community recipes commonly use `--batch-size 16384 --ubatch-size 1024` on TP4
+(see [Benchmarks](../rdna2-benchmarks.md#long-context-community-sweeps-aug-2930-2026)).
+
+### Host tips that affect llama-server
+
+- **CPU governor:** if any hot path stays on the host (Flash-Next n-gram tables, `--override-tensor …=CPU`,
+  MoE/KV offload), `powersave` can lag bursty PP. Community: switching Intel `intel_pstate` to
+  `performance` improved Flash-Next PP ~33% while VRAM-resident 27B was unchanged. Check
+  `/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`. See
+  [General troubleshooting](../../troubleshooting/general.md#cpu-governor-hurts-host-resident-models).
+- **DAX / Optane model store:** fast loads are nice for swap-testing; **never mmap** GGUFs from
+  `dax=always` mounts into ROCm — use `--no-mmap` / `--load-mode none`. See
+  [troubleshooting](../../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm).
 
 ### Full validated example (4× V620, Qwen3.5-122B-A10B-MTP)
 
@@ -81,9 +119,9 @@ is enabled but slower, set `NCCL_P2P_DISABLE=1`. If all-reduce fails, try
 ## Notable limits
 
 - Validated primarily on **4× V620 gfx1030, ROCm 7.14**; other systems use conservative fallbacks.
-  **TP4 does work** (author: Gigabyte MC62-G40; others on Broadwell-EP across two NUMA nodes). Most
-  successful TP4 + P2P reports are on **AMD CPUs**.
-- **Multi-socket** hosts can hurt TP — single-socket Epyc preferred. Dual-Xeon UPI traffic has
+  **TP4 does work** on known-good server boards (e.g. Gigabyte **MC62-G40**) and on some dual-socket
+  Broadwell-EP hosts. Most successful TP4 + P2P reports are on **AMD CPUs**.
+- **Multi-socket** hosts can hurt TP — single-socket EPYC preferred. Dual-Xeon UPI traffic has
   **halved prefill** in `#general` even when theoretical cross-socket bandwidth looked fine.
 - **KV checkpoints** crash on tensor split — use `--ctx-checkpoints 0`.
 - `GGML_TP_SHARDED_OUTPUT` and `GGML_TP_VOCAB_SHARDED_OUTPUT` are incompatible modes.
@@ -92,7 +130,13 @@ is enabled but slower, set `NCCL_P2P_DISABLE=1`. If all-reduce fails, try
   slower) or **140 W** (~8–10% slower vs unlocked) before blaming the fork. See
   [Power Tuning](../../tuning/power.md).
 - **TP3** (three cards) has caused driver crashes; stick to 2 or 4.
-- Most `GGML_HIP_GFX1030_*` flags are redundant with `HSA_OVERRIDE_GFX_VERSION=10.3.0` unless A/B testing.
+- Most `GGML_HIP_GFX1030_*` flags are redundant with `HSA_OVERRIDE_GFX_VERSION=10.3.0` unless A/B
+  testing — prefer the [short env stack](#recommended-env-stack).
+- **FA / q8 KV:** quantized V cache needs FA on; FA occupancy asserts on some head-256 models —
+  see [troubleshooting](../../troubleshooting/llama-cpp.md#flashattention-abort-max_blocks_per_sm--0).
+- **GPU sampling** (`--spec-draft-backend-sampling` and related): install `hipcub-devel` (or distro
+  equivalent) at build time. Without it, expect `device 'Meta()' does not have support for op TOP_K`
+  and fall back to slower CPU sampling.
 
 For stock builds see [Building & running](../building.md). Speculative decoding configs:
 [RDNA2 speculative decoding](../rdna2-speculative.md).

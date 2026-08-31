@@ -83,3 +83,20 @@ on the fork — see [Quantization](../../vllm/quantization.md#int4-on-gfx1030-no
 If TP works on one image and dies after a host ROCm bump, check the **ROCm version** before the
 model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
 **7.14.0** — see [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+
+## Prefill blocks decode / MTP stalls under concurrency
+
+Symptom: with speculative decode (MTP) and multiple in-flight requests, generation stalls while
+prefill runs; or graph + MTP3 reaches "Application startup complete" then hangs on PLE lookup /
+`sample_tokens` timeout.
+
+Community notes (`#vllm-rdna`):
+
+- Prefer **GPTQ + RDNA2 W4A16** (or AWQ HIP) paths over GGUF-in-vLLM for these cards.
+- Concurrent MTP / prefill-vs-decode fixes land in community recipes first — see open PRs on
+  [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe).
+- MTP=0 vs MTP=3 are different bug surfaces; a commit that "works" at MTP=3 can still emit spurious
+  tokens at MTP=0. A/B and pin a known-good recipe commit.
+- Slow or broken P2P + custom all-reduce can look like MTP latency bugs — A/B the
+  [disable vs PIX custom AR](../../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks)
+  stacks.

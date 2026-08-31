@@ -62,10 +62,15 @@ This wiki is public on GitHub Pages. When turning Discord messages into docs:
 | Do | Don't |
 |---|---|
 | Summarize operational facts (env vars, topology, bench numbers) | Paste message URLs, message IDs, or `@mentions` |
-| Attribute with channel names (`#vllm-rdna`) or "community report" | Copy Discord usernames, display names, or avatars |
-| Use `/path/to/model`, `./build/bin/…`, `-hf org/model` | Copy someone's home directory, hostnames, or internal IPs |
+| Attribute with channel names (`#vllm-rdna`) or "community report" | Copy Discord usernames, display names, real names, or avatars |
+| Use `/path/to/model`, `./build/bin/…`, `-hf org/model` | Copy someone's home directory, hostnames, Linux usernames, or internal IPs |
 | Link public repos (GitHub, Hugging Face, lunnova.dev) | Commit bot tokens, guild IDs, or channel IDs |
-| Generalize hardware ("Ice Lake 4× V620 host") | Quote forum thread titles that include a member's name |
+| Generalize hardware ("Ice Lake 4× V620 host", "server board X") | Quote forum thread titles that include a member's name |
+| Cite motherboard / CPU **product** models when they help topology advice | Paste PCI BDFs (`0000:1a:00.0`), serials, MAC addresses, or geotags |
+
+Public GitHub / Hugging Face **org or repo names** are fine to link (they are already public
+attribution). Prefer "community report" / "fork README" over naming Discord people even when the
+same handle appears on GitHub.
 
 **Never commit:** `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `.env` files, or screenshots of private
 channels. Cloud Agents should set token + guild ID in **Secrets** only (see repo `README.md`).

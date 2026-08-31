@@ -47,3 +47,29 @@ MIOpen compiles kernels on first use in `~/.cache/miopen`. Later runs are fast.
 ## Secure Boot blocks the amdgpu-dkms module
 
 Either sign the module or disable Secure Boot.
+
+## CPU governor hurts host-resident models
+
+Symptom: Flash-Next (or any model with large **CPU-side** tables / offload) has weak prefill; VRAM-only
+27B is fine.
+
+On Intel `intel_pstate`, default `powersave` still boosts but **ramps lazily**. Bursty host work
+(n-gram hash + gather from a multi-GB host table) finishes before the governor reacts. Community:
+`performance` improved Flash-Next PP ~33% on a ~6k prompt; GPU-bound Qwen3.8-27B unchanged; idle
+clocks still drop.
+
+```sh
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+```
+
+Persist with a systemd oneshot if needed (resets on reboot). Skip this if every tensor stays in VRAM.
+
+## Unsupported AMD GPU in the box "steals" ROCm
+
+Symptom: env overrides look correct, but ROCm / vLLM acts as if only an old unsupported AMDGPU exists
+(e.g. Polaris) and ignores the V620s.
+
+`#general`: some ROCm code paths **punt the entire stack** when they see an unsupported AMD device,
+instead of skipping that one card. Workarounds: remove/disable the unsupported device, or hide it with
+`HIP_VISIBLE_DEVICES` / `ROCR_VISIBLE_DEVICES` so only the gfx1030 cards remain visible.

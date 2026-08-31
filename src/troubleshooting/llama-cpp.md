@@ -7,6 +7,47 @@ Symptom: fatal error in `ggml-backend-meta.cpp` during warmup with tensor split.
 Fix: `--ctx-checkpoints 0`. Known on stock llama.cpp and the RDNA2 fork. See
 [RDNA2 serving limits](../../llama-cpp/rdna2-serving.md#notable-limits).
 
+## FlashAttention abort: `max_blocks_per_sm > 0`
+
+Symptom: server aborts with something like:
+
+```text
+fattn-common.cuh:…: GGML_ASSERT(max_blocks_per_sm > 0) failed
+  launch_fattn<256, …>
+```
+
+`#llamacpp` / community reports this on **gfx1030** when the HIP occupancy query returns **0** for
+the **head-size 256** FA tile kernel (common on Qwen3.8 dense and some MoE paths).
+
+Constraints that make this painful:
+
+| Goal | Constraint |
+|---|---|
+| Quantized **V** cache (`q8` KV, etc.) | Requires `--flash-attn on` — no bypass |
+| `--flash-attn off` | Forces **f16** KV |
+| `--split-mode tensor` | Effectively needs FA on many workloads |
+
+Mitigations to try (in order):
+
+1. Prefer the RDNA2 fork build script (`./scripts/build-rdna2-portable.sh`) so FA paths match the
+   fork's gfx1030 profile.
+2. Keep the **simplified** env stack — especially `GGML_HIP_SAFE_STATE_IO=1` (known ROCm FA crash
+   workaround). Do **not** pile on every `GGML_HIP_GFX1030_*` flag; that set can clash with the RCCL
+   autotune path. See [Serving](../../llama-cpp/rdna2-serving.md#recommended-env-stack).
+3. If FA still aborts on head-256 models under TP: fall back to **f16 KV + FA on** only after a
+   fork update / local occupancy patch, or temporarily use **layer split** for that model until FA
+   occupancy is fixed upstream/fork-side.
+
+## DAX-backed mmap oopses amdgpu SVM
+
+Symptom: loading a GGUF from an Optane / pmem **`dax=always`** mount with default mmap → kernel fault
+in `svm_range_dma_map_dev`, process becomes unkillable, VRAM leaked on all cards, reboot required.
+
+**Fix:** `--no-mmap` and/or `--load-mode none` whenever the model file lives on a DAX mount. Storage
+only affects **load time** (community: Optane DAX ~4 GB/s vs NVMe hundreds of MB/s for a ~30 GB
+GGUF); once weights are in VRAM, inference is unchanged. Great for swap-testing models; useless for a
+single long-lived production load.
+
 ## RCCL all-reduce fails (HIP "operation cannot be performed")
 
 Symptom: `ggml_backend_cuda_comm_allreduce_nccl` crash, `NCCL WARN HIP failure`.

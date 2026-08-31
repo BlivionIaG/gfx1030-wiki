@@ -28,9 +28,21 @@ image targets seven RDNA architectures (gfx1030 through RDNA4).
 
 Image tags are **refreshed in place** when fixes land — always `docker pull` before debugging. Confirm your
 `-extras` image includes the latest `rdna2_extras` commits (AWQ dispatch, GDN HIP, TP graph fix).
+`#vllm-rdna` (Aug 31 2026): `blivioniag/vllm-rdna:v0.27.1-extras` was refreshed again — re-pull even if
+you already had that tag.
+
+> **Upstream vLLM 0.28.x:** Discord asked whether stock vLLM now lists gfx1030. Official 0.28 GPU docs
+> still target CDNA / RDNA3+ families, not Navi 21. Keep using the community `-extras` images (or the
+> [rdna2_extras fork](../fork.md)) until an upstream release explicitly documents gfx1030.
+
+## llama.cpp vs vLLM
+
+For a short comparison table (battle-tested GGUF vs agentic / Flash-Next), see
+[llama.cpp overview](../../llama-cpp/overview.md#llamacpp-vs-vllm-on-v620-llamacpp--vllm-rdna).
 
 ## Related
 
 - [Multi-GPU PCIe P2P](../../tuning/p2p.md) — important for tensor parallel.
 - [Environment variables](../../reference/env-vars.md) — cheat-sheet.
-- [Community recipes](https://github.com/leapdragon/vllm-rdna2-recipe) — external collection.
+- [Community recipes](https://github.com/leapdragon/vllm-rdna2-recipe) — external collection (includes
+  concurrent MTP / prefill-vs-decode work — check open PRs).

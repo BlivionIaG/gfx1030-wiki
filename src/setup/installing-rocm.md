@@ -53,13 +53,17 @@ smaller RDNA2 die — continue to [HSA_OVERRIDE for RDNA2 Cousins](./hsa-overrid
 ## Multi-GPU: pin ROCm 7.2.0 or 7.14.0
 
 For **more than one card**, stay on **ROCm 7.2.0** (not 7.2.1+) **or jump to 7.14.0**.
-`#vllm-rdna` reports an **RCCL bug from 7.2.1 upward** that shows up as soon as you leave a single
-GPU — tensor-parallel hangs, comm failures, or cards dropping offline. The published
+`#vllm-rdna` / `#llamacpp` report an **RCCL bug from 7.2.1 upward** (including mid-line builds such as
+**7.2.4**) that shows up as soon as you leave a single GPU — tensor-parallel hangs, comm failures,
+`AllReduce init failed`, or cards dropping offline. The published
 [`vllm-rdna`](../vllm/running.md#image-matrix) images already sit on those two bases for that reason.
 
 Do **not** "upgrade within 7.2.x" on a multi-GPU box. If you are already on a broken 7.2.1–7.13
 userspace, rebuild or pull a **7.2.0** or **7.14.0** image rather than debugging RCCL on the
-in-between releases.
+in-between releases. ROCm **10** / TheRock packaging is interesting for newer cards; community
+llama.cpp benches on Ice Lake have run ROCm **10.0** with numbers close to 7.1 on that host, but
+day-to-day advice for gfx1030 multi-GPU is still: **prefer 7.14.0** (or 7.2.0) unless you are
+deliberately lab-testing 10.x.
 
 ## Notes & gotchas
 

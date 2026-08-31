@@ -37,6 +37,8 @@ See the fork's `README.md` and `docs/gfx1030-*` / `docs/rdna2-*` for the authori
 - Fastest fork quants in `#llamacpp` / `#harnesses` are **Q4_0** and **Q8_0** (native MMVQ paths).
   Q6 / UD-Q4_K can be slower even when they "fit". **MXFP4** has been reported a bit faster than
   Q4_0 on some 27B runs — A/B on your cards.
+- For GPU-side sampling paths, install **`hipcub-devel`** (package name varies by distro) before
+  building — otherwise TOP_K / draft sampling falls back to CPU.
 
 ## Build
 

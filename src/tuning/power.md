@@ -111,7 +111,18 @@ sudo ./powertuning/scripts/v620-verify.sh
 ```
 
 `v620-verify.sh` confirms both the `V620 powerfix` dmesg marker and `power1_cap_min=120000000`.
-After the override, idle around **~7 W per card** has been reported (Fedora 44, 4× V620).
+After the override, idle around **~7 W per card** has been reported (Fedora 44, 4× V620). If idle
+is still ~50 W, the floor/cap path is not active — re-run verify.
+
+### Token cost vs stock 250 W
+
+`#llamacpp`: at the **stock 250 W** floor, V620 inference can look ~15% more expensive per token than a
+high-end Nvidia reference; with a **180 W** cap after the floor unlock, the same report called V620
+**~20% cheaper** per token, with falloff "undetectable" down to ~200 W and only small percentages below
+that. Cap at **160 / 140 W** mainly for PSU headroom, not because 180 W is slow.
+
+Undervolt experiments exist; community: about **−25 mV** was stable for one host, while more aggressive
+settings started emitting **random tokens**. Treat UV as optional and A/B carefully.
 
 ## Slot power and PSU transients
 

@@ -54,6 +54,34 @@ and **40–50 t/s** decode.
 > `pp512` = prefill (512-token prompt); `tg128` = generation (128 tokens). For A3B MoE, **layer split**
 > beats tensor split; dense models use tensor split.
 
+## Long-context community sweeps (Aug 29–30 2026)
+
+Community `#benchmarks` posts (4× V620, RDNA2 fork, short env stack, `--ubatch-size 1024`, MTP). Treat
+as **single-host snapshots** — not wiki-reproduced.
+
+### Quant comparison (one host, tensor-split + MTP)
+
+Prompt-eval and generation across context tiers; **Q8_0** often wins on this fork (native MMVQ path):
+
+| ctx | Q4_K_L tg | Q6_K_L tg | Q8_0 tg | bf16 tg |
+|---|---:|---:|---:|---:|
+| 16k | 16.7 | 16.0 | 17.5 | 15.7 |
+| 32k | 24.4 | 27.5 | 31.7 | 18.6 |
+| 64k | 21.8 | 23.6 | 22.2 | 11.0 |
+| 128k | 23.0 | 22.4 | 26.7 | 12.4 |
+
+Prefill ranking on that host: **Q8_0 > Q4 ≈ Q6 > bf16**. A separate real ~107k-token prose prompt on
+Q8_0 reported ~667 PP / ~23 tg with ~45% MTP accept.
+
+### ROCm 7.1 vs 10.0 (Ice Lake 4× V620, Q6_K_XL + MTP)
+
+Same fork commit / command shape; community numbers are close across ROCm **7.1** and **10.0** on that
+host (regular 16k ~963–965 PP / ~46 tg). Prefer [ROCm 7.2.0 or 7.14.0](../../setup/installing-rocm.md)
+for multi-GPU RCCL unless you are deliberately lab-testing TheRock/10.x.
+
+Reproduce long-context benches with fixed non-repeating prompts (16/32/64/128k) and full command +
+commit — community tool: [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench).
+
 ## Upcoming optimizations (PR #10)
 
 > **Status:** in review — [PR #10](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/10). Env vars
