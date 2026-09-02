@@ -13,7 +13,7 @@ Docker tags yet.
 |---|---|---|---|
 | **1 (current)** | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | Hand-written **RDNA2 HIP kernels** + dispatch; feeds `blivioniag/vllm-rdna:*-extras` images | Day-to-day gfx1030 serving via `-extras` Docker |
 | **2 (current)** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | **Flash-Next / Qwen3.8** focused fork + container recipe ([ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)) | Qwen3.8 Flash-Next production path while llama.cpp lags |
-| **3 (next target)** | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`) | Shared org plane: rebase toward **vLLM 0.28**, land `rdna2_extras` HIP work, backport leapdragon commits, one tickets/CI home | Tracking / contributing to the merge — **not** the default image source yet |
+| **3 (next target)** | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`) | Shared org plane: rebase toward **vLLM 0.28**, land `rdna2_extras` HIP work, backport Flash-Next fork commits, one tickets/CI home | Tracking / contributing to the merge — **not** the default image source yet |
 
 **Day-to-day:** keep pulling [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) `-extras`
 tags (fork **#1**). Use fork **#2** for Flash-Next. Treat fork **#3** as the destination once images/CI

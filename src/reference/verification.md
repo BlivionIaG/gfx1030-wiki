@@ -50,10 +50,10 @@
 | Cache sizes ~3 GB / ~700 MB | **Community** | Order-of-magnitude |
 | `SAFETENSORS_FAST_GPU=1` | **Community** | `#vllm-rdna` Sep 2026 + AMD optimization docs |
 | `VLLM_CACHE_ROOT` + compile cache on | **Community** | Flash-Next / recipe startups (~5 vs ~10 min) |
-| Flash-Next ~580–700 PP / ~50–53 decode | **Community** | `#vllm-rdna` Sep 2026, leapdragon recipe host |
-| ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in leapdragon `ROCR-CPU-FIX.md` |
+| Flash-Next ~580–700 PP / ~50–53 decode | **Community** | `#vllm-rdna` Sep 2026, Flash-Next recipe host |
+| ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in fork #2 `ROCR-CPU-FIX.md` |
 | EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
-| Two current forks + opengfx1030 as #3 target | **Community** | `#vllm-rdna` Sep 2026: #1 `rdna2_extras`, #2 leapdragon Flash-Next; #3 `opengfx1030/vllm-rdna` is next merge target (0.28), not default Docker yet |
+| Two current forks + opengfx1030 as #3 target | **Community** | `#vllm-rdna` Sep 2026: #1 `rdna2_extras`, #2 Flash-Next fork; #3 `opengfx1030/vllm-rdna` is next merge target (0.28), not default Docker yet |
 | `opengfx1030/vllm-rdna` ready for day-to-day | **Needs verify** | Org repo + `rdna_extras` branch exist; Hub `-extras` still from fork #1 |
 | Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep `-extras` |
 
@@ -78,7 +78,7 @@
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Fork landscape: #1 `rdna2_extras`, #2 leapdragon Flash-Next, #3 opengfx1030 next | **Community** | `#vllm-rdna` Sep 2026 plan; confirm Hub tags still track #1 |
+| Fork landscape: #1 `rdna2_extras`, #2 Flash-Next fork, #3 opengfx1030 next | **Community** | `#vllm-rdna` Sep 2026 plan; confirm Hub tags still track #1 |
 | No WMMA on RDNA2 | **Solid** | Architecture |
 | Kernel file list | **Solid** | Fork tree (`rdna2_extras`) |
 | `fa_rdna2` head_size=256 | **Fork-source** | Commit `03b2d91` |
@@ -164,7 +164,7 @@
 | `troubleshooting/llama-cpp.md` DAX mmap SVM oops | **Community** | `--no-mmap` mandatory on `dax=always` |
 | `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris/WX4100-in-box ROCm skip; unbind > ROCR_VISIBLE alone |
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
-| `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — leapdragon patch |
+| `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |
 | `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |
 | `tuning/p2p.md` SlimSAS / passive riser notes | **Community** | `#general` cabling |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
