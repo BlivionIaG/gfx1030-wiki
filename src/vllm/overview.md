@@ -15,7 +15,8 @@ image targets seven RDNA architectures (gfx1030 through RDNA4).
 | Pull an image and run your first model | [Running (Docker)](../running.md) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](../configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](../quantization.md) |
-| Custom RDNA2 HIP kernels (`-extras`) | [rdna2_extras fork](../fork.md) |
+| Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](../fork.md) (`rdna2_extras`) |
+| Which fork / Flash-Next / opengfx1030 | [Fork landscape](../fork.md#fork-landscape) |
 | Rebuild or extend Docker images | [Building images](../images.md) |
 | Something broke | [vLLM troubleshooting](../../troubleshooting/vllm.md) |
 
@@ -24,27 +25,30 @@ image targets seven RDNA architectures (gfx1030 through RDNA4).
 | Variant | When to use |
 |---|---|
 | `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. |
-| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | [`rdna2_extras`](../fork.md) fork with native RDNA2 kernels — **recommended on gfx1030**. |
+| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Fork **#1** [`rdna2_extras`](../fork.md#the-rdna2_extras-fork-fork-1) — native RDNA2 kernels; **recommended** day-to-day on gfx1030. |
 
 Image tags are **refreshed in place** when fixes land — always `docker pull` before debugging. Confirm your
 `-extras` image includes the latest `rdna2_extras` commits (AWQ dispatch, GDN HIP, TP graph fix).
 `#vllm-rdna` (Aug 31 2026): `blivioniag/vllm-rdna:v0.27.1-extras` was refreshed again — re-pull even if
 you already had that tag.
 
-> **Upstream vLLM 0.28.x:** Discord asked whether stock vLLM now lists gfx1030. Official 0.28 GPU docs
-> still target CDNA / RDNA3+ families, not Navi 21. Keep using the community `-extras` images (or the
-> [rdna2_extras fork](../fork.md)) until an upstream release explicitly documents gfx1030. `#vllm-rdna`
-> (Sep 2026): community work is rebasing HIP kernels toward **0.28** and consolidating into
-> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) — published Docker tags may lag
-> that org until CI images catch up.
+> **Two forks now; third is the target.** Day-to-day serving = **`blivioniag/vllm` `rdna2_extras`**
+> (Docker `-extras`). Flash-Next = **`leapdragon/vllm-rdna2-qwen`**. The shared
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) repo is the **next consolidation
+> target** (0.28 rebase + both lines of work) — not the default image source yet. Details:
+> [Fork landscape](../fork.md#fork-landscape).
+>
+> **Upstream vLLM 0.28.x:** Official GPU docs still omit Navi 21 / gfx1030. Keep community forks until
+> upstream documents it.
 
 ### Qwen3.8 Flash-Next on vLLM
 
-llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). Community production path is the
-[`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
-branch / recipe: `#vllm-rdna` reports cold **~580–700 tok/s prefill** and **~50–53 tok/s decode** on
-16k–32k-tier prompts without MTP (ballpark; host-dependent). Prefer that stack over llama.cpp for
-Flash-Next until the RDNA2 llama.cpp fork catches up.
+llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). Community production path is fork
+**#2** — [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
+— not the Hub `-extras` image: `#vllm-rdna` reports cold **~580–700 tok/s prefill** and **~50–53 tok/s
+decode** on 16k–32k-tier prompts without MTP (ballpark; host-dependent). Prefer that stack over llama.cpp
+for Flash-Next until the RDNA2 llama.cpp fork catches up. Flash-Next work is expected to land in
+**opengfx1030** after the 0.28 rebase / merge.
 
 Also watch [TheRock ROCR idle-CPU spin](../../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714)
 on ROCm 7.14 hosts.

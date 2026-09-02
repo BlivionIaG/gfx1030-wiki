@@ -53,7 +53,8 @@
 | Flash-Next ~580–700 PP / ~50–53 decode | **Community** | `#vllm-rdna` Sep 2026, leapdragon recipe host |
 | ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in leapdragon `ROCR-CPU-FIX.md` |
 | EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
-| `opengfx1030/vllm-rdna` consolidation | **Needs verify** | Org repo exists; Docker tags may lag |
+| Two current forks + opengfx1030 as #3 target | **Community** | `#vllm-rdna` Sep 2026: #1 `rdna2_extras`, #2 leapdragon Flash-Next; #3 `opengfx1030/vllm-rdna` is next merge target (0.28), not default Docker yet |
+| `opengfx1030/vllm-rdna` ready for day-to-day | **Needs verify** | Org repo + `rdna_extras` branch exist; Hub `-extras` still from fork #1 |
 | Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep `-extras` |
 
 ### `quantization.md`
@@ -77,8 +78,9 @@
 
 | Statement | Status | Verify how |
 |---|---|---|
+| Fork landscape: #1 `rdna2_extras`, #2 leapdragon Flash-Next, #3 opengfx1030 next | **Community** | `#vllm-rdna` Sep 2026 plan; confirm Hub tags still track #1 |
 | No WMMA on RDNA2 | **Solid** | Architecture |
-| Kernel file list | **Solid** | Fork tree |
+| Kernel file list | **Solid** | Fork tree (`rdna2_extras`) |
 | `fa_rdna2` head_size=256 | **Fork-source** | Commit `03b2d91` |
 | GDN decode ~9.3× vs Triton | **Community** | Fork microbench |
 | GDN full HIP prefill chain | **Fork-source** | Commits `69d2efe`, `b53a7a2c` |
