@@ -9,6 +9,9 @@ via GitHub Actions. Anyone is welcome to contribute — just open a pull request
 
 **Live site:** https://blivioniag.github.io/gfx1030-wiki/ (after the first Pages deployment)
 
+**Community Discord (gfx1030 club):** https://discord.gg/mESex2aBp — where most tuning tips and fork
+updates land first (`#vllm-rdna`, `#llamacpp`, `#general`, `#benchmarks`).
+
 ## Contributing
 
 You can contribute either directly on GitHub (edit a file and open a PR) or locally with mdBook so you

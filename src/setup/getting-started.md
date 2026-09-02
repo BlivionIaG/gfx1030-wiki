@@ -61,6 +61,12 @@ python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_
 
 You should see `True` and your Radeon card's name. If not, see [Troubleshooting](../troubleshooting/index.md).
 
+## 6. Join the community Discord
+
+Questions, live benches, and fork updates land first on **gfx1030 club**:
+[https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp) (`#vllm-rdna`, `#llamacpp`, `#general`,
+`#benchmarks`). See [Useful resources](../meta/resources.md#community-discord).
+
 ---
 
 ## Previewing this wiki locally

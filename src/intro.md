@@ -33,6 +33,17 @@ kernels) takes a bit of extra work. That's what this wiki documents.
 
 New here? Start with [Supported Hardware](./setup/hardware.md) and [Getting Started](./setup/getting-started.md).
 
+## Community Discord
+
+Much of this wiki is distilled from the **gfx1030 club** Discord — live tuning tips, fork releases,
+and multi-GPU benches land there first.
+
+- **Server:** gfx1030 club
+- **Join:** [https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp)
+- Useful channels: `#vllm-rdna`, `#llamacpp`, `#general`, `#benchmarks`, `#harnesses`
+
+When turning Discord threads into docs, follow the privacy rules in [Contributing](./meta/contributing.md#privacy-discord--wiki).
+
 > **Disclaimer:** This is a community wiki, not affiliated with or endorsed by AMD. Kernel patches and
 > power-cap changes are done at your own risk. Always cross-check against the official
 > [ROCm documentation](https://rocm.docs.amd.com/). Contributions welcome — see
