@@ -4,7 +4,7 @@
 
 Symptom: crash at `GDN _output_projection all-reduce` / `_SimpleCData.__new__`, or OOM during graph capture.
 
-**Root cause (fixed in current `rdna2_extras`):** TP comm wrappers were not `allow_in_graph`. Fork fix:
+**Root cause (fixed in current extras):** TP comm wrappers were not `allow_in_graph`. Fork fix:
 `fix(distributed): allow TP comm ops in torch.compile graph capture`.
 
 **First, pull the latest image:**
@@ -41,7 +41,7 @@ Check logs for `Using RDNA2W4A16LinearKernel`. If you see Triton/Exllama instead
 export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
 ```
 
-Confirm `-extras` image from current `rdna2_extras`. See [Fork kernel dispatch](../../vllm/fork.md#kernel-dispatch-on-gfx1030).
+Confirm `-extras` image from current extras. See [Fork kernel dispatch](../../vllm/fork.md#kernel-dispatch-on-gfx1030).
 
 ## vLLM picks the wrong platform / doesn't see my Radeon
 

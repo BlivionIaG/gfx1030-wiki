@@ -25,7 +25,7 @@ src/
     running.md             # Images, docker run, quick start
     configuration.md       # Env vars, CUDA graphs, compose
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
-    fork.md                # rdna2_extras kernels
+    fork.md                # rdna_extras kernels
     images.md              # Building Docker images
 
   llama-cpp/               # llama.cpp and RDNA2 fork

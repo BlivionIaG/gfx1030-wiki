@@ -8,7 +8,7 @@ Common errors on gfx1030 / RDNA2 and how to fix them. Pick the section that matc
 | vLLM Docker, CUDA graphs, kernel dispatch, AMDSMI, RCCL 7.2.1+, MTP stalls | [vLLM](./vllm.md) |
 | llama.cpp RCCL, KV checkpoints, FA occupancy abort, DAX mmap, tensor split, PSU, Vulkan ICD | [llama.cpp](./llama-cpp.md) |
 
-> **WIP:** Fixes involving latest `rdna2_extras` images assume a current image pull — see
+> **WIP:** Fixes involving latest `-extras` images assume a current image pull — see
 > [Verification status](../reference/verification.md).
 
 ## Still stuck?

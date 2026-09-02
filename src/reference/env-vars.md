@@ -124,5 +124,5 @@ RDNA2 has **no fast BF16**. Always prefer **FP16** for hot paths:
 
 - PyTorch: pass `dtype=torch.float16`.
 - vLLM: `--dtype float16` (see [Running vLLM](../vllm/overview.md)).
-- The [`rdna2_extras`](../vllm/fork.md) fork adds quantized (W4A16 / FP8) RDNA2 kernels to cut VRAM and
+- The [`rdna_extras`](../vllm/fork.md) fork adds quantized (W4A16 / FP8) RDNA2 kernels to cut VRAM and
   sidestep BF16 entirely.
