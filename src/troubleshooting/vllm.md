@@ -100,3 +100,20 @@ Community notes (`#vllm-rdna`):
 - Slow or broken P2P + custom all-reduce can look like MTP latency bugs — A/B the
   [disable vs PIX custom AR](../../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks)
   stacks.
+
+## ROCR idle CPU spin (TheRock 7.14) {#rocr-idle-cpu-spin-therock-714}
+
+Symptom: after starting a multi-GPU vLLM serve on **TheRock / ROCm 7.14** (ROCR **1.21**), the host
+holds several CPU cores at high utilization even when the GPUs are idle (~one core per HIP process,
+plus more once RCCL initializes).
+
+Root cause: `AsyncEventsLoop` / signal-wait paths busy-spin without backoff
+([ROCm/TheRock#7051](https://github.com/ROCm/TheRock/issues/7051),
+[ROCm/ROCm#6522](https://github.com/ROCm/ROCm/issues/6522)). Stock env knobs
+(`HSA_ENABLE_INTERRUPT`, etc.) do not fix multi-GPU cases.
+
+**Fix:** rebuild only `libhsa-runtime64.so` with the poll-backoff patch and `LD_PRELOAD` it. Step-by-step
+for host builds (and note that recipe containers already bake the patch):
+[`docs/rdna2/ROCR-CPU-FIX.md`](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)
+in [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next).
+Pull latest recipe / container before re-debugging idle CPU.

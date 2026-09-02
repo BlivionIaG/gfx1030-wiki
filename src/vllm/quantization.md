@@ -60,3 +60,14 @@ graphs (1024/512), **~331 total tok/s** at 8 concurrent requests (16k/512), and 
   the native kernel is active before blaming the quant format.
 - Don't force `--attention-backend` or `--quantization` — let vLLM auto-select unless A/B testing.
 - Mount Triton and torch-compile caches (see [Configuration](../configuration.md#cache-volumes-first-boot-is-slow)).
+
+## Experimental: EXL3 and Quark (`#vllm-rdna`, Sep 2026)
+
+These paths are **not** in the published `-extras` image matrix yet — track Discord / fork branches.
+
+| Format | Status | Notes |
+|---|---|---|
+| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Needs a rebuilt image that includes the EXL3 path. |
+| **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
+
+Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.

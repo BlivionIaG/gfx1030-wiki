@@ -4,6 +4,16 @@ Curated links for gfx1030 / RDNA2 work. Grouped by type — not everything here 
 wiki-maintained; see [Verification status](../reference/verification.md) for claim audits on guides
 that reference these projects.
 
+## Community Discord
+
+Primary hangout for V620 / gfx1030 inference work. Wiki pages often cite channel names
+(`#vllm-rdna`, `#llamacpp`, `#general`, `#benchmarks`) — that is where the claim came from.
+
+| | |
+|---|---|
+| **Server** | **gfx1030 club** |
+| **Invite** | [https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp) |
+
 ## Official documentation
 
 - [ROCm documentation](https://rocm.docs.amd.com/)
@@ -47,8 +57,10 @@ performance work happens first.
 |---|---|
 | [`blivioniag/v620_toolbox`](https://github.com/blivioniag/v620_toolbox) | V620 power cap + PCIe P2P — [`powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning) (Fedora), [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning) (Ubuntu 26.04); see [Power tuning](../tuning/power.md) |
 | [`blivioniag/vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker) | Docker build system for `rocm-rdna` / `vllm-rdna` images |
-| [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | vLLM fork with RDNA2 HIP kernels — see [rdna2_extras fork](../vllm/fork.md) |
-| [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community vLLM serving recipes for RDNA2 (watch open PRs for concurrent MTP) |
+| [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | **vLLM fork #1 (current)** — RDNA2 HIP kernels; Hub `-extras` images — [fork landscape](../vllm/fork.md#fork-landscape) |
+| [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) | **vLLM fork #2 (current)** — Flash-Next / Qwen3.8 — [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md) |
+| [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) | **vLLM fork #3 (next target)** — shared org merge of #1 + #2 toward vLLM 0.28; not default Docker yet |
+| [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community compose/env recipes (not a separate engine fork; watch open PRs for concurrent MTP) |
 | [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) | RDNA2/V620 llama.cpp fork — see [overview](../llama-cpp/rdna2-overview.md) |
 | [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench) | Reproducible long-context PP/TG benches (real prompts) — used by `#benchmarks` |
 | [`sebastianmechno-sys/vllm-rocm-windows-rdna2`](https://github.com/sebastianmechno-sys/vllm-rocm-windows-rdna2) | Unofficial Windows 11 + ROCm 7.x vLLM for RX 6000 — **not wiki-validated** |

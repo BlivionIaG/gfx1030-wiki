@@ -3,6 +3,10 @@
 This is a community wiki for the gfx1030 (RDNA2 / Navi 21) GPU ecosystem. Contributions of all sizes are
 welcome — fixing a typo, correcting an out-of-date command, or adding a whole new guide.
 
+Live discussion happens on the **gfx1030 club** Discord:
+[https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp). Propose wiki fixes there (`#wiki`) or
+open a GitHub PR — both are fine. See [Useful resources](./resources.md#community-discord).
+
 ## Two ways to contribute
 
 ### 1. Directly on GitHub (no command line)

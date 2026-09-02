@@ -1,7 +1,30 @@
-# The rdna2_extras Fork
+# vLLM forks (RDNA2 / gfx1030)
 
 > **WIP:** Kernel behavior below is traced to **fork source commits**; published `-extras` Docker images
 > may lag HEAD until rebuilt. See [Verification status](../../reference/verification.md#vllm-forkmd).
+
+## Fork landscape {#fork-landscape}
+
+`#vllm-rdna` (Sep 2026): there are **two active vLLM forks** today. A **third**, shared-org repo
+(`opengfx1030`) is the **next target** — planned merge plane, not a drop-in replacement for published
+Docker tags yet.
+
+| # | Repo / branch | Role | Use it when… |
+|---|---|---|---|
+| **1 (current)** | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | Hand-written **RDNA2 HIP kernels** + dispatch; feeds `blivioniag/vllm-rdna:*-extras` images | Day-to-day gfx1030 serving via `-extras` Docker |
+| **2 (current)** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | **Flash-Next / Qwen3.8** focused fork + container recipe ([ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)) | Qwen3.8 Flash-Next production path while llama.cpp lags |
+| **3 (next target)** | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`) | Shared org plane: rebase toward **vLLM 0.28**, land `rdna2_extras` HIP work, backport Flash-Next fork commits, one tickets/CI home | Tracking / contributing to the merge — **not** the default image source yet |
+
+**Day-to-day:** keep pulling [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) `-extras`
+tags (fork **#1**). Use fork **#2** for Flash-Next. Treat fork **#3** as the destination once images/CI
+catch up — do not assume `opengfx1030` tags replace Hub yet.
+
+Companion (not a third engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
+collects compose/env recipes and open PRs (concurrent MTP, etc.) that may target either stack.
+
+---
+
+## The `rdna2_extras` fork (fork #1)
 
 The `-extras` images are built from the
 [`blivioniag/vllm`](https://github.com/blivioniag/vllm) fork on the **`rdna2_extras`** branch. It adds

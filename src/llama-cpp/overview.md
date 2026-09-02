@@ -30,7 +30,7 @@ Community rule of thumb (Aug 2026):
 |---|---|
 | Getting ROCm + multi-GPU working; GGUF; single-stream / low concurrency | **llama.cpp** (RDNA2 fork) — more battle-tested on V620 |
 | Multi-stream / agentic loads with prefix caching | **vLLM `-extras`** — caching + concurrency usually win |
-| Qwen3.8 **Flash-Next** on 4× V620 | Community: ~28–30 t/s on the llama.cpp fork vs ~59–60 t/s on vLLM (same card count; architecture still experimental) |
+| Qwen3.8 **Flash-Next** on 4× V620 | Prefer **vLLM** Flash-Next recipe (~50–60 t/s decode class) over llama.cpp (~15–30 t/s community reports; upstream/fork gaps) — see [vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm) |
 
 Neither stack is "finished" for every model. New to the cards? Start with
 [RDNA2 serving](../rdna2-serving.md), then try [vLLM](../../vllm/overview.md) when you need concurrency.

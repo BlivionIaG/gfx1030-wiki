@@ -68,8 +68,21 @@ Persist with a systemd oneshot if needed (resets on reboot). Skip this if every 
 ## Unsupported AMD GPU in the box "steals" ROCm
 
 Symptom: env overrides look correct, but ROCm / vLLM acts as if only an old unsupported AMDGPU exists
-(e.g. Polaris) and ignores the V620s.
+(e.g. Polaris / WX4100) and ignores the V620s — or `rocminfo` crashes with topology errors about an
+unsupported KFD node.
 
-`#general`: some ROCm code paths **punt the entire stack** when they see an unsupported AMD device,
-instead of skipping that one card. Workarounds: remove/disable the unsupported device, or hide it with
-`HIP_VISIBLE_DEVICES` / `ROCR_VISIBLE_DEVICES` so only the gfx1030 cards remain visible.
+`#general` / `#llamacpp`: some ROCm code paths **punt the entire stack** when they see an unsupported
+AMD device, instead of skipping that one card. `ROCR_VISIBLE_DEVICES` alone is **unreliable** for this
+on mixed hosts.
+
+Workarounds (pick one):
+
+1. **Unbind** the display/legacy card from `amdgpu` after boot (keep it for POST / recovery, but out of
+   the compute topology).
+2. Use a **non-amdgpu** display GPU (old NVIDIA / Intel / Terascale HD that never binds `amdgpu`) or
+   run the host **headless**.
+3. Hide devices carefully with `HIP_VISIBLE_DEVICES` / `ROCR_VISIBLE_DEVICES` and re-check `rocminfo`
+   still enumerates every V620.
+
+Docker device passthrough of only the V620 does **not** always isolate an unsupported host GPU from
+HSA topology init — VM passthrough or unbind is the reliable fix when mixed AMD cards fight ROCm.

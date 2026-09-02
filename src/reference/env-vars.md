@@ -47,7 +47,9 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_USE_DEEP_GEMM` | `0` | Disable DeepGEMM (NVIDIA-oriented). |
 | `VLLM_USE_FLASHINFER_SAMPLER` | `0` | Disable FlashInfer sampler (not useful on RDNA2). |
 | `VLLM_USE_AOT_COMPILE` | `0` | Disable AOT compile on multi-GPU if cache replay causes device-bound errors. |
-| `VLLM_DISABLE_COMPILE_CACHE` | `1` | Disable torch.compile cache (pair with `VLLM_USE_AOT_COMPILE=0` for TP stability). |
+| `VLLM_DISABLE_COMPILE_CACHE` | `1` | Disable torch.compile cache (pair with `VLLM_USE_AOT_COMPILE=0` for TP stability). For **faster recipe startups**, invert: `0` + set `VLLM_CACHE_ROOT` to a persistent mount (`#vllm-rdna` Sep 2026). |
+| `VLLM_CACHE_ROOT` | `/path/to/vllm-cache` | Persistent vLLM compile cache root (Docker volume). |
+| `SAFETENSORS_FAST_GPU` | `1` | Faster safetensors → GPU weight load (common in `#vllm-rdna` / some Dockerfiles). |
 | `TORCHINDUCTOR_COMPILE_THREADS` | `1` | Limit inductor threads (stability during first-boot compile). |
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
@@ -66,6 +68,7 @@ Prefer the **short stack** below. Long lists of `GGML_HIP_GFX1030_*` knobs are u
 | `GGML_CUDA_ALLREDUCE` | `nccl` | Use RCCL for tensor-parallel all-reduce (+10% tgen reported). |
 | `GGML_HIP_GFX1030_P2P_ALLREDUCE` | `off` / `auto-expanded` | P2P all-reduce tuning; set `off` if RCCL misbehaves. Optional — not part of the short stack. |
 | `GGML_CUDA_DISABLE_GRAPHS` | `1` | Disable HIP graphs (some benchmark profiles use this). |
+| `SPEC_SIDECAR` | `1` | Opt-in MTP/DFlash sidecar outside the main process (`#llamacpp` Sep 2026; pull latest fork). |
 | `NCCL_P2P_LEVEL` | `PXB` / `PHB` | RCCL P2P topology level for all-reduce. |
 | `NCCL_P2P_DISABLE` | `0` / `1` | Disable P2P in RCCL (fallback when topology is broken). |
 

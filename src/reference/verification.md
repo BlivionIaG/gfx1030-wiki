@@ -48,6 +48,13 @@
 | Throughput table (277/93/331 tok/s) | **Community** | Fork author, TP4, 4× V620 |
 | Docker Compose ~24 t/s TP2 | **Community** | `#vllm-rdna` report |
 | Cache sizes ~3 GB / ~700 MB | **Community** | Order-of-magnitude |
+| `SAFETENSORS_FAST_GPU=1` | **Community** | `#vllm-rdna` Sep 2026 + AMD optimization docs |
+| `VLLM_CACHE_ROOT` + compile cache on | **Community** | Flash-Next / recipe startups (~5 vs ~10 min) |
+| Flash-Next ~580–700 PP / ~50–53 decode | **Community** | `#vllm-rdna` Sep 2026, Flash-Next recipe host |
+| ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in fork #2 `ROCR-CPU-FIX.md` |
+| EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
+| Two current forks + opengfx1030 as #3 target | **Community** | `#vllm-rdna` Sep 2026: #1 `rdna2_extras`, #2 Flash-Next fork; #3 `opengfx1030/vllm-rdna` is next merge target (0.28), not default Docker yet |
+| `opengfx1030/vllm-rdna` ready for day-to-day | **Needs verify** | Org repo + `rdna_extras` branch exist; Hub `-extras` still from fork #1 |
 | Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep `-extras` |
 
 ### `quantization.md`
@@ -65,13 +72,15 @@
 | INT4 vdot2 fp16 dequant | **Solid** | ISA + fork code |
 | Qwen3.8-27B AWQ needs `head_size=256` | **Fork-source** | Same as `fa_rdna2` commit; confirm on image |
 | GDN hybrid ~93/331 tok/s | **Community** | Fork author bench |
+| EXL3 9B / Quark W4A16 | **Needs verify** | `#vllm-rdna` Sep 2026 — experimental |
 
 ### `fork.md`
 
 | Statement | Status | Verify how |
 |---|---|---|
+| Fork landscape: #1 `rdna2_extras`, #2 Flash-Next fork, #3 opengfx1030 next | **Community** | `#vllm-rdna` Sep 2026 plan; confirm Hub tags still track #1 |
 | No WMMA on RDNA2 | **Solid** | Architecture |
-| Kernel file list | **Solid** | Fork tree |
+| Kernel file list | **Solid** | Fork tree (`rdna2_extras`) |
 | `fa_rdna2` head_size=256 | **Fork-source** | Commit `03b2d91` |
 | GDN decode ~9.3× vs Triton | **Community** | Fork microbench |
 | GDN full HIP prefill chain | **Fork-source** | Commits `69d2efe`, `b53a7a2c` |
@@ -109,6 +118,8 @@
 | DFlash hurts PP more than MTP | **Community** | `#llamacpp` Aug 28 |
 | MTP n=3 often beats n=4 (27B Q8 TP4) | **Community** | Real-prompt A/B; acceptance dropped at n=4 |
 | Flash-Next TP experimental / deferred | **Community** | Fork update + forum benches; layer-split only |
+| Flash-Next llama.cpp << vLLM | **Community** | `#llamacpp` / forum Sep 2026 |
+| `SPEC_SIDECAR=1` MTP path | **Community** | Fork maintainer tip; pull latest |
 | Full DFlash2 TP4 command | **Community** | Author production recipe |
 
 ### `rdna2-serving.md`
@@ -124,6 +135,9 @@
 | 160 W / 140 W PSU workaround | **Community** | Transients on TP prefill; miner PSU / P620 cables |
 | TP3 driver crash | **Community** | Prefer 2 or 4 GPUs |
 | `hipcub-devel` for GPU sampling | **Community** | Forum / `#llamacpp` build note |
+| Single V620 Q4_0 ~39–49 t/s (27B) | **Community** | `#llamacpp` Sep 2026 |
+| Embedder idle +~40 W/GPU | **Community** | `#llamacpp` — nomic/etc. alongside chat |
+| Fork day-to-day on ROCm 7.14 | **Community** | `#llamacpp` Sep 2026 — not mid-7.2.x |
 
 ---
 
@@ -148,11 +162,13 @@
 | `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
 | `troubleshooting/llama-cpp.md` FA `max_blocks_per_sm` abort | **Community** | head-256 occupancy 0 on gfx1030; q8 KV needs FA |
 | `troubleshooting/llama-cpp.md` DAX mmap SVM oops | **Community** | `--no-mmap` mandatory on `dax=always` |
-| `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris-in-box ROCm skip |
+| `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris/WX4100-in-box ROCm skip; unbind > ROCR_VISIBLE alone |
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
+| `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |
 | `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |
 | `tuning/p2p.md` SlimSAS / passive riser notes | **Community** | `#general` cabling |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
+| `setup/hardware.md` W6800 BIOS on V620 → 54 CU | **Community** | `#general` Sep 2026 PSA — stay on stock V620 VBIOS |
 
 ---
 
