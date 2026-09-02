@@ -119,7 +119,8 @@ is still ~50 W, the floor/cap path is not active — re-run verify.
 `#llamacpp`: at the **stock 250 W** floor, V620 inference can look ~15% more expensive per token than a
 high-end Nvidia reference; with a **180 W** cap after the floor unlock, the same report called V620
 **~20% cheaper** per token, with falloff "undetectable" down to ~200 W and only small percentages below
-that. Cap at **160 / 140 W** mainly for PSU headroom, not because 180 W is slow.
+that. Cap at **160 / 140 W** mainly for PSU headroom, not because 180 W is slow. `#general` (Sep 2026)
+similarly calls **~120–170 W** the practical sweet spot — little gained above that for the extra watts.
 
 Undervolt experiments exist; community: about **−25 mV** was stable for one host, while more aggressive
 settings started emitting **random tokens**. Treat UV as optional and A/B carefully.

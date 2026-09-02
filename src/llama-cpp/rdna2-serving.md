@@ -116,6 +116,31 @@ Build with `./scripts/build-rdna2-portable.sh`. RCCL needs working [PCIe P2P](..
 is enabled but slower, set `NCCL_P2P_DISABLE=1`. If all-reduce fails, try
 `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none`.
 
+The RDNA2 fork's recent HIP/RCCL work is validated primarily against **ROCm 7.14** (`#llamacpp`,
+Sep 2026). Mid-7.2.x (e.g. 7.2.4) is not a confident target — upgrade or pin per
+[Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+
+## Single-GPU community ballpark (Qwen3.8-27B)
+
+`#llamacpp` (Sep 2026), **1× V620**, RDNA2 fork, short env stack — treat as single-host snapshots:
+
+| Quant | Decode (community) | Notes |
+|---|---|---|
+| **Q4_0** | ~39–49 t/s | Fastest native MMVQ path on the fork |
+| **Q5_K_XL** | ~24 t/s | Slower unpack path |
+| **Q8_0** | often ≥ Q5 | Less unpacking/shuffling; needs the VRAM (easier on TP2+) |
+| **MXFP4** (~14.5 GB) | ≈ Q4_0 (slightly slower in one report) | Fits 1× 32 GB with reduced context |
+
+On **4× V620**, long-context MTP benches (community suite) saw decode hold ~60–65 t/s at 32k on coding
+prompts but drop harder by 64k — ngram / sidecar MTP work aims to lift acceptance; A/B with
+[`llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench).
+
+### Idle power with embedded servers
+
+Running an **embedding** server (nomic, etc.) alongside chat on the same cards can add ~**40 W per GPU**
+even when the embedder looks idle (`#llamacpp`). Park embedders on a spare card or stop them when not
+needed if you care about power.
+
 ## Notable limits
 
 - Validated primarily on **4× V620 gfx1030, ROCm 7.14**; other systems use conservative fallbacks.

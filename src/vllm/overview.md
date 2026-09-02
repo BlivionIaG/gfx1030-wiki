@@ -33,7 +33,21 @@ you already had that tag.
 
 > **Upstream vLLM 0.28.x:** Discord asked whether stock vLLM now lists gfx1030. Official 0.28 GPU docs
 > still target CDNA / RDNA3+ families, not Navi 21. Keep using the community `-extras` images (or the
-> [rdna2_extras fork](../fork.md)) until an upstream release explicitly documents gfx1030.
+> [rdna2_extras fork](../fork.md)) until an upstream release explicitly documents gfx1030. `#vllm-rdna`
+> (Sep 2026): community work is rebasing HIP kernels toward **0.28** and consolidating into
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) — published Docker tags may lag
+> that org until CI images catch up.
+
+### Qwen3.8 Flash-Next on vLLM
+
+llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). Community production path is the
+[`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
+branch / recipe: `#vllm-rdna` reports cold **~580–700 tok/s prefill** and **~50–53 tok/s decode** on
+16k–32k-tier prompts without MTP (ballpark; host-dependent). Prefer that stack over llama.cpp for
+Flash-Next until the RDNA2 llama.cpp fork catches up.
+
+Also watch [TheRock ROCR idle-CPU spin](../../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714)
+on ROCm 7.14 hosts.
 
 ## llama.cpp vs vLLM
 

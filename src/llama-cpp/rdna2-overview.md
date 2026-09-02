@@ -8,7 +8,8 @@
 The focus is **tensor parallel (TP)** and **MMQ/MMVQ** (quantized matmul) kernels.
 
 > Actively evolving and experimental. Treat throughput claims as needing your own matched before/after
-> runs. See [Benchmarks](../rdna2-benchmarks.md).
+> runs. See [Benchmarks](../rdna2-benchmarks.md). `#llamacpp` (Sep 2026): **RDNA3 (`gfx11xx`) support**
+> is landing on the fork soon — this wiki still focuses on `gfx1030` / V620 until that path is documented.
 
 ## What it does
 

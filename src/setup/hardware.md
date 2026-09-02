@@ -17,6 +17,11 @@ as `gfx1030`.
 
 Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you want the full 32 GB.
 
+> **Do not flash W6800 VBIOS onto a V620.** `#general` (Sep 2026): pre-modded eBay cards and DIY flashes
+> that load a **W6800** BIOS on a **V620** drop active CUs from **72 → 54** (W6800's different CU
+> layout). That is a large compute hit — stay on **stock V620 BIOS**. Cooling shroud mods are fine;
+> BIOS swaps are not a free "Pro unlock."
+
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
 
 ## AMD BC-250 (`gfx1013`)

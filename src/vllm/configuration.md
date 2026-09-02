@@ -23,6 +23,7 @@ export RCCL_MSCCL_ENABLE=0
 export VLLM_USE_RDNA2_FA=1                  # extras images: native RDNA2 FlashAttention
 export VLLM_USE_V2_MODEL_RUNNER=1           # +17% vs V1 reported on gfx1030
 export FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
+export SAFETENSORS_FAST_GPU=1               # faster safetensors → GPU load (`#vllm-rdna` Sep 2026)
 ```
 
 ### Custom all-reduce / P2P (two community stacks)
@@ -117,6 +118,22 @@ volumes:
 ```
 
 First startup compiles kernels and can take many minutes. Subsequent boots reuse the cache.
+
+For **recipe / Flash-Next** stacks that *want* the compile cache (not the multi-GPU AOT-disable
+workaround above), `#vllm-rdna` (Sep 2026) recommends keeping the cache **on** and pointing it at a
+persistent directory:
+
+```bash
+export VLLM_DISABLE_COMPILE_CACHE=0
+export VLLM_CACHE_ROOT=/path/to/persistent/vllm-cache   # mount this in Docker
+```
+
+Community reports ~5 min vs ~10 min subsequent startups once the cache is warm — still slow cold, but
+better than rebuilding every boot. Do **not** mix this with the TP `VLLM_DISABLE_COMPILE_CACHE=1`
+workaround unless you have verified your image needs that disable path.
+
+`SAFETENSORS_FAST_GPU=1` is also commonly set (and already present in some `vllm-rdna` Dockerfiles) to
+speed weight load into GPU memory — see [AMD vLLM optimization notes](https://rocm.docs.amd.com/projects/ai-ecosystem/en/latest/optimization/vllm-v1-optimization.html).
 
 ## Docker Compose example (GPTQ + MTP + CUDA graphs)
 

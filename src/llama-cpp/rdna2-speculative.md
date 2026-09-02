@@ -57,8 +57,13 @@ over MTP when context grows — same advice as the draft-quant row above.
 Community benches (4× V620, layer vs tensor split) show Flash-Next **layer-split** can run, while
 **tensor split** on experimental qwen4exp / Flash-Next branches is still rough. Fork maintainers have
 deferred dedicated Flash-Next work until upstream settles — expect **experimental** support via
-upstream merges only, not a polished gfx1030 profile. Prefer stable Qwen3.8-27B / MoE recipes for
-production TP.
+upstream merges only, not a polished gfx1030 profile.
+
+`#llamacpp` / forum (Sep 2026): Flash-Next on llama.cpp often lands around **~15–30 t/s** on multi-V620
+hosts and is widely called out as weaker than the
+[vLLM Flash-Next recipe](../../vllm/overview.md#qwen38-flash-next-on-vllm) (~50–60 t/s decode class).
+Prefer stable Qwen3.8-27B / MoE recipes for production TP on llama.cpp; use vLLM for Flash-Next until
+upstream/fork gaps close.
 
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
 
@@ -95,5 +100,13 @@ acceptance in synthetic benches (usually a bad prompt).
 **MXFP4** quants (e.g. `quark75/Qwen3.8-27B-MXFP4-GGUF`) pair well with MTP on TP2 — see
 [Serving](../rdna2-serving.md#docker-example).
 
-HIP **sidecar** speculative decoding (external process driving MTP/DFlash) is being explored in the
-fork as opt-in experimental work — track the fork README rather than copying unfinished flags here.
+HIP **sidecar** speculative decoding is now an opt-in fork path (`#llamacpp`, Sep 2026):
+
+```bash
+export SPEC_SIDECAR=1   # moves MTP/DFlash logic outside the main llama.cpp process
+```
+
+Pair with `--spec-draft-p-min 0.0` (fork maintainer tip). Sidecar work is still evolving — pull latest
+`edwinbrowwn/llama.cpp-rdna2` and prefer MTP over DFlash on the sidecar path while DFlash remains slow.
+Track the fork README for flag churn; do not treat `SPEC_SIDECAR` as required for the built-in MTP flags
+above.
