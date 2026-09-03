@@ -9,7 +9,7 @@
 | Status | Meaning |
 |---|---|
 | **Solid** | Hardware fact, upstream/ROCm docs, or fork source code confirms the behavior exists. |
-| **Fork-source** | Confirmed in `blivioniag/vllm` `rdna2_extras` commits; may still need a fresh `-extras` image build. |
+| **Fork-source** | Confirmed in `opengfx1030/vllm-rdna` `rdna_extras` (and historical `blivioniag/vllm` `rdna2_extras`) commits; may still need a fresh `-extras` image build. |
 | **Community** | Reported in Discord or by a fork author; plausible but not wiki-verified on our hardware. |
 | **Needs verify** | Should be re-tested before treating as guidance (image lag, single-host bench, or opinion). |
 | **Opinion** | Subjective quality/speed trade-off from community testing. |
@@ -18,7 +18,7 @@
 
 | Topic | Status | Notes |
 |---|---|---|
-| Docker `-extras` images vs `rdna2_extras` HEAD | **Needs verify** | Wiki documents Aug 2026 fork commits. Images refreshed in place but **not confirmed** to include `0fdb1884+`. Re-pull and check logs. |
+| Docker `-extras` images vs extras HEAD | **Needs verify** | Wiki documents Aug 2026 fork commits. Hub bake still clones historical `blivioniag/vllm` `rdna2_extras`. Re-pull and check logs. Official HEAD is `opengfx1030/vllm-rdna` `rdna_extras`. |
 | Performance numbers (tok/s, × speedups) | **Community** | Unless marked **Solid**, treat throughput tables as single-host snapshots. |
 | Env-var recipes | **Community** | Common stacks from Discord; A/B on your topology. |
 | ROCm 7.2.1+ multi-card RCCL bug | **Community** | `#vllm-rdna` (fork author): stay on **7.2.0** or **7.14.0** |
@@ -51,11 +51,12 @@
 | `SAFETENSORS_FAST_GPU=1` | **Community** | `#vllm-rdna` Sep 2026 + AMD optimization docs |
 | `VLLM_CACHE_ROOT` + compile cache on | **Community** | Flash-Next / recipe startups (~5 vs ~10 min) |
 | Flash-Next ~580–700 PP / ~50–53 decode | **Community** | `#vllm-rdna` Sep 2026, Flash-Next recipe host |
-| ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in fork #2 `ROCR-CPU-FIX.md` |
+| ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in Flash-Next fork `ROCR-CPU-FIX.md` |
 | EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
-| Two current forks + opengfx1030 as #3 target | **Community** | `#vllm-rdna` Sep 2026: #1 `rdna2_extras`, #2 Flash-Next fork; #3 `opengfx1030/vllm-rdna` is next merge target (0.28), not default Docker yet |
-| `opengfx1030/vllm-rdna` ready for day-to-day | **Needs verify** | Org repo + `rdna_extras` branch exist; Hub `-extras` still from fork #1 |
-| Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep `-extras` |
+| Official extras source is `opengfx1030/vllm-rdna` `rdna_extras` | **Solid** | `#vllm-rdna` Sep 2026 move; default branch `rdna_extras`; PRs go to the org. Hub `-extras` still from historical clone |
+| `opengfx1030/vllm-rdna` ready as published Docker | **Needs verify** | Org repo exists; `vllm-rdna-docker` bake still `VLLM_REPOSITORY=https://github.com/BlivionIaG/vllm.git` |
+| Flash-Next still separate from org extras | **Community** | `#vllm-rdna` Sep 2026: `leapdragon/vllm-rdna2-qwen` until merge |
+| Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep extras |
 
 ### `quantization.md`
 
@@ -78,9 +79,9 @@
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Fork landscape: #1 `rdna2_extras`, #2 Flash-Next fork, #3 opengfx1030 next | **Community** | `#vllm-rdna` Sep 2026 plan; confirm Hub tags still track #1 |
+| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Flash-Next still separate; Hub still historical | **Solid** | Org repo + default branch; `#vllm-rdna` Sep 2026 |
 | No WMMA on RDNA2 | **Solid** | Architecture |
-| Kernel file list | **Solid** | Fork tree (`rdna2_extras`) |
+| Kernel file list | **Solid** | Fork tree (`rdna_extras`) |
 | `fa_rdna2` head_size=256 | **Fork-source** | Commit `03b2d91` |
 | GDN decode ~9.3× vs Triton | **Community** | Fork microbench |
 | GDN full HIP prefill chain | **Fork-source** | Commits `69d2efe`, `b53a7a2c` |

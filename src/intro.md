@@ -27,10 +27,9 @@ kernels) takes a bit of extra work. That's what this wiki documents.
 - **[vLLM on RDNA](./vllm/overview.md)** — ready-to-run Docker images
   ([`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) on a
   [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base), how they are
-  built with [`vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker), and the **two current
-  vLLM forks** ([`rdna2_extras`](./vllm/fork.md) HIP kernels + the Flash-Next fork), with
-  [`opengfx1030/vllm-rdna`](./vllm/fork.md#fork-landscape) as the **next shared-org target** (better for
-  multi-stream / agentic loads once llama.cpp is working).
+  built with [`vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker), and the **official**
+  vLLM extras fork [`opengfx1030/vllm-rdna`](./vllm/fork.md) (`rdna_extras`) plus the separate
+  Flash-Next fork (better for multi-stream / agentic loads once llama.cpp is working).
 
 New here? Start with [Supported Hardware](./setup/hardware.md) and [Getting Started](./setup/getting-started.md).
 

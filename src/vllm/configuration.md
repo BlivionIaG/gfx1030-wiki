@@ -44,7 +44,7 @@ Prefer **`--attention-backend RDNA_ATTN`** (or `VLLM_USE_RDNA2_FA=1`) over **`RO
 Triton also fight each other). `FA_RDNA2` may not show up on older `-extras` images or GPTQ models that
 still auto-select `ROCM_ATTN` — that is expected on hybrid GDN; see [fork](../fork.md#attention-backends).
 
-For **multi-GPU TP** on current `rdna2_extras` images, if AOT compile cache replay causes device-bound
+For **multi-GPU TP** on current `-extras` images, if AOT compile cache replay causes device-bound
 errors, add:
 
 ```bash
@@ -53,7 +53,7 @@ export VLLM_DISABLE_COMPILE_CACHE=1
 ```
 
 `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` steer vLLM away from the generic AMD Triton flash-attention path,
-which can be slower or crash on some Qwen head sizes. See [rdna2_extras fork](../fork.md) for kernel
+which can be slower or crash on some Qwen head sizes. See [rdna_extras fork](../fork.md) for kernel
 details. Full env cheat-sheet: [Reference](../../reference/env-vars.md).
 
 **Don't force backends or quantization** unless you're A/B testing — or avoiding a
@@ -80,7 +80,7 @@ vllm serve /path/to/model \
   --compilation-config '{"cudagraph_mode": "FULL_AND_PIECEWISE", "compile_ranges_endpoints": []}'
 ```
 
-Reported steady-state throughput on current `rdna2_extras` (1024/512 bench, TP4):
+Reported steady-state throughput on current `-extras` (1024/512 bench, TP4):
 
 | Graph mode | Total tok/s | Output tok/s |
 |---|---|---|

@@ -47,7 +47,7 @@ Set per-target in `docker-bake.hcl`:
 | ARG | Purpose |
 |---|---|
 | `BASE_IMAGE` | Published base image, e.g. `blivioniag/rocm-rdna:7.2.0`. |
-| `VLLM_REPOSITORY` / `VLLM_REF` | vLLM clone URL and git ref (tag or branch). |
+| `VLLM_REPOSITORY` / `VLLM_REF` | vLLM clone URL and git ref (tag or branch). Official extras source is [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna); current bake still clones `https://github.com/BlivionIaG/vllm.git` @ `rdna2_extras`. |
 | `VLLM_COMMIT` | Full 40-char commit; the build fails if `HEAD` doesn't match (reproducibility). |
 | `VLLM_VARIANT` | `upstream` or `extras-fork` (recorded as an image label). |
 | `PYTORCH_ROCM_ARCH` | Semicolon-joined gfx targets. |

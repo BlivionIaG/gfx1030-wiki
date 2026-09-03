@@ -21,7 +21,7 @@
 - [Running (Docker)](./vllm/running.md)
 - [Configuration](./vllm/configuration.md)
 - [Quantization](./vllm/quantization.md)
-- [vLLM forks (rdna2_extras + landscape)](./vllm/fork.md)
+- [vLLM forks (rdna_extras + landscape)](./vllm/fork.md)
 - [Building images](./vllm/images.md)
 
 # llama.cpp

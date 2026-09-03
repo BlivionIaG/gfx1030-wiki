@@ -5,30 +5,40 @@
 
 ## Fork landscape {#fork-landscape}
 
-`#vllm-rdna` (Sep 2026): there are **two active vLLM forks** today. A **third**, shared-org repo
-(`opengfx1030`) is the **next target** — planned merge plane, not a drop-in replacement for published
-Docker tags yet.
+`#vllm-rdna` (Sep 2026): the **official** gfx1030 vLLM source is the shared-org repo. File new PRs and
+issues there. Flash-Next is still a separate production fork until that work lands in the org. Published
+Docker Hub tags have **not** moved yet.
 
 | # | Repo / branch | Role | Use it when… |
 |---|---|---|---|
-| **1 (current)** | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | Hand-written **RDNA2 HIP kernels** + dispatch; feeds `blivioniag/vllm-rdna:*-extras` images | Day-to-day gfx1030 serving via `-extras` Docker |
-| **2 (current)** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | **Flash-Next / Qwen3.8** focused fork + container recipe ([ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)) | Qwen3.8 Flash-Next production path while llama.cpp lags |
-| **3 (next target)** | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`) | Shared org plane: rebase toward **vLLM 0.28**, land `rdna2_extras` HIP work, backport Flash-Next fork commits, one tickets/CI home | Tracking / contributing to the merge — **not** the default image source yet |
+| **Official** | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) (default) | Hand-written **RDNA HIP kernels** + dispatch. Moved from `blivioniag/vllm` `rdna2_extras`. Rebase toward **vLLM 0.28**; one tickets/CI home | Clone, contribute, track HEAD |
+| **Flash-Next** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | **Flash-Next / Qwen3.8** focused fork + container recipe ([ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)) | Qwen3.8 Flash-Next production path while llama.cpp lags |
+| **Historical** | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | Predecessor of the official repo. Do **not** file new PRs here | Comparing old commits; Hub `-extras` images still clone this line until `vllm-rdna-docker` is retargeted |
 
-**Day-to-day:** keep pulling [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) `-extras`
-tags (fork **#1**). Use fork **#2** for Flash-Next. Treat fork **#3** as the destination once images/CI
-catch up — do not assume `opengfx1030` tags replace Hub yet.
+**Day-to-day serving:** keep pulling [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) `-extras`
+tags (v0.27.1). Those images still come from the personal Docker Hub namespace and the historical
+`rdna2_extras` clone URL. **Source of truth** for new kernel work is
+[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna). Do not assume org GHCR/Docker tags
+exist yet.
 
-Companion (not a third engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
+Companion (not an engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
 collects compose/env recipes and open PRs (concurrent MTP, etc.) that may target either stack.
 
 ---
 
-## The `rdna2_extras` fork (fork #1)
+## The `rdna_extras` fork {#the-rdna_extras-fork}
 
-The `-extras` images are built from the
-[`blivioniag/vllm`](https://github.com/blivioniag/vllm) fork on the **`rdna2_extras`** branch. It adds
+<a id="the-rdna2_extras-fork-fork-1"></a>
+
+The official extras source is
+[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) on the default **`rdna_extras`**
+branch (formerly [`blivioniag/vllm`](https://github.com/blivioniag/vllm) `rdna2_extras`). It adds
 hand-written **RDNA2 HIP kernels** and the vLLM plumbing to dispatch to them.
+
+Published Hub `-extras` images are still built from the historical clone
+(`VLLM_REPOSITORY=https://github.com/BlivionIaG/vllm.git`, `VLLM_REF=rdna2_extras`) until
+[`vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker) is retargeted. Pull those images for
+serving; clone the org repo to contribute.
 
 Why it exists: RDNA2 (gfx1030) has **no matrix/WMMA cores** — those arrived with RDNA3 (`gfx11xx`). So
 quantized GEMM, attention, and MoE have to be implemented efficiently on RDNA2's regular vector ALUs.
@@ -43,9 +53,10 @@ HIP kernel vs fp16 for these paths — fp16 dequant is the winning approach on V
 | Branch | Purpose |
 |---|---|
 | `main` | Fork baseline tracking upstream vLLM. |
-| `feat/enable-gfx1030` | Baseline enablement so vLLM recognizes and runs on gfx1030. |
-| `perf/rdna2_w4a16` | Performance work on the W4A16 path. |
-| `rdna2_extras` | The aggregated branch with all the extra kernels — what the `-extras` images build. |
+| `rdna_extras` | **Default.** Aggregated RDNA extras (HIP kernels, EXL3 WIP, …). File PRs here. |
+
+Historical names on the old personal fork (`feat/enable-gfx1030`, `perf/rdna2_w4a16`, `rdna2_extras`)
+are superseded. Hub `-extras` bake targets still pin `VLLM_REF=rdna2_extras` on that old repo.
 
 ## What's in it
 
@@ -71,6 +82,9 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 - `qdq_4_rdna2.cuh`, `qdq_8_rdna2.cuh`, `qdq_fp8_rdna2.cuh` — quant/dequant helpers.
 - Python: `model_executor/kernels/linear/mixed_precision/rdna2_w4a16.py`,
   `.../scaled_mm/rdna2_w8a16_fp8*.py`, `rdna2_w8a8_fp8.py`, and the `rdna_hybrid_w4a16.py` selector.
+- **EXL3** (in-tree on `rdna_extras`, **not** in published v0.27.1 `-extras` images yet):
+  `exl3_hadamard.cu`, `exl3_dot2_*.cu`, plus `vllm/.../quantization/exl3.py`. Experimental; see
+  [Quantization](../quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
 ### MoE (mixture of experts)
 
@@ -109,7 +123,8 @@ docker run -it --rm \
 ```
 
 See [Running (Docker)](../running.md) for the full run recipe and [Building images](../images.md)
-for how the `-extras` variant is produced (`VLLM_VARIANT=extras-fork`, `VLLM_REF=rdna2_extras`).
+for how the `-extras` variant is produced (`VLLM_VARIANT=extras-fork`, currently `VLLM_REF=rdna2_extras`
+from the historical personal clone until bake is retargeted at `opengfx1030/vllm-rdna`).
 
 ## Kernel dispatch on gfx1030
 
@@ -140,7 +155,7 @@ attention layers — that's expected. The GDN linear-attention layers now use th
 ### CUDA graph capture (TP comm fix)
 
 A common `_SimpleCData.__new__` crash during V2 cudagraph capture on multi-GPU TP setups was fixed by
-marking TP communication wrappers with `allow_in_graph`. With current `rdna2_extras` images, CUDA graphs
+marking TP communication wrappers with `allow_in_graph`. With current `-extras` images, CUDA graphs
 are the preferred fast path — you should not need `--enforce-eager` for this class of failure anymore.
 On multi-GPU, if AOT compile cache replay misbehaves, try
 `VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1`.
@@ -165,8 +180,8 @@ Omit `VLLM_DISABLED_KERNELS` when testing Exllama — it competes with the RDNA2
 ## Building from source (advanced)
 
 ```bash
-git clone -b rdna2_extras https://github.com/blivioniag/vllm.git
-cd vllm
+git clone -b rdna_extras https://github.com/opengfx1030/vllm-rdna.git
+cd vllm-rdna
 export PYTORCH_ROCM_ARCH=gfx1030
 pip install -r requirements/rocm.txt
 pip install --no-build-isolation -e .
@@ -180,4 +195,6 @@ pytest tests/kernels/attention/test_fa_rdna2_shape_sweep.py
 ```
 
 > These kernels are actively evolving. Treat the fork as experimental, pin to a known-good image tag for
-> reproducible serving, and file issues on the fork if you hit correctness or performance problems.
+> reproducible serving, and file issues on
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna/issues) if you hit correctness or
+> performance problems.

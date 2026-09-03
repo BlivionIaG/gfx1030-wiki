@@ -2,7 +2,8 @@
 
 A focused, markdown-based documentation site for running LLM inference on AMD **gfx1030** (RDNA2 /
 Navi 21) GPUs — with a bias toward the Radeon PRO V620. Covers V620/gfx1030 **tuning** (power cap, PCIe
-P2P) and **vLLM** via the `blivioniag/vllm-rdna` Docker images and the `rdna2_extras` fork.
+P2P) and **vLLM** via the `blivioniag/vllm-rdna` Docker images and the official
+`opengfx1030/vllm-rdna` extras fork.
 
 Powered by **[mdBook](https://rust-lang.github.io/mdBook/)** and automatically deployed to GitHub Pages
 via GitHub Actions. Anyone is welcome to contribute — just open a pull request.

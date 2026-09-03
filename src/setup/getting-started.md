@@ -50,7 +50,7 @@ The fastest path is the prebuilt images — no local ROCm/PyTorch/vLLM build req
 Prefer GGUF and building from source? See [Building & Running llama.cpp](../llama-cpp/building.md) (ROCm or Vulkan).
 
 Want to build the images yourself, or use the RDNA-tuned kernels? See
-[Building the Images](../vllm/images.md) and [The rdna2_extras Fork](../vllm/fork.md).
+[Building the Images](../vllm/images.md) and [The rdna_extras fork](../vllm/fork.md).
 
 ## 5. Smoke test
 
