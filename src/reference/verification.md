@@ -41,7 +41,8 @@
 |---|---|---|
 | Recommended env block | **Community** | Discord default stack |
 | Custom AR disable vs PIX force | **Community** | `#vllm-rdna` Aug 2026 — pick by P2P topology |
-| `VLLM_USE_V2_MODEL_RUNNER` +17% vs V1 | **Community** | `#vllm-rdna` bench comment |
+| `VLLM_USE_V2_MODEL_RUNNER` +17% vs V1 | **Community** | `#vllm-rdna` bench comment (`-extras`) |
+| `VLLM_USE_V2_MODEL_RUNNER=0` for Flash-Next long prompts | **Community** | `#vllm-rdna` Sep 2026 — stalls/timeouts fixed; ~68 t/s dense INT8 |
 | `VLLM_USE_AOT_COMPILE=0` / `VLLM_DISABLE_COMPILE_CACHE=1` | **Fork-source** | Multi-GPU TP workaround |
 | CUDA graphs preferred over `--enforce-eager` | **Fork-source** | TP `allow_in_graph` fix; **needs verify** on image |
 | `ROCM_ATTN` Triton hang | **Community** | Hours-long compile; use `RDNA_ATTN` |
@@ -50,12 +51,16 @@
 | Cache sizes ~3 GB / ~700 MB | **Community** | Order-of-magnitude |
 | `SAFETENSORS_FAST_GPU=1` | **Community** | `#vllm-rdna` Sep 2026 + AMD optimization docs |
 | `VLLM_CACHE_ROOT` + compile cache on | **Community** | Flash-Next / recipe startups (~5 vs ~10 min) |
-| Flash-Next ~580–700 PP / ~50–53 decode | **Community** | `#vllm-rdna` Sep 2026, Flash-Next recipe host |
+| Flash-Next ~580–700 PP / ~50–53 decode | **Community** | Early Sep recipe; **superseded** by prefill campaign below |
+| Flash-Next ~1000–1200 PP / ~60–100+ decode | **Community** | `#vllm-rdna` Sep 4–7 + Flash-Next `RESULTS.md`; host-dependent |
+| Flash-Next container ~40 t/s vs llama.cpp ~18–19 | **Community** | `#vllm-rdna` Sep 2026 same-host comparison |
 | ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in Flash-Next fork `ROCR-CPU-FIX.md` |
 | EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
 | Official extras source is `opengfx1030/vllm-rdna` `rdna_extras` | **Solid** | `#vllm-rdna` Sep 2026 move; default branch `rdna_extras`; PRs go to the org. Hub `-extras` still from historical clone |
 | `opengfx1030/vllm-rdna` ready as published Docker | **Needs verify** | Org repo exists; `vllm-rdna-docker` bake still `VLLM_REPOSITORY=https://github.com/BlivionIaG/vllm.git` |
 | Flash-Next still separate from org extras | **Community** | `#vllm-rdna` Sep 2026: `leapdragon/vllm-rdna2-qwen` until merge |
+| Org 0.28 rebase / Flash-Next cherry-picks | **Community** | `#vllm-rdna` Sep 3–7: regressions under debug; PR `#1` review-only |
+| LMCache RDNA Docker integration | **Needs verify** | `#lmcache` WIP — no recipe yet |
 | Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep extras |
 
 ### `quantization.md`
@@ -80,6 +85,7 @@
 | Statement | Status | Verify how |
 |---|---|---|
 | Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Flash-Next still separate; Hub still historical | **Solid** | Org repo + default branch; `#vllm-rdna` Sep 2026 |
+| Consolidation / 0.28 gap audit | **Community** | `#vllm-rdna` Sep 3–7 channel notes; treat as WIP |
 | No WMMA on RDNA2 | **Solid** | Architecture |
 | Kernel file list | **Solid** | Fork tree (`rdna_extras`) |
 | `fa_rdna2` head_size=256 | **Fork-source** | Commit `03b2d91` |
@@ -121,6 +127,9 @@
 | Flash-Next TP experimental / deferred | **Community** | Fork update + forum benches; layer-split only |
 | Flash-Next llama.cpp << vLLM | **Community** | `#llamacpp` / forum Sep 2026 |
 | `SPEC_SIDECAR=1` MTP path | **Community** | Fork maintainer tip; pull latest |
+| Sidecar GGUF identity / Unsloth vs other Q8 | **Community** | `#llamacpp` Sep 2026 — match publisher families |
+| DFlash2 aperture violation crash | **Community** | `#llamacpp` Sep 2026 — pull latest / A/B MTP |
+| `--spec-draft-p-min` ≠ 0 disarms MTP | **Community** | `#benchmarks` Sep 2026 tip |
 | Full DFlash2 TP4 command | **Community** | Author production recipe |
 
 ### `rdna2-serving.md`
@@ -139,6 +148,9 @@
 | Single V620 Q4_0 ~39–49 t/s (27B) | **Community** | `#llamacpp` Sep 2026 |
 | Embedder idle +~40 W/GPU | **Community** | `#llamacpp` — nomic/etc. alongside chat |
 | Fork day-to-day on ROCm 7.14 | **Community** | `#llamacpp` Sep 2026 — not mid-7.2.x |
+| Concurrent `--parallel` crush (~5–9 t/s) | **Community** | `#llamacpp` Sep 2026 V620 multi-agent |
+| Upstream PR #22466 fast tensor loads | **Needs verify** | Community <35 s on 122B-Q4; watch merge |
+| Long-ctx prefer Q6+/Q8 | **Opinion** | `#llamacpp` Sep 2026 quality reports |
 
 ---
 
@@ -166,8 +178,12 @@
 | `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris/WX4100-in-box ROCm skip; unbind > ROCR_VISIBLE alone |
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
 | `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |
+| `troubleshooting/vllm.md` Flash-Next V2=0 long prompts | **Community** | `#vllm-rdna` Sep 2026 |
+| `troubleshooting/llama-cpp.md` DFlash2 / sidecar / concurrent | **Community** | `#llamacpp` Sep 2026 |
 | `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |
 | `tuning/p2p.md` SlimSAS / passive riser notes | **Community** | `#general` cabling |
+| `tuning/p2p.md` external Xpander / narrow uplink | **Community** | `#general` Sep 2026 — long-ctx collapse |
+| `tuning/p2p.md` layer vs tensor split explainer | **Community** | `#benchmarks` Sep 2026 |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
 | `setup/hardware.md` W6800 BIOS on V620 → 54 CU | **Community** | `#general` Sep 2026 PSA — stay on stock V620 VBIOS |
 

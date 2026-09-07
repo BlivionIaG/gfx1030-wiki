@@ -21,10 +21,15 @@ export VLLM_BATCH_INVARIANT=0
 export HIP_FORCE_DEV_KERNARG=1
 export RCCL_MSCCL_ENABLE=0
 export VLLM_USE_RDNA2_FA=1                  # extras images: native RDNA2 FlashAttention
-export VLLM_USE_V2_MODEL_RUNNER=1           # +17% vs V1 reported on gfx1030
+export VLLM_USE_V2_MODEL_RUNNER=1           # +17% vs V1 reported on gfx1030 `-extras`
 export FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
 export SAFETENSORS_FAST_GPU=1               # faster safetensors → GPU load (`#vllm-rdna` Sep 2026)
 ```
+
+`VLLM_USE_V2_MODEL_RUNNER=1` remains the usual default on Hub **`-extras`**. On the **Flash-Next**
+fork, long agentic prompts that stall or timeout with V2 enabled have been fixed in-community by
+setting **`VLLM_USE_V2_MODEL_RUNNER=0`** instead — see
+[Flash-Next long-prompt stalls](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
 
 ### Custom all-reduce / P2P (two community stacks)
 

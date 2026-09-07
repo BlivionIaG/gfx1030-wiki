@@ -45,10 +45,27 @@ you already had that tag.
 
 llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). Community production path is the
 [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
-fork — not the Hub `-extras` image: `#vllm-rdna` reports cold **~580–700 tok/s prefill** and **~50–53 tok/s
-decode** on 16k–32k-tier prompts without MTP (ballpark; host-dependent). Prefer that stack over llama.cpp
-for Flash-Next until the RDNA2 llama.cpp fork catches up. Flash-Next work is expected to land in
+fork — not the Hub `-extras` image. Prefer that stack over llama.cpp for Flash-Next until the RDNA2
+llama.cpp fork catches up. Flash-Next work is expected to land in
 [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) after the 0.28 rebase / merge.
+
+`#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
+
+| Metric | Earlier recipe | After Sep 4–6 prefill/decode work |
+|---|---|---|
+| Sustained **prefill** | ~580–700 tok/s | **~1000–1200 tok/s** (fork author; RESULTS.md ~1080–1180 @ 3k–30k) |
+| **Decode** (single-stream) | ~50–64 tok/s | **~60–100+ tok/s** class depending on MTP acceptance / prompt (fork RESULTS.md; community warm benches ~85 t/s) |
+| vs llama.cpp Flash-Next | — | Community: container **~40 t/s** vs llama.cpp ROCm **~18–19 t/s** on the same host |
+
+Docs live under
+[`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2)
+(`README.md`, `RESULTS.md`, `TROUBLESHOOTING.md`, `ROCR-CPU-FIX.md`). Pull latest before re-benching —
+tags and container `latest` move with the prefill campaign.
+
+**Long-prompt stalls / timeouts:** if large agentic prompts (tens of k tokens) hang or take many minutes
+while short prompts are fine, try `VLLM_USE_V2_MODEL_RUNNER=0` — community report of stable **~68 t/s**
+with dense INT8 + custom all-reduce after that switch; fork docs now call it out. See
+[vLLM troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
 
 Also watch [TheRock ROCR idle-CPU spin](../../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714)
 on ROCm 7.14 hosts.

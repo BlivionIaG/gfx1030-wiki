@@ -61,9 +61,9 @@ upstream merges only, not a polished gfx1030 profile.
 
 `#llamacpp` / forum (Sep 2026): Flash-Next on llama.cpp often lands around **~15–30 t/s** on multi-V620
 hosts and is widely called out as weaker than the
-[vLLM Flash-Next recipe](../../vllm/overview.md#qwen38-flash-next-on-vllm) (~50–60 t/s decode class).
-Prefer stable Qwen3.8-27B / MoE recipes for production TP on llama.cpp; use vLLM for Flash-Next until
-upstream/fork gaps close.
+[vLLM Flash-Next recipe](../../vllm/overview.md#qwen38-flash-next-on-vllm) (**~60–100+ t/s** decode class
+after the Sep prefill campaign). Prefer stable Qwen3.8-27B / MoE recipes for production TP on llama.cpp;
+use vLLM for Flash-Next until upstream/fork gaps close.
 
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
 
@@ -110,3 +110,14 @@ Pair with `--spec-draft-p-min 0.0` (fork maintainer tip). Sidecar work is still 
 `edwinbrowwn/llama.cpp-rdna2` and prefer MTP over DFlash on the sidecar path while DFlash remains slow.
 Track the fork README for flag churn; do not treat `SPEC_SIDECAR` as required for the built-in MTP flags
 above.
+
+### Sidecar / DFlash gotchas (Sep 2026) {#sidecar-dflash-gotchas}
+
+`#llamacpp` reports to know about:
+
+| Issue | What happens | Mitigation |
+|---|---|---|
+| **Draft GGUF identity mismatch** | Sidecar probe fails with `target GGUF model identity differs`; falls back to native MTP / no sidecar | Prefer the **same publisher family** for target + draft (community: **Unsloth** Qwen3.8-27B Q8_0 loaded sidecar; some Bartowski / AtomicChat Q8_0 builds did not). Re-pull fork after identity-matching fixes |
+| **DFlash2 `MEMORY_APERTURE_VIOLATION`** | Crash in `gemv_mmvq2_*` / `[dflash-sidecar] illegal memory access`; server may enter target-only then abort | Reboot / clean env, pull latest DFlash sidecar fixes, A/B MTP instead of DFlash2; report host + quant on `#llamacpp` |
+| **`--spec-draft-p-min` ≠ 0** | Community: non-zero `p-min` can effectively **disarm MTP** acceptance | Keep `--spec-draft-p-min 0` (or `0.0`) unless you have measured otherwise |
+| **Quark / MXFP4 lockups** | Quark-AWQ-MXFP4 GGUFs can look great then wedge after long ctx | Prefer **Q6+** / **Q8** for long sessions; community: sub-Q6 feels unusable over long context |

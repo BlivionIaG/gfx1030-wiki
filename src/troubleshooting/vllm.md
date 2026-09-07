@@ -84,6 +84,26 @@ If TP works on one image and dies after a host ROCm bump, check the **ROCm versi
 model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
 **7.14.0** — see [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
+## Flash-Next long-prompt stalls {#flash-next-long-prompt-stalls}
+
+Symptom (Flash-Next fork / recipe containers, `#vllm-rdna` Sep 2026): short prompts decode fine, but
+**large prompts** (tens of k tokens — agentic coding, session resume) take many minutes, timeout, or
+appear wedged. Temps and power caps look healthy.
+
+**Community fix that unblocked one 4× V620 host:**
+
+```bash
+export VLLM_USE_V2_MODEL_RUNNER=0
+```
+
+Reporter then saw stable **~68 tok/s** with dense INT8 + custom all-reduce, including large prompts.
+The Flash-Next fork author added this to their docs / troubleshooting. Official-extras authors note
+separate Dense-on-V2 fixes in progress on the org rebase — A/B both values on your image.
+
+Also rule out thermal / power first ([Power tuning](../../tuning/power.md)), and measure expected
+prefill time (~1k tok/s class ⇒ ~40 s for 40k tokens, not minutes). Prefill campaign numbers:
+[vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm).
+
 ## Prefill blocks decode / MTP stalls under concurrency
 
 Symptom: with speculative decode (MTP) and multiple in-flight requests, generation stalls while
