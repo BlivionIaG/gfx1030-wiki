@@ -86,3 +86,23 @@ Workarounds (pick one):
 
 Docker device passthrough of only the V620 does **not** always isolate an unsupported host GPU from
 HSA topology init — VM passthrough or unbind is the reliable fix when mixed AMD cards fight ROCm.
+
+## Painfully slow V620 (clocks stuck ~200 MHz)
+
+See [Wrong / cloud VBIOS](../setup/hardware.md#wrong-cloud-vbios) — check `rocm-smi` clocks under
+load before chasing software.
+
+## Overheating / thermal paste on V620 {#v620-thermals}
+
+`#general`: V620s are passive server cards — airflow matters more than most desktop GPUs.
+
+| Report | Notes |
+|---|---|
+| Stock pads | Some hosts call factory **graphene / graphite** pads high quality; a bad repaste can **worsen** temps |
+| Batch heating | Community reports of cards that overheat or fail to init under ROCm after long load — test new cards under load for a long stretch; OS may still list an AMD GPU while `rocm-smi` does not |
+| Temps | Rough community ballpark: ~**86 °C** at full load can be “OK”; **94–96 °C** is high (often stress / curve tuning) — improve airflow / power cap first |
+| Cooling | Cap at **180 W** (or lower); single-fan / weak blower setups struggle at stock **250 W** |
+
+PCB photos for cooler compatibility: community link
+[Linus Tech Tips V620 thread](https://linustechtips.com/topic/1588645-radeon-pro-v620-but-tencent-edition-meeting-issues-with-everything/).
+W6800 waterblocks are **not** a guaranteed fit.

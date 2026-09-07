@@ -78,6 +78,29 @@ models (logs only show Triton / ROCM / TurboQuant). Pull the latest `-extras` ta
 `Using RDNA2W4A16LinearKernel` / native FA in startup logs. Qwen3.8-27B AWQ needs **head size 256**
 on the fork — see [Quantization](../../vllm/quantization.md#int4-on-gfx1030-no-native-int4-alus).
 
+### `shm_broadcast` / one GPU + one CPU pegged {#shm-broadcast-triton-vs-rccl}
+
+Symptom (`#vllm-rdna` Sep 2026, often Flash-Next / multi-GPU): serve looks wedged; logs repeat
+something like:
+
+```text
+No available shared memory broadcast block found in 60 seconds.
+This typically happens when some processes are hanging or doing some time-consuming work
+(e.g. compilation, weight/kv cache quantization).
+```
+
+Community diagnosis: classic **Triton JIT compile fighting RCCL** — not necessarily a dead process.
+Guidance:
+
+1. **Wait** — first boots can sit like this a long time; keep the Triton / compile cache volumes
+   mounted ([Configuration](../../vllm/configuration.md#cache-volumes-first-boot-is-slow)).
+2. Stay on **ROCm 7.2.0 or 7.14.x** — avoid mid-7.2.x (same pin as
+   [multi-GPU RCCL](#multi-gpu-rccl-hangs-or-cards-drop-offline)).
+3. Prefer HIP / `RDNA_ATTN` paths over AMD Triton FA where the fork offers them — less Triton means
+   fewer of these stalls.
+4. Next cold start with a warm cache should be much shorter; if it never recovers after hours, A/B
+   `VLLM_USE_V2_MODEL_RUNNER=0` and the [long-prompt](#flash-next-long-prompt-stalls) notes.
+
 ## Multi-GPU RCCL hangs or cards drop offline
 
 If TP works on one image and dies after a host ROCm bump, check the **ROCm version** before the

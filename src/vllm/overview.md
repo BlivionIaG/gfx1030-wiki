@@ -75,6 +75,19 @@ on ROCm 7.14 hosts.
 For a short comparison table (battle-tested GGUF vs agentic / Flash-Next), see
 [llama.cpp overview](../../llama-cpp/overview.md#llamacpp-vs-vllm-on-v620-llamacpp--vllm-rdna).
 
+## What fits well on V620 {#what-fits-well-on-v620}
+
+`#general` (Sep 2026) consensus — RDNA2 has **no matrix / tensor cores**, so **prefill** on dense
+models is the weak spot (agentic “read a pile of files” workloads frustrate people even when decode
+looks fine):
+
+| Workload | Community take |
+|---|---|
+| **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) | Sweet spot on 1–4× V620 |
+| Dense **27B** | Usable; expect mediocre PP vs newer silicon |
+| **Flash-Next** | Promising on **4×** V620 via the [vLLM recipe](#qwen38-flash-next-on-vllm); not a 1-card path |
+| Dense agentic on 1–2 cards | Often disappointing TTFT / PP — prefer MoE or more cards |
+
 ## Related
 
 - [Multi-GPU PCIe P2P](../../tuning/p2p.md) — important for tensor parallel.

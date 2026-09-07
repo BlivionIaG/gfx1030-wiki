@@ -141,6 +141,14 @@ That makes the **+12 V rail** and slot power delivery more sensitive than a 3080
   (`STANDARD` / `standard` — check `rocm-smi --help` on your ROCm; the enum name varies.)
 - Cap at **160 W** or **140 W** if 180 W still trips protection.
 
+### Multi-card PSU sizing (community)
+
+`#forum` / `#general` (Sep 2026): an **8× V620 @ 180 W** build targets ~**1440 W** for GPUs alone,
+leaving headroom for CPU/board. One reported pick that avoids sketchy splitters:
+**SilverStone HELA 2050 Platinum** (`SST-AX2050MCPT-A`). US hosts often need a **240 V** circuit
+for that class of load — stock **250 W × 8** on a 120 V / 20 A breaker is a non-starter. Prefer
+the [120–180 W](#token-cost-vs-stock-250-w) caps for both thermals and wall power.
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.
