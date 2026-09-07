@@ -56,6 +56,7 @@ performance work happens first.
 | Project | What it is |
 |---|---|
 | [`blivioniag/v620_toolbox`](https://github.com/blivioniag/v620_toolbox) | V620 power cap + PCIe P2P — [`powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning) (Fedora), [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning) (Ubuntu 26.04); see [Power tuning](../tuning/power.md) |
+| [`Tamalero/amd-v620-soft-unlock`](https://github.com/Tamalero/amd-v620-soft-unlock) | V620 OverDrive soft unlock in **passthrough VMs** (QEMU `romfile=` pptable patch; no flash, keeps 72 CUs) — [Power tuning](../tuning/power.md#soft-unlock-passthrough-vms) |
 | [`blivioniag/vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker) | Docker build system for `rocm-rdna` / `vllm-rdna` images |
 | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) | **Official vLLM extras fork** — RDNA HIP kernels; PRs/issues here — [fork landscape](../vllm/fork.md#fork-landscape) |
 | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) | **Flash-Next / Qwen3.8** fork (still separate until merged into the org) — [docs/rdna2](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2), [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md) |

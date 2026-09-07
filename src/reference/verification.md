@@ -163,8 +163,10 @@
 | `troubleshooting/vllm.md` AMDSMI / missing `render` | **Community** | `#vllm-rdna` Docker compose |
 | `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
 | `tuning/power.md` Ubuntu 26.04 path | **Community** | `ubuntu_powertuning/` — validated kernel `7.0.0-30-generic`; re-verify after kernel upgrades |
-| `tuning/power.md` Fedora Server 44 / kernel 6.19 | **Community** | Ice Lake 4× V620 host — powerfix + 180 W + ~7 W idle |
+| `tuning/power.md` Fedora Server 44 / kernel 6.19 | **Community** | Ice Lake 4× V620 host — power floor + 180 W + ~7 W idle |
 | `tuning/power.md` V620 slot-power / `setperflevel` | **Community** | `#llamacpp` — TDP from slot, not 8-pin |
+| `tuning/power.md` soft unlock (`amd-v620-soft-unlock`) | **Community** | Upstream README + `#general` passthrough reports; wiki-unverified TFLOPS / 232–275 W range |
+| `setup/hardware.md` prefer soft unlock over W6800 flash | **Community** | Soft unlock keeps 72 CUs; W6800 flash → 54 CU |
 | `tuning/ecc.md` two-reboot `ras_enable=0` | **Community** | lunnova on W6800; Discord reports V620 ECC-on (~30 GB). Confirm `rocm-smi` after two reboots |
 | `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |

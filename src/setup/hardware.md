@@ -21,6 +21,10 @@ Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you wa
 > that load a **W6800** BIOS on a **V620** drop active CUs from **72 → 54** (W6800's different CU
 > layout). That is a large compute hit — stay on **stock V620 BIOS**. Cooling shroud mods are fine;
 > BIOS swaps are not a free "Pro unlock."
+>
+> Need OverDrive / unlocked clocks in a **passthrough VM** without flashing? Prefer the reversible
+> 4-byte PowerPlay soft unlock ([`Tamalero/amd-v620-soft-unlock`](https://github.com/Tamalero/amd-v620-soft-unlock))
+> over a W6800 flash — see [Power tuning → Soft unlock](../tuning/power.md#soft-unlock-passthrough-vms).
 
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
 
