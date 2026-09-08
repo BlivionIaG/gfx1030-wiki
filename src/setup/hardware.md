@@ -26,25 +26,6 @@ Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you wa
 > 4-byte PowerPlay soft unlock ([`Tamalero/amd-v620-soft-unlock`](https://github.com/Tamalero/amd-v620-soft-unlock))
 > over a W6800 flash — see [Power tuning → Soft unlock](../tuning/power.md#soft-unlock-passthrough-vms).
 
-### Wrong / cloud VBIOS (clocks stuck ~200 MHz) {#wrong-cloud-vbios}
-
-`#general` (Sep 2026): some used V620s ship with a **cloud / “Microsoft”** VBIOS that **caps core
-clocks around ~200 MHz**. Inference then looks catastrophically slow even though `rocminfo` is fine.
-
-Quick check under load (`rocm-smi` / `amd-smi`):
-
-| Symptom under load | Likely |
-|---|---|
-| Core stuck ~**200 MHz** | Wrong / cloud VBIOS — restore a **stock V620** image |
-| ~**1500–1800 MHz** | Normal when power-capped |
-| ~**2350–2500 MHz** class | Typical unlocked / stock V620 behavior (host-dependent) |
-
-Community VBIOS revision strings seen via `amd-smi` include **`608277`** and **`606253`** — not a
-wiki-validated “must flash” matrix; compare clocks first. Tools people use for dumps/flash include
-[`stylesuxx/amdvbflash`](https://github.com/stylesuxx/amdvbflash) — **only** flash a known-good
-**V620** image, never a W6800 image (CU loss above). Soft unlock does **not** replace a 200 MHz
-cloud BIOS; fix the image first.
-
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
 
 ## AMD BC-250 (`gfx1013`)

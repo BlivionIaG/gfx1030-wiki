@@ -184,7 +184,6 @@
 | `troubleshooting/vllm.md` shm_broadcast / Triton vs RCCL | **Community** | `#vllm-rdna` Sep 7 — wait + cache; stay on 7.14 |
 | `troubleshooting/llama-cpp.md` DFlash2 / sidecar / concurrent | **Community** | `#llamacpp` Sep 2026 |
 | `troubleshooting/general.md` V620 thermals / graphene pads | **Community** | `#general` Sep 2026 — mixed repaste reports |
-| `setup/hardware.md` cloud VBIOS ~200 MHz clock cap | **Community** | `#general` Sep 2026 — restore stock V620 image only |
 | `vllm/overview.md` MoE sweet spot / Flash-Next needs 4 cards | **Opinion** | `#general` Sep 2026 workload consensus |
 | `tuning/power.md` 8× @ 180 W ≈ 1440 W + HELA 2050 | **Community** | `#forum` Sep 2026 build notes |
 | `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |

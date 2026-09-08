@@ -87,11 +87,6 @@ Workarounds (pick one):
 Docker device passthrough of only the V620 does **not** always isolate an unsupported host GPU from
 HSA topology init — VM passthrough or unbind is the reliable fix when mixed AMD cards fight ROCm.
 
-## Painfully slow V620 (clocks stuck ~200 MHz)
-
-See [Wrong / cloud VBIOS](../setup/hardware.md#wrong-cloud-vbios) — check `rocm-smi` clocks under
-load before chasing software.
-
 ## Overheating / thermal paste on V620 {#v620-thermals}
 
 `#general`: V620s are passive server cards — airflow matters more than most desktop GPUs.
