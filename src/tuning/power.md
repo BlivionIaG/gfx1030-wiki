@@ -141,6 +141,49 @@ That makes the **+12 V rail** and slot power delivery more sensitive than a 3080
   (`STANDARD` / `standard` — check `rocm-smi --help` on your ROCm; the enum name varies.)
 - Cap at **160 W** or **140 W** if 180 W still trips protection.
 
+### Multi-card PSU sizing (community)
+
+`#forum` / `#general` (Sep 2026): an **8× V620 @ 180 W** build targets ~**1440 W** for GPUs alone,
+leaving headroom for CPU/board. One reported pick that avoids sketchy splitters:
+**SilverStone HELA 2050 Platinum** (`SST-AX2050MCPT-A`). US hosts often need a **240 V** circuit
+for that class of load — stock **250 W × 8** on a 120 V / 20 A breaker is a non-starter. Prefer
+the [120–180 W](#token-cost-vs-stock-250-w) caps for both thermals and wall power.
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.
+
+## Soft unlock (passthrough VMs) {#soft-unlock-passthrough-vms}
+
+Different problem, different tool:
+[`Tamalero/amd-v620-soft-unlock`](https://github.com/Tamalero/amd-v620-soft-unlock) unlocks **OverDrive
+clock + power controls** on a V620 that is **PCIe-passthrough into a Linux VM** (Proxmox / QEMU /
+libvirt). Stock passthrough often leaves OverDrive empty (LACT / CoreCtrl / sysfs), a fixed ~1825 MHz
+core pstate, and a hard **250 W** power cap.
+
+| Approach | What it changes | Typical use |
+|---|---|---|
+| **`v620_toolbox` power floor** (this page) | Kernel reports `power1_cap_min` **120 W**; boot-cap ~**180 W** | Baremetal or guest efficiency — lower watts for inference |
+| **Soft unlock** (`amd-v620-soft-unlock`) | 4-byte PowerPlay OD **capability** patch via QEMU `romfile=` — no flash, **keeps 72 CUs** | VM passthrough: expose OD clocks (core / VRAM) and power range **~232–275 W** |
+| **W6800 VBIOS flash** | Permanent signed cross-flash | **Avoid** — drops V620 CUs (**72 → 54**). See [hardware](../setup/hardware.md) |
+
+How soft unlock works (summary — follow the upstream README):
+
+1. Guest kernel: `amdgpu.ppfeaturemask=0xffffffff`
+2. Dump the card's own VBIOS from the guest (`/sys/kernel/debug/dri/*/amdgpu_vbios`)
+3. Patch with `make_odcaps_rom.py` (sets OD caps 0–3 + ATOM checksum; **no ROMs shipped**)
+4. Attach as QEMU `romfile=` / Proxmox `hostpci…,romfile=` / libvirt `<rom file=…/>`
+5. Verify `pp_od_clk_voltage` shows an `OD_RANGE`, then tune with sysfs / [`tools/v620`](https://github.com/Tamalero/amd-v620-soft-unlock/blob/main/tools/v620) / [LACT](https://github.com/ilya-zlobintsev/LACT)
+
+**Warnings from upstream (do not skip):**
+
+- Never write guest `pp_features` or sysfs `pp_table` on this card — can **wedge the SMU**; V620 has
+  **no FLR**, so recovery is a **host** reboot.
+- Soft unlock is **per-VM** (`romfile=`). Nothing is written to the physical flash; remove `romfile=`
+  to revert.
+- Passive baremetal **ACPI VFCT** delivery path is documented upstream as **experimental / untested**.
+- Passive server cards need real airflow before raising clocks / 275 W.
+
+`#general`: community reports of reliable use under Proxmox passthrough (weeks-long). This wiki has
+**not** independently validated TFLOPS or power-range claims — treat benches in the upstream README
+as community-reported.

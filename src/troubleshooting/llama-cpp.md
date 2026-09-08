@@ -91,3 +91,24 @@ Vulkan — tensor parallel needs RCCL. See [Building llama.cpp](../../llama-cpp/
 If a **new V620** hard-reboots a box that was stable with a 3080, read
 [Slot power and PSU transients](../../tuning/power.md#slot-power-and-psu-transients) before chasing
 Vulkan ICDs.
+
+## DFlash2 / sidecar crashes {#dflash2--sidecar-crashes}
+
+Symptoms (`#llamacpp` Sep 2026):
+
+- `HSA_STATUS_ERROR_MEMORY_APERTURE_VIOLATION` in a DFlash `gemv_mmvq2_*` kernel, then
+  `[dflash-sidecar] an illegal memory access was encountered` and ROCm abort.
+- Sidecar probe: `qwen35-mtp target mismatch: target GGUF model identity differs` → falls back off
+  sidecar.
+
+See [Sidecar / DFlash gotchas](../../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas): match
+publisher families for target/draft GGUFs, keep `--spec-draft-p-min 0`, pull latest fork, A/B MTP.
+
+## Concurrent decode collapses {#concurrent-decode-collapses}
+
+Symptom: single-stream is ~35–50 t/s; with two overlapping generations (or a second prefill) decode
+falls to single-digit t/s.
+
+Expected on V620 for many llama.cpp configs — see
+[Concurrent slots](../../llama-cpp/rdna2-serving.md#concurrent-slots). Prefer separate instances /
+GPUs over high `--parallel` for multi-agent.

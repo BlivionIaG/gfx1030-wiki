@@ -141,6 +141,22 @@ Running an **embedding** server (nomic, etc.) alongside chat on the same cards c
 even when the embedder looks idle (`#llamacpp`). Park embedders on a spare card or stop them when not
 needed if you care about power.
 
+### Concurrent slots / multi-agent (V620) {#concurrent-slots}
+
+`#llamacpp` (Sep 2026): on V620 (no matrix cores), **`--parallel` > 1** can crush per-stream decode —
+community report of **~35–50 t/s → ~5–9 t/s** when two generations overlap, and prefill of a second
+request can stall the first. Prefer **one stream per process** and scale out with separate instances
+(different GPUs / aliases) if you need multi-agent throughput. KV-aware load balancers (e.g.
+[paddler](https://github.com/intentee/paddler)) and shared KV layers ([LMCache](https://github.com/LMCache/LMCache)
+on the vLLM side) are discussed in `#llamacpp` / `#lmcache` but are not wiki-validated recipes yet.
+
+### Faster GGUF loads (upstream WIP)
+
+Community (`#vllm-rdna` / `#llamacpp`, Sep 2026): upstream
+[llama.cpp PR #22466](https://github.com/ggml-org/llama.cpp/pull/22466) (async pinned upload for
+`-sm tensor` loads) dropped a **122B-Q4** load from **>2 min to <35 s** on one host. Watch that PR /
+fork merges if cold-start time matters.
+
 ## Notable limits
 
 - Validated primarily on **4× V620 gfx1030, ROCm 7.14**; other systems use conservative fallbacks.
@@ -154,7 +170,9 @@ needed if you care about power.
   prefill start (transient on the +12 V rail, classic with old miner PSUs). Try **160 W** (~2–4%
   slower) or **140 W** (~8–10% slower vs unlocked) before blaming the fork. See
   [Power Tuning](../../tuning/power.md).
-- **TP3** (three cards) has caused driver crashes; stick to 2 or 4.
+- **TP3** (three cards) has caused driver crashes; stick to 2 or 4 when possible. On boards with
+  **three** full CPU x16 slots, community still prefers trying **tensor split** first if the links
+  are PCIe 4.0 x16 — see [Host topology](../../tuning/p2p.md#host-topology).
 - Most `GGML_HIP_GFX1030_*` flags are redundant with `HSA_OVERRIDE_GFX_VERSION=10.3.0` unless A/B
   testing — prefer the [short env stack](#recommended-env-stack).
 - **FA / q8 KV:** quantized V cache needs FA on; FA occupancy asserts on some head-256 models —
@@ -162,6 +180,9 @@ needed if you care about power.
 - **GPU sampling** (`--spec-draft-backend-sampling` and related): install `hipcub-devel` (or distro
   equivalent) at build time. Without it, expect `device 'Meta()' does not have support for op TOP_K`
   and fall back to slower CPU sampling.
+- **Long-context quant quality:** community (`#llamacpp`): below **Q6** often looks fine on short
+  benches then loops / stalls as context grows; **Q8** is noticeably more stable. Pair with
+  [sidecar gotchas](../rdna2-speculative.md#sidecar-dflash-gotchas).
 
 For stock builds see [Building & running](../building.md). Speculative decoding configs:
 [RDNA2 speculative decoding](../rdna2-speculative.md).

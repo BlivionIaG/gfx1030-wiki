@@ -27,7 +27,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_ROCM_USE_AITER_MOE` | `0` | Disable AITER MoE (same reason). |
 | `VLLM_RDNA_FORCE_FP16` | `1` | Force FP16 compute paths — avoids slow BF16 emulation on RDNA2. |
 | `VLLM_USE_RDNA2_FA` | `1` | Enable native RDNA2 FlashAttention (`-extras` images). |
-| `VLLM_USE_V2_MODEL_RUNNER` | `1` | V2 runner; `#vllm-rdna` reported **+17%** vs V1 on gfx1030. |
+| `VLLM_USE_V2_MODEL_RUNNER` | `1` / `0` | V2 runner; `#vllm-rdna` reported **+17%** vs V1 on gfx1030 `-extras`. On **Flash-Next**, try `0` if long prompts stall — [troubleshooting](../troubleshooting/vllm.md#flash-next-long-prompt-stalls). |
 | `VLLM_DISABLED_KERNELS` | `ExllamaLinearKernel,TritonW4A16LinearKernel` | Force GPTQ onto `RDNA2W4A16LinearKernel`. |
 | `VLLM_DISABLE_CUSTOM_ALL_REDUCE` | `1` | Disable custom all-reduce (safer when P2P is broken / Ice Lake). |
 | `VLLM_FORCE_CUSTOM_ALL_REDUCE` | `1` | Force custom all-reduce when P2P works (`#vllm-rdna` PIX stack). Mutually exclusive intent with disable. |

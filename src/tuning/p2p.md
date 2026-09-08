@@ -111,6 +111,11 @@ Fedora 43 AMD validation).
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).
+- **External PCIe expansion** (`#general`, Sep 2026 — e.g. Cubix Xpander–class enclosures): each
+  group of cards may get full-width slots **behind the switch**, while only **one x16** (often
+  **PCIe 3.0**) returns to the host. Community: 8× GPU on that pattern was fine at low context but
+  fell to **~3 t/s** around 50–60k context. Prefer **4 GPUs on one switch** + P2P / TP inside the
+  switch over stretching TP across a narrow host uplink.
 
 ## Host topology
 
@@ -120,10 +125,23 @@ Community reports, not wiki-benched:
 |---|---|
 | **PCIe 4.0 x16** per card (CPU root ports) | Best case for TP4. Community known-good llama.cpp TP4 board: Gigabyte **MC62-G40**. |
 | **PCIe 4.0 x8** per card | Practical floor for 8× V620 without a switch; expected to still scale. |
+| **Three CPU x16 slots** | Enough bandwidth that community recommends trying **tensor split** before layer-only. Still watch [TP3 crash notes](../llama-cpp/rdna2-serving.md#notable-limits). |
 | **PCIe 3.0 x4** | Throughput often **stops scaling at 3 cards** and can regress at 4. |
-| **PLX / PCIe switch** | See [PLX / PCIe switches](#plx--pcie-switches). |
+| **PLX / PCIe switch / Xpander** | See [PLX / PCIe switches](#plx--pcie-switches). |
 | **Dual-socket (NUMA)** | TP across sockets can **halve prefill**. Bind workers to the NUMA node of their GPUs. P2P is typically **per socket**. vLLM with NUMA-aware TP workers is less painful than llama.cpp crossing UPI/Infinity Fabric. |
-| **Odd GPU counts (TP3)** | llama.cpp tensor-split on **3** cards has caused driver crashes; prefer 2 or 4. |
+| **Odd GPU counts (TP3)** | llama.cpp tensor-split on **3** cards has caused driver crashes; prefer 2 or 4 when you can. |
+
+### Layer split vs tensor split (quick)
+
+Community explainer (`#benchmarks` thread, Sep 2026):
+
+- **Layer / pipeline split** — VRAM grows with each card, but only one GPU works the model at a
+  time (sequential stages). Less GPU↔GPU traffic.
+- **Tensor (row) split** — all GPUs work together each step; needs much more interconnect bandwidth
+  and often becomes **PCIe-limited** on narrow links.
+
+On fat CPU roots (gen4 x16 × N), try tensor first. Behind a narrow switch uplink, prefer smaller
+TP domains or layer/PP splits.
 
 ## Cabling / risers (community)
 

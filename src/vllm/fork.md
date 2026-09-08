@@ -12,7 +12,7 @@ Docker Hub tags have **not** moved yet.
 | # | Repo / branch | Role | Use it when… |
 |---|---|---|---|
 | **Official** | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) (default) | Hand-written **RDNA HIP kernels** + dispatch. Moved from `blivioniag/vllm` `rdna2_extras`. Rebase toward **vLLM 0.28**; one tickets/CI home | Clone, contribute, track HEAD |
-| **Flash-Next** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | **Flash-Next / Qwen3.8** focused fork + container recipe ([ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)) | Qwen3.8 Flash-Next production path while llama.cpp lags |
+| **Flash-Next** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | **Flash-Next / Qwen3.8** focused fork + container recipe ([docs/rdna2](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2), [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md)) | Qwen3.8 Flash-Next production path while llama.cpp lags |
 | **Historical** | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | Predecessor of the official repo. Do **not** file new PRs here | Comparing old commits; Hub `-extras` images still clone this line until `vllm-rdna-docker` is retargeted |
 
 **Day-to-day serving:** keep pulling [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) `-extras`
@@ -22,7 +22,26 @@ tags (v0.27.1). Those images still come from the personal Docker Hub namespace a
 exist yet.
 
 Companion (not an engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
-collects compose/env recipes and open PRs (concurrent MTP, etc.) that may target either stack.
+collects compose/env recipes and open PRs (concurrent MTP, etc.). `#vllm-rdna` (Sep 2026): the Flash-Next
+author treats the **recipes** repo as a **parts pile** (less active new work); day-to-day Flash-Next
+optimization lives in `vllm-rdna2-qwen`. Concurrent-MTP PRs on the recipes repo are still worth
+cherry-picking into either stack.
+
+### Consolidation status (Sep 3–7 2026) {#consolidation-status}
+
+`#vllm-rdna` snapshot — expect this to move quickly:
+
+| Track | Status |
+|---|---|
+| **0.28 rebase** on `opengfx1030/vllm-rdna` | In progress. Port of HIP kernels from the old 0.27.1 line; authors report **decode regressions** vs 0.27.1 while hunting CUDA-graph / kernel output bugs |
+| **Flash-Next → org cherry-picks** | Open review-only PR ([`opengfx1030/vllm-rdna#1`](https://github.com/opengfx1030/vllm-rdna/pull/1)) for `rdna_ar` / fabric knobs; more Flash-Next commits still to triage (overlap with existing HIP paths) |
+| **Kernel gap audit after `RDNA_ATTN` port** | Community audit list (fix only): missing/partial `layernorm` bindings, FA int8/fp8 variants, some W8A8 / MLA / int8 cache bindings, `VLLM_FORCE_CUSTOM_ALL_REDUCE` wiring, MXFP4 oracle backend, stricter custom-paged-attention gate. Already clean on that pass: W4A16 dense+MoE, MLA sparse file, dynamo `_SimpleCData` fix, EXL3, arch helpers |
+| **Flash-Next production** | Still the recommended day-to-day Flash-Next path on 4× V620; see [overview](../overview.md#qwen38-flash-next-on-vllm) |
+| **LMCache** | `#lmcache` channel: WIP to wire [LMCache](https://github.com/LMCache/LMCache) KV offload (RAM/SSD + remote) into the RDNA vLLM Docker stack — not ready for wiki recipes yet |
+
+Official-fork feature set called out in-channel (HIP): **MXFP4**, **AWQ INT4**, **GPTQ INT4**, GDN
+prefill/decode linear attention, and FlashAttention-equivalent kernels. Treat as **fork-source /
+WIP** on 0.28 HEAD until Hub `-extras` retargets.
 
 ---
 

@@ -78,11 +78,54 @@ models (logs only show Triton / ROCM / TurboQuant). Pull the latest `-extras` ta
 `Using RDNA2W4A16LinearKernel` / native FA in startup logs. Qwen3.8-27B AWQ needs **head size 256**
 on the fork — see [Quantization](../../vllm/quantization.md#int4-on-gfx1030-no-native-int4-alus).
 
+### `shm_broadcast` / one GPU + one CPU pegged {#shm-broadcast-triton-vs-rccl}
+
+Symptom (`#vllm-rdna` Sep 2026, often Flash-Next / multi-GPU): serve looks wedged; logs repeat
+something like:
+
+```text
+No available shared memory broadcast block found in 60 seconds.
+This typically happens when some processes are hanging or doing some time-consuming work
+(e.g. compilation, weight/kv cache quantization).
+```
+
+Community diagnosis: classic **Triton JIT compile fighting RCCL** — not necessarily a dead process.
+Guidance:
+
+1. **Wait** — first boots can sit like this a long time; keep the Triton / compile cache volumes
+   mounted ([Configuration](../../vllm/configuration.md#cache-volumes-first-boot-is-slow)).
+2. Stay on **ROCm 7.2.0 or 7.14.x** — avoid mid-7.2.x (same pin as
+   [multi-GPU RCCL](#multi-gpu-rccl-hangs-or-cards-drop-offline)).
+3. Prefer HIP / `RDNA_ATTN` paths over AMD Triton FA where the fork offers them — less Triton means
+   fewer of these stalls.
+4. Next cold start with a warm cache should be much shorter; if it never recovers after hours, A/B
+   `VLLM_USE_V2_MODEL_RUNNER=0` and the [long-prompt](#flash-next-long-prompt-stalls) notes.
+
 ## Multi-GPU RCCL hangs or cards drop offline
 
 If TP works on one image and dies after a host ROCm bump, check the **ROCm version** before the
 model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
 **7.14.0** — see [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+
+## Flash-Next long-prompt stalls {#flash-next-long-prompt-stalls}
+
+Symptom (Flash-Next fork / recipe containers, `#vllm-rdna` Sep 2026): short prompts decode fine, but
+**large prompts** (tens of k tokens — agentic coding, session resume) take many minutes, timeout, or
+appear wedged. Temps and power caps look healthy.
+
+**Community fix that unblocked one 4× V620 host:**
+
+```bash
+export VLLM_USE_V2_MODEL_RUNNER=0
+```
+
+Reporter then saw stable **~68 tok/s** with dense INT8 + custom all-reduce, including large prompts.
+The Flash-Next fork author added this to their docs / troubleshooting. Official-extras authors note
+separate Dense-on-V2 fixes in progress on the org rebase — A/B both values on your image.
+
+Also rule out thermal / power first ([Power tuning](../../tuning/power.md)), and measure expected
+prefill time (~1k tok/s class ⇒ ~40 s for 40k tokens, not minutes). Prefill campaign numbers:
+[vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm).
 
 ## Prefill blocks decode / MTP stalls under concurrency
 
