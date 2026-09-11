@@ -65,6 +65,19 @@ hosts and is widely called out as weaker than the
 after the Sep prefill campaign). Prefer stable Qwen3.8-27B / MoE recipes for production TP on llama.cpp;
 use vLLM for Flash-Next until upstream/fork gaps close.
 
+`#llamacpp` (Sep 10–11 2026) community snapshots — still **not** a polished gfx1030 profile:
+
+| Setup | Quant / backend | Prefill | Decode | Notes |
+|---|---|---|---|---|
+| **2× V620**, LocalAI `rocm-llama-cpp-development` | Qwen3.8 Flash-Next **Q4** | low | **~6 t/s** | n-gram offloaded to NVMe; 64 GB host RAM |
+| **2× V620**, 64 GB VRAM | [`mudler/Qwen3.8-Flash-Next-APEX-GGUF`](https://huggingface.co/mudler/Qwen3.8-Flash-Next-APEX-GGUF) compact (~85 GB GGUF) | **~370+ t/s** | **~26 t/s** | n-gram table on NVMe (no extra host RAM); **156k** KV at **q8** |
+| **4× V620**, n-gram in host RAM | Flash-Next (non-APEX) | **~200–400 t/s** | **~20–35 t/s** | Context-dependent; PP/tg still below 27B on the same rig |
+
+**Host RAM for Flash-Next n-gram:** keeping the n-gram table off storage is on the order of
+**~50 GB** of system RAM (community, 4× V620). Budget that on top of OS + any CPU offload — or
+keep the table on fast NVMe and accept the slower path (APEX report: NVMe-resident n-gram was
+fine).
+
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
 
 ```bash
@@ -121,3 +134,4 @@ above.
 | **DFlash2 `MEMORY_APERTURE_VIOLATION`** | Crash in `gemv_mmvq2_*` / `[dflash-sidecar] illegal memory access`; server may enter target-only then abort | Reboot / clean env, pull latest DFlash sidecar fixes, A/B MTP instead of DFlash2; report host + quant on `#llamacpp` |
 | **`--spec-draft-p-min` ≠ 0** | Community: non-zero `p-min` can effectively **disarm MTP** acceptance | Keep `--spec-draft-p-min 0` (or `0.0`) unless you have measured otherwise |
 | **Quark / MXFP4 lockups** | Quark-AWQ-MXFP4 GGUFs can look great then wedge after long ctx | Prefer **Q6+** / **Q8** for long sessions; community: sub-Q6 feels unusable over long context |
+| **MTP + LCP slot reuse** | HTTP **200**, no tokens; `inconsistent sequence positions` / `llama_decode(ctx_dft)` after `find_slot: non-consecutive` | Disable MTP, force a fresh slot, or see [MTP LCP position desync](../../troubleshooting/llama-cpp.md#mtp-lcp-position-desync). `--ctx-checkpoints 0` does **not** prevent this |

@@ -27,7 +27,7 @@ author treats the **recipes** repo as a **parts pile** (less active new work); d
 optimization lives in `vllm-rdna2-qwen`. Concurrent-MTP PRs on the recipes repo are still worth
 cherry-picking into either stack.
 
-### Consolidation status (Sep 3–7 2026) {#consolidation-status}
+### Consolidation status (Sep 3–11 2026) {#consolidation-status}
 
 `#vllm-rdna` snapshot — expect this to move quickly:
 
@@ -35,9 +35,12 @@ cherry-picking into either stack.
 |---|---|
 | **0.28 rebase** on `opengfx1030/vllm-rdna` | In progress. Port of HIP kernels from the old 0.27.1 line; authors report **decode regressions** vs 0.27.1 while hunting CUDA-graph / kernel output bugs |
 | **Flash-Next → org cherry-picks** | Open review-only PR ([`opengfx1030/vllm-rdna#1`](https://github.com/opengfx1030/vllm-rdna/pull/1)) for `rdna_ar` / fabric knobs; more Flash-Next commits still to triage (overlap with existing HIP paths) |
+| **Intel AutoRound / FP16 Flash-Next** | Draft [`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5) — large, **dirty** vs `rdna_extras`. Validated short-run on 4× V620 (see [overview](../overview.md#intel-autoround-flash-next)). Not a Hub image. |
+| **Recipe ports + Hybrid W4A16 gfx10** | Draft [`opengfx1030/vllm-rdna#6`](https://github.com/opengfx1030/vllm-rdna/pull/6) — in-tree Apache ports from the recipe book (Triton LDS/softmax, skinny MoE GEMV, MTP `SupportsPP`). **RDNA2 HIP stays the auto default**; Hybrid is opt-in (`--linear-backend rdna_hybrid`). Needs gfx1030 A/B. |
 | **Kernel gap audit after `RDNA_ATTN` port** | Community audit list (fix only): missing/partial `layernorm` bindings, FA int8/fp8 variants, some W8A8 / MLA / int8 cache bindings, `VLLM_FORCE_CUSTOM_ALL_REDUCE` wiring, MXFP4 oracle backend, stricter custom-paged-attention gate. Already clean on that pass: W4A16 dense+MoE, MLA sparse file, dynamo `_SimpleCData` fix, EXL3, arch helpers |
 | **Flash-Next production** | Still the recommended day-to-day Flash-Next path on 4× V620; see [overview](../overview.md#qwen38-flash-next-on-vllm) |
-| **LMCache** | `#lmcache` channel: WIP to wire [LMCache](https://github.com/LMCache/LMCache) KV offload (RAM/SSD + remote) into the RDNA vLLM Docker stack — not ready for wiki recipes yet |
+| **Upstream vLLM 0.29** | `#vllm-rdna` (Sep 11): **V2 model runner becomes the default** on 0.29. Hub `-extras` is still 0.27.1. Flash-Next long-prompt hosts that needed `VLLM_USE_V2_MODEL_RUNNER=0` should re-A/B before bumping. |
+| **LMCache** | `#lmcache` (Sep 9): still **plan-only** — add gfx1030 to a fork, try the standalone image, then plug into the vLLM Docker/pip stack. Disaggregated prefill/decode is later. No wiki recipe yet. |
 
 Official-fork feature set called out in-channel (HIP): **MXFP4**, **AWQ INT4**, **GPTQ INT4**, GDN
 prefill/decode linear attention, and FlashAttention-equivalent kernels. Treat as **fork-source /

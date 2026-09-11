@@ -54,9 +54,18 @@
 | Flash-Next ~580–700 PP / ~50–53 decode | **Community** | Early Sep recipe; **superseded** by prefill campaign below |
 | Flash-Next ~1000–1200 PP / ~60–100+ decode | **Community** | `#vllm-rdna` Sep 4–7 + Flash-Next `RESULTS.md`; host-dependent |
 | Flash-Next container ~40 t/s vs llama.cpp ~18–19 | **Community** | `#vllm-rdna` Sep 2026 same-host comparison |
+| Intel AutoRound Flash-Next ~962 PP / ~41–56 decode | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5`; 4× V620; dirty PR |
+| `--max-num-batched-tokens 4096` fixes 128k PP cliff | **Community** | `#vllm-rdna` Sep 11 — 375 → ~950 PP; A/B on your scheduler |
+| Intel AutoRound ~75 GB / BF16 PLE ~95 GiB | **Community** | Publisher checkpoint + PR validation notes |
+| Quantized group-16 INT4 PLE incoherent | **Needs verify** | `#vllm-rdna` — not the published PR path (BF16 PLE) |
+| GDN varlen second-seq output bug | **Fork-source** | `gdn_prefill_o_rdna2.cu` in draft PR #5; concurrent prefill |
+| Recipe ports / Hybrid gfx10 opt-in | **Needs verify** | Draft `opengfx1030/vllm-rdna#6` — RDNA2 stays auto default |
+| vLLM 0.29 defaults V2 runner | **Community** | `#vllm-rdna` Sep 11; Hub `-extras` still 0.27.1 |
 | ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in Flash-Next fork `ROCR-CPU-FIX.md` |
 | EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
+| Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 — draft PR #5; not in Hub `-extras` |
 | Official extras source is `opengfx1030/vllm-rdna` `rdna_extras` | **Solid** | `#vllm-rdna` Sep 2026 move; default branch `rdna_extras`; PRs go to the org. Hub `-extras` still from historical clone |
+| Draft PRs `#5` / `#6` on org extras | **Needs verify** | Flash-Next AutoRound + recipe ports; do not treat as released |
 | `opengfx1030/vllm-rdna` ready as published Docker | **Needs verify** | Org repo exists; `vllm-rdna-docker` bake still `VLLM_REPOSITORY=https://github.com/BlivionIaG/vllm.git` |
 | Flash-Next still separate from org extras | **Community** | `#vllm-rdna` Sep 2026: `leapdragon/vllm-rdna2-qwen` until merge |
 | Org 0.28 rebase / Flash-Next cherry-picks | **Community** | `#vllm-rdna` Sep 3–7: regressions under debug; PR `#1` review-only |
@@ -79,6 +88,7 @@
 | Qwen3.8-27B AWQ needs `head_size=256` | **Fork-source** | Same as `fa_rdna2` commit; confirm on image |
 | GDN hybrid ~93/331 tok/s | **Community** | Fork author bench |
 | EXL3 9B / Quark W4A16 | **Needs verify** | `#vllm-rdna` Sep 2026 — experimental |
+| Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5` |
 
 ### `fork.md`
 
@@ -114,6 +124,9 @@
 | Long-context quant sweep (Q8 wins) | **Community** | `#benchmarks` Aug 30 — single host |
 | ROCm 7.1 vs 10.0 Ice Lake sweep | **Community** | Close numbers; prefer 7.14 for RCCL day-to-day |
 | Flash-Next ~28 t/s llama.cpp vs ~60 t/s vLLM | **Community** | `#llamacpp` 4× V620 comparison |
+| Flash-Next APEX GGUF ~370 PP / ~26 t/s (2× V620) | **Community** | `#llamacpp` Sep 11 — `mudler/Qwen3.8-Flash-Next-APEX-GGUF` |
+| Flash-Next Q4 ~6 t/s on 2× V620 (LocalAI) | **Community** | `#llamacpp` Sep 10 — n-gram on NVMe |
+| Flash-Next n-gram table ~50 GB RAM | **Community** | `#llamacpp` Sep 10 — 4× V620 to avoid storage offload |
 | PR #10 / #12 status | **Needs verify** | Re-check fork PRs |
 
 ### `rdna2-speculative.md`
@@ -131,6 +144,7 @@
 | DFlash2 aperture violation crash | **Community** | `#llamacpp` Sep 2026 — pull latest / A/B MTP |
 | `--spec-draft-p-min` ≠ 0 disarms MTP | **Community** | `#benchmarks` Sep 2026 tip |
 | Full DFlash2 TP4 command | **Community** | Author production recipe |
+| MTP + LCP prompt-cache position desync | **Community** | `#llamacpp` Sep 10 — HTTP 200 / no tokens; `--ctx-checkpoints 0` does not fix |
 
 ### `rdna2-serving.md`
 
@@ -181,8 +195,10 @@
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
 | `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |
 | `troubleshooting/vllm.md` Flash-Next V2=0 long prompts | **Community** | `#vllm-rdna` Sep 2026 |
+| `troubleshooting/vllm.md` 128k PP cliff / batched-tokens 4096 | **Community** | `#vllm-rdna` Sep 11 — Intel AutoRound draft |
 | `troubleshooting/vllm.md` shm_broadcast / Triton vs RCCL | **Community** | `#vllm-rdna` Sep 7 — wait + cache; stay on 7.14 |
 | `troubleshooting/llama-cpp.md` DFlash2 / sidecar / concurrent | **Community** | `#llamacpp` Sep 2026 |
+| `troubleshooting/llama-cpp.md` MTP LCP position desync | **Community** | `#llamacpp` Sep 10 — `ctx_dft` / M-RoPE `X < Y` |
 | `troubleshooting/general.md` V620 thermals / graphene pads | **Community** | `#general` Sep 2026 — mixed repaste reports |
 | `vllm/overview.md` MoE sweet spot / Flash-Next needs 4 cards | **Opinion** | `#general` Sep 2026 workload consensus |
 | `tuning/power.md` 8× @ 180 W ≈ 1440 W + HELA 2050 | **Community** | `#forum` Sep 2026 build notes |

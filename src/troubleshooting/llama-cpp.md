@@ -104,6 +104,52 @@ Symptoms (`#llamacpp` Sep 2026):
 See [Sidecar / DFlash gotchas](../../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas): match
 publisher families for target/draft GGUFs, keep `--spec-draft-p-min 0`, pull latest fork, A/B MTP.
 
+## MTP slot wedge: LCP / prompt-cache position desync {#mtp-lcp-position-desync}
+
+Symptom (`#llamacpp`, Sep 2026): `llama-server` stays up and the HTTP API returns **200**, but **no
+tokens** are generated (clients such as Hermes show 0 tok/s). Common on long agentic sessions
+(**>~40k** tokens; community failures clustered around 32–89k). Restarting the process is not
+required — a later **new-context** request often recovers the wedged slot.
+
+Typical stderr fingerprint (M-RoPE / draft context):
+
+```text
+W find_slot: non-consecutive token position … after … for sequence …
+E init: the tokens of sequence … have inconsistent sequence positions:
+  - the last position stored in the memory module … is X = …
+  - the tokens … have a starting position of Y = …
+  for M-RoPE, it is required that the position satisfies: X < Y
+E spec process: llama_decode(ctx_dft) head=0 failed rc=-1
+E srv decode: failed to process speculative batch
+```
+
+`X = Y` and `X > Y` both show up. The **main** decode can accept the batch; the **MTP draft**
+context (`ctx_dft`) is what rejects it.
+
+This is **not** the same as the [KV checkpoint crash](#kv-checkpoint-crash-on-tensor-split).
+Reporters already had `--ctx-checkpoints 0`. The trigger is the **LCP / prompt-cache slot-reuse**
+path (`selected slot by LCP similarity`) plus **`--spec-type draft-mtp`**: a reused prefix is
+re-spanned at a stale position while the draft context holds another. It also is **not** specific
+to quantized KV — the same wedge was seen after switching KV from `q8_0` back to `f16`.
+
+Community setup that reproduced it daily: RDNA2 fork, **3× V620** tensor-split, Qwen3.8-27B
+Quark-AWQ-MXFP4, `--parallel 2`, Flash Attention on, `--spec-type draft-mtp --spec-draft-n-max 4`,
+`--ctx-checkpoints 0`.
+
+Mitigations to try (in order):
+
+1. Turn **MTP off** for that slot / session (or gate it when logs show `non-consecutive token
+   position`).
+2. Avoid prefix-cache reuse: new session / `--parallel 1`, or force a fresh slot after a 200-with-no-tokens
+   event.
+3. Prefer **Q6+ / Q8** long-session quants over Quark-AWQ-MXFP4 — see
+   [Sidecar / DFlash gotchas](../../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas).
+4. Pull latest `edwinbrowwn/llama.cpp-rdna2` and report the three-step fingerprint on `#llamacpp`
+   if it still wedges.
+
+If the hang is a **failed tool call** or a premature stop token (raw payload looks complete), that
+is a different class — inspect the harness payload before blaming MTP.
+
 ## Concurrent decode collapses {#concurrent-decode-collapses}
 
 Symptom: single-stream is ~35–50 t/s; with two overlapping generations (or a second prefill) decode
