@@ -7,6 +7,12 @@ Live discussion happens on the **gfx1030 club** Discord:
 [https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp). Propose wiki fixes there (`#wiki`) or
 open a GitHub PR — both are fine. See [Useful resources](./resources.md#community-discord).
 
+A **daily Cursor Automation** (when enabled) reads Discord and opens draft PRs titled
+`wiki: discord digest YYYY-MM-DD`. Treat those like any other contribution: review
+privacy and accuracy before merging. Setup lives in the repo at
+`.cursor/automations/daily-discord-wiki.md` (not loaded by Cursor automatically —
+activate once at [cursor.com/automations/new](https://cursor.com/automations/new)).
+
 ## Two ways to contribute
 
 ### 1. Directly on GitHub (no command line)
@@ -78,6 +84,20 @@ same handle appears on GitHub.
 
 **Never commit:** `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `.env` files, or screenshots of private
 channels. Cloud Agents should set token + guild ID in **Secrets** only (see repo `README.md`).
+
+### Automated Discord digest PRs
+
+When the daily digest automation is active, expect occasional draft PRs that
+only touch `src/` (and `SUMMARY.md` if a page was added). Review them like a
+human patch:
+
+- Reject transcripts, `@mentions`, message links, and personal host/path leaks.
+- Keep unconfirmed tok/s and one-off anecdotes in
+  [Verification status](../reference/verification.md) as **Community** / **Needs verify**.
+- Empty calendar days should produce **no** PR; do not “fill” the wiki from stale chat.
+
+The agent instructions are `.cursor/skills/discord-wiki-digest/SKILL.md`. You can
+still ask a Cloud Agent for an on-demand pass; it should follow the same skill.
 
 ## Deployment
 
