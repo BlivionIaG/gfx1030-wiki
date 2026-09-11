@@ -30,7 +30,7 @@ Community rule of thumb (Aug 2026):
 |---|---|
 | Getting ROCm + multi-GPU working; GGUF; single-stream / low concurrency | **llama.cpp** (RDNA2 fork) — more battle-tested on V620 |
 | Multi-stream / agentic loads with prefix caching | **vLLM `-extras`** — caching + concurrency usually win |
-| Qwen3.8 **Flash-Next** on 4× V620 | Prefer **vLLM** Flash-Next recipe (**~60–100+ t/s** decode class after Sep 2026 prefill work; earlier ~50–60) over llama.cpp (~15–30 t/s community reports; upstream/fork gaps) — see [vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm) |
+| Qwen3.8 **Flash-Next** on 4× V620 | Prefer **vLLM** Flash-Next recipe (**~60–100+ t/s** decode class after Sep 2026 prefill work; earlier ~50–60) over llama.cpp (~15–35 t/s typical; 2-card APEX GGUF ~26 t/s) — see [vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm) and [Flash-Next on llama.cpp](../rdna2-speculative.md#qwen38-flash-next-experimental) |
 | MoE / lighter agentic | **Either** — community sweet spot for these cards; see [What fits well](../../vllm/overview.md#what-fits-well-on-v620) |
 
 Neither stack is "finished" for every model. New to the cards? Start with

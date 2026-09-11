@@ -73,3 +73,21 @@ and rebuild from that branch, or wait for a tagged image.
 | **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
+
+## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
+
+Not in published `-extras` tags. Community + draft
+[`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5) are exercising Intel
+**W4A16 AutoRound** Flash-Next:
+
+| Checkpoint | Role |
+|---|---|
+| [`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound) | PR-validation checkpoint (W4A16 weights, FP16 serve path) |
+| [`Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound) | RTN sibling cited in `#vllm-rdna` (high publisher recovery %) |
+
+Community take: Intel AutoRound sits **between Unsloth Q5_XL and Q6_XL** on quality while the
+weight pack is tens of GB smaller (~**75 GB**). That still wants **four 32 GB** cards plus a
+large **CPU PLE / n-gram** table (embedded BF16 table is ~**95 GiB** — offload to RAM).
+
+Do **not** assume group-16 INT4 PLE sidecars match the published benches. See
+[overview](../overview.md#intel-autoround-flash-next).

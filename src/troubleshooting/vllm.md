@@ -127,6 +127,26 @@ Also rule out thermal / power first ([Power tuning](../../tuning/power.md)), and
 prefill time (~1k tok/s class ⇒ ~40 s for 40k tokens, not minutes). Prefill campaign numbers:
 [vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm).
 
+## Flash-Next 128k prefill cliff {#flash-next-128k-prefill-cliff}
+
+Symptom (`#vllm-rdna` Sep 2026, Intel AutoRound / draft
+[`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5)): prefill holds
+**~950 tok/s** through 64k, then falls to **~375 tok/s** at **128k** while decode stays flat
+(~48–55 tok/s). Looks like a scheduler / chunking misconfig more than a kernel cliff.
+
+**Community fix on that host:** raise the batch cap:
+
+```bash
+--max-num-batched-tokens 4096
+```
+
+The suspected combination was `enable_chunked_prefill=True` with **2048** scheduled / batched
+tokens. After 4096, 128k prose/code PP returned to the **~950 tok/s** class (same 4× V620, FP16
+KV, CPU PLE offload). See [overview](../../vllm/overview.md#intel-autoround-flash-next).
+
+If 128k is still slow after 4096, A/B [V2 runner](#flash-next-long-prompt-stalls) and confirm you
+are not on quantized PLE (known-good is the embedded BF16 n-gram table).
+
 ## Prefill blocks decode / MTP stalls under concurrency
 
 Symptom: with speculative decode (MTP) and multiple in-flight requests, generation stalls while

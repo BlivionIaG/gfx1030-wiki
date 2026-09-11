@@ -137,6 +137,10 @@ Community reports ~5 min vs ~10 min subsequent startups once the cache is warm �
 better than rebuilding every boot. Do **not** mix this with the TP `VLLM_DISABLE_COMPILE_CACHE=1`
 workaround unless you have verified your image needs that disable path.
 
+On **Flash-Next** long-context serves, if prefill falls off a cliff around **128k** while decode
+stays flat, raise `--max-num-batched-tokens` to **4096** before blaming kernels — see
+[128k prefill cliff](../../troubleshooting/vllm.md#flash-next-128k-prefill-cliff).
+
 `SAFETENSORS_FAST_GPU=1` is also commonly set (and already present in some `vllm-rdna` Dockerfiles) to
 speed weight load into GPU memory — see [AMD vLLM optimization notes](https://rocm.docs.amd.com/projects/ai-ecosystem/en/latest/optimization/vllm-v1-optimization.html).
 

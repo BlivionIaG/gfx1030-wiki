@@ -67,6 +67,43 @@ while short prompts are fine, try `VLLM_USE_V2_MODEL_RUNNER=0` — community rep
 with dense INT8 + custom all-reduce after that switch; fork docs now call it out. See
 [vLLM troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
 
+### Intel AutoRound Flash-Next (draft, `#vllm-rdna` Sep 10–11 2026) {#intel-autoround-flash-next}
+
+A second Flash-Next track is the Intel **W4A16 AutoRound** checkpoint
+([`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound);
+community also cites the RTN sibling
+[`Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound)).
+Weights are ~**75 GB**; plan on **4× V620**. Community quality notes: Intel AutoRound beats some
+other INT4 Flash-Next packs on published tool-calling scores (example cited: **80.5** vs **76.0**
+for a different INT4). Treat those as **publisher / community numbers**, not wiki benches.
+
+Draft integration: [`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5)
+(open, **not** in Hub `-extras`). PR validation used **FP16 activations**, **CPU PLE / n-gram
+offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures on **4× V620**
+(no P2P in the Discord report):
+
+| Metric | Community / PR snapshot |
+|---|---|
+| Uncached 1024-token prefill | **~962 tok/s** (vs ~535 BF16 on that host) |
+| Short decode + MTP | **~41 tok/s**, ~61% MTP accept |
+| Prose / code 16–64k | **~950–980 tok/s** PP, **~48–56 tok/s** decode |
+| 128k after `4096` batched tokens | PP stays **~950 tok/s** class (was **~375 tok/s** at 2048 scheduled tokens) |
+| Startup (warm-ish) | ~**4 min** vs earlier **8–10 min** on the same host |
+| fp16 KV fit | ~**291k** tokens on 4 cards (one report) |
+
+**Gotchas** (do not treat as a drop-in Hub image):
+
+- Known-good PLE is the **embedded BF16** n-gram table (~**95 GiB** tensor data) with
+  `--engram-config '{"cpu_offload":true}'`. **Quantized CPU PLE** (group-16 INT4 sidecar) is **not**
+  end-to-end validated; `#vllm-rdna` saw **incoherent** generation on that path.
+- `--max-num-batched-tokens 2048` + chunked prefill was the suspected cause of the **128k PP cliff**.
+  Raise to **4096** (or see [troubleshooting](../../troubleshooting/vllm.md#flash-next-128k-prefill-cliff)).
+- Concurrent varlen GDN prefill still has a fork kernel addressing bug
+  (`gdn_prefill_o_rdna2.cu` reuses a global chunk index). Single-stream benches can look fine.
+- The PR is huge and **dirty** against `rdna_extras` — wait for a cleaned cherry-pick / image
+  before calling it production. Day-to-day Flash-Next remains
+  [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen).
+
 Also watch [TheRock ROCR idle-CPU spin](../../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714)
 on ROCm 7.14 hosts.
 
