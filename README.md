@@ -75,3 +75,20 @@ Read-only Discord tools live in `tools/discord-mcp`. They only read the **gfx103
 4. New cloud agent run: *List gfx1030 channels, then the last 20 messages in #general.*
 
 `.cursor/environment.json` installs the package on Builds. `tools/discord-mcp/run.sh` also installs deps on first MCP start if needed.
+
+### Daily Discord → wiki automation
+
+A Cursor Automation can run that Discord pass on a schedule and open a **draft**
+PR instead of waiting for a manual “update the wiki from Discord” prompt.
+
+1. Create it at [cursor.com/automations/new](https://cursor.com/automations/new)
+   (cloud agents cannot enable the schedule for you).
+2. Use the checklist and prompt in
+   [`.cursor/automations/daily-discord-wiki.md`](./.cursor/automations/daily-discord-wiki.md).
+3. The agent follows
+   [`.cursor/skills/discord-wiki-digest/SKILL.md`](./.cursor/skills/discord-wiki-digest/SKILL.md)
+   (privacy rules, channel list, when to no-op).
+
+Attach **this repo** on the automation (scheduled jobs default to no repo) and
+leave Discord MCP + `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` Secrets as for other
+Cloud Agents. Merge digest PRs only after a human check.

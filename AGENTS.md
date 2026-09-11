@@ -58,3 +58,29 @@ There is **no application server, database, backend, or automated test/lint suit
 - Reads are locked to the guild in `DISCORD_GUILD_ID` when that secret is set.
 - Private Discord channels return Missing Access until the bot role is added on that channel.
 - Do not vendor `.env` files. Use `.env.example` only.
+
+### Daily Discord → wiki digest (Cursor Automation)
+
+Most wiki substance is distilled from the gfx1030 Discord. Do not wait for a
+human to paste “go through Discord and update the wiki” — that job is the
+**discord-wiki-digest** skill plus a **scheduled Cursor Automation**.
+
+- Skill (what to scan, privacy, when to no-op): `.cursor/skills/discord-wiki-digest/SKILL.md`
+- Paste-ready prompt + dashboard fields: `.cursor/automations/daily-discord-wiki.md`
+
+Cursor does **not** create or enable automations from a cloud agent session, and
+does not load `.cursor/automations/` as config. A human (or a **local**
+`/automate` in the Agents Window) must Save + activate once at
+https://cursor.com/automations/new :
+
+1. Trigger: scheduled daily (suggested cron `0 9 * * *` UTC).
+2. **Attach this repo** (`BlivionIaG/gfx1030-wiki`, branch `master`). Cron defaults
+   to no repository — without it the agent cannot open a wiki PR.
+3. Paste the prompt from `.cursor/automations/daily-discord-wiki.md`.
+4. Tools: PR creation on, Memories on, MCP **discord** on.
+5. Same Cloud environment and Secrets as other gfx1030-wiki agents.
+
+When you are that automation (or a human asked for a Discord wiki pass): follow
+the skill. Open a **draft** PR only if there is durable new knowledge;
+`mdbook build` must succeed; never merge; never invent Discord content if MCP
+fails. Empty days are a successful no-op (no empty PR).
