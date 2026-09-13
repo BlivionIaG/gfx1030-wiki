@@ -19,6 +19,7 @@
 
 - [Overview](./vllm/overview.md)
 - [Running (Docker)](./vllm/running.md)
+- [Recipes (pick a path)](./vllm/recipes.md)
 - [Configuration](./vllm/configuration.md)
 - [Quantization](./vllm/quantization.md)
 - [vLLM forks (rdna_extras + landscape)](./vllm/fork.md)

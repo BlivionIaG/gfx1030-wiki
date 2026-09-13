@@ -23,6 +23,7 @@ src/
   vllm/                    # vLLM serving on RDNA
     overview.md            # Section hub — start here
     running.md             # Images, docker run, quick start
+    recipes.md             # Which stack / model / card count
     configuration.md       # Env vars, CUDA graphs, compose
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
     fork.md                # rdna_extras kernels
@@ -87,6 +88,7 @@ src/
 | Install ROCm, hardware list | `setup/` |
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
+| Which image / model / card-count recipe | `vllm/recipes.md` |
 | Kernel source, fork branches | `vllm/fork.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |
 | Stock llama.cpp cmake build | `llama-cpp/building.md` |

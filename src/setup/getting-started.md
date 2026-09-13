@@ -48,8 +48,9 @@ repo.
 
 The fastest path is the prebuilt images — no local ROCm/PyTorch/vLLM build required:
 
-- [Running vLLM (Docker)](../vllm/overview.md) — [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna)
+- [Running vLLM (Docker)](../vllm/running.md) — [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna)
   on a [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base.
+- [vLLM recipes](../vllm/recipes.md) — Hub `-extras` vs recipe container vs Flash-Next by card count.
 
 Prefer GGUF and building from source? See [Building & Running llama.cpp](../llama-cpp/building.md) (ROCm or Vulkan).
 

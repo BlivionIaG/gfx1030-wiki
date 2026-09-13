@@ -13,6 +13,7 @@ image targets seven RDNA architectures (gfx1030 through RDNA4).
 | Goal | Page |
 |---|---|
 | Pull an image and run your first model | [Running (Docker)](../running.md) |
+| Which stack / model / card count | [Recipes](../recipes.md) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](../configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](../quantization.md) |
 | Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](../fork.md) (`rdna_extras`) |
@@ -129,5 +130,7 @@ looks fine):
 
 - [Multi-GPU PCIe P2P](../../tuning/p2p.md) — important for tensor parallel.
 - [Environment variables](../../reference/env-vars.md) — cheat-sheet.
-- [Community recipes](https://github.com/leapdragon/vllm-rdna2-recipe) — external collection (includes
-  concurrent MTP / prefill-vs-decode work — check open PRs).
+- [Recipes (wiki)](../recipes.md) — pick Hub `-extras` vs recipe container vs Flash-Next by card count.
+- [Community recipe book](https://github.com/leapdragon/vllm-rdna2-recipe) (mirror
+  [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe)) — presets,
+  patches, concurrent MTP PRs.

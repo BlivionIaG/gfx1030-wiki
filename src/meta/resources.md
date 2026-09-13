@@ -61,7 +61,8 @@ performance work happens first.
 | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) | **Official vLLM extras fork** — RDNA HIP kernels; PRs/issues here — [fork landscape](../vllm/fork.md#fork-landscape) |
 | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) | **Flash-Next / Qwen3.8** fork (still separate until merged into the org) — [docs/rdna2](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2), [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md) |
 | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | **Historical** — predecessor of `opengfx1030/vllm-rdna`; Hub `-extras` still clones this until docker bake is retargeted |
-| [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community compose/env recipes (parts pile; watch open PRs for concurrent MTP) |
+| [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community recipe book + GHCR presets (27B/122B; parts pile; concurrent MTP PRs) — [wiki recipes](../vllm/recipes.md) |
+| [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) | Org mirror of the recipe book (`#vllm-rdna`) |
 | [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) | RDNA2/V620 llama.cpp fork — see [overview](../llama-cpp/rdna2-overview.md) |
 | [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench) | Reproducible long-context PP/TG benches (real prompts) — used by `#benchmarks` |
 | [`LMCache/LMCache`](https://github.com/LMCache/LMCache) | KV cache layer (RAM/SSD/remote) — `#lmcache` WIP for RDNA vLLM Docker; not wiki-validated yet |
