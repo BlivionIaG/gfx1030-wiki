@@ -47,8 +47,12 @@ docker run -it --rm \
   --security-opt seccomp=unconfined \
   --ipc host \
   -p 8000:8000 \
+  -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
   docker.io/blivioniag/vllm-rdna:v0.27.1-extras \
-  vllm serve Qwen/Qwen2.5-7B-Instruct --dtype float16 --max-model-len 8192
+  vllm serve cyankiwi/Qwen3.8-27B-AWQ-INT4 \
+    --dtype float16 \
+    --max-model-len 8192 \
+    --language-model-only --skip-mm-profiling --trust-remote-code
 ```
 
 - Give the container the GPU with `--device /dev/kfd --device /dev/dri` and the `video` **and**
@@ -56,6 +60,9 @@ docker run -it --rm \
   [`Failed to infer device type`](../../troubleshooting/vllm.md#failed-to-infer-device-type--amdsmi_status_not_init).
 - **Prefer `--dtype float16`.** RDNA2 has weak/emulated BF16; letting vLLM pick bf16 from a model's
   `config.json` can trigger slow float32 fallbacks.
+- The **27B AWQ** example is the current `#vllm-rdna` day-to-day dense pick (Sep 2026). For a smaller
+  smoke test, swap in any instruct model that fits VRAM. Model / card-count matrix:
+  [Recipes](../recipes.md).
 - For a **non-Navi-21** RDNA2 card (gfx1031/1032/…), add `-e HSA_OVERRIDE_GFX_VERSION=10.3.0`. See
   [HSA_OVERRIDE](../../setup/hsa-override.md).
 - Multi-GPU: add `--tensor-parallel-size N`; enabling [PCIe P2P](../../tuning/p2p.md) helps a lot here.
@@ -65,11 +72,12 @@ Query the OpenAI-compatible endpoint:
 ```bash
 curl http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"Qwen/Qwen2.5-7B-Instruct","messages":[{"role":"user","content":"Hi from gfx1030!"}]}'
+  -d '{"model":"cyankiwi/Qwen3.8-27B-AWQ-INT4","messages":[{"role":"user","content":"Hi from gfx1030!"}]}'
 ```
 
 ## Next steps
 
+- Choose Hub vs recipe container vs Flash-Next: [Recipes](../recipes.md)
 - Tune env vars and CUDA graphs: [Configuration](../configuration.md)
 - Pick a quant format: [Quantization](../quantization.md)
 - Kernel details: [rdna_extras fork](../fork.md)

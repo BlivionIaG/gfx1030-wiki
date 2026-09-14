@@ -34,6 +34,19 @@
 | Image tag matrix | **Needs verify** | [Docker Hub tags](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) |
 | `PYTORCH_ROCM_ARCH` list | **Solid** | `vllm-rdna-docker` build |
 | Prefer `--dtype float16` | **Solid** | RDNA2 BF16 limitation |
+| Default smoke model `cyankiwi/Qwen3.8-27B-AWQ-INT4` | **Community** | `#vllm-rdna` Sep 13 2026 day-to-day 27B pick |
+
+### `recipes.md`
+
+| Statement | Status | Verify how |
+|---|---|---|
+| Three stacks (Hub `-extras` / recipe GHCR / Flash-Next fork) | **Community** | `#vllm-rdna` Sep 2026; public READMEs |
+| Recipe image `0.27.1-rocm7.2.3-gfx1030` + `preset:` | **Community** | Recipe `containers/README.md` |
+| 1× V620: prefer MoE; Flash-Next not 1-card | **Community** | `#vllm-rdna` Sep 13 2026 |
+| Gemma 4 unfinished on gfx1030 vLLM | **Needs verify** | `#vllm-rdna` Sep 13 — single-thread reports |
+| Flash-Next weights `wtdcode` + `primitive-ai` PLE | **Community** | `#vllm-rdna` Aug 30 / Sep 13 |
+| TP4 cyankiwi AWQ env block | **Community** | `#vllm-rdna` Aug 31 bench paste (paths sanitized) |
+| Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 
 ### `configuration.md`
 

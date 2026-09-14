@@ -22,7 +22,9 @@ tags (v0.27.1). Those images still come from the personal Docker Hub namespace a
 exist yet.
 
 Companion (not an engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
-collects compose/env recipes and open PRs (concurrent MTP, etc.). `#vllm-rdna` (Sep 2026): the Flash-Next
+(mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe))
+collects compose/env recipes and open PRs (concurrent MTP, etc.). Wiki entry point:
+[Recipes](../recipes.md). `#vllm-rdna` (Sep 2026): the Flash-Next
 author treats the **recipes** repo as a **parts pile** (less active new work); day-to-day Flash-Next
 optimization lives in `vllm-rdna2-qwen`. Concurrent-MTP PRs on the recipes repo are still worth
 cherry-picking into either stack.
