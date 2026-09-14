@@ -13,7 +13,9 @@ lspci | grep -i vga
 rocminfo | grep -m1 -o 'gfx[0-9]*'
 ```
 
-See [Supported Hardware](./hardware.md) for the full card list.
+See [Supported Hardware](./hardware.md) for the full card list. If the box **never POSTs** with
+several V620s (especially behind a PLX switch), read [Host firmware](./host-firmware.md) before
+chasing ROCm.
 
 ## 2. Install ROCm
 

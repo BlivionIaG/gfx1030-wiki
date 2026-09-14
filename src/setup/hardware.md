@@ -73,3 +73,9 @@ rocminfo | grep -m1 -o 'gfx[0-9]*'
 
 If the output shows `gfx1030`, everything in this wiki applies directly. If it shows `gfx1031`,
 `gfx1032`, etc., head to [HSA_OVERRIDE for RDNA2 Cousins](./hsa-override.md) first.
+
+## Host firmware (large BAR / no POST)
+
+4× V620 behind a PLX switch can fail to **POST** on older workstation BIOS (community: Dell
+Precision T5820 / T7820 / T7920) even when the same kit boots on a modern desktop board. That is
+firmware MMIO High / SR-IOV work — see [Host firmware](./host-firmware.md) — not a ROCm bug.

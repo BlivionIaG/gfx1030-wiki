@@ -76,6 +76,11 @@ performance work happens first.
   `amdgpu.ras_enable=0` + two reboots; pinned in `#vllm-rdna`. See [Disabling ECC](../tuning/ecc.md).
 - `rocminfo`, `rocm-smi`, `amd-smi`, `clinfo` — GPU visibility, topology, and P2P checks. See
   [Environment variables](../reference/env-vars.md#handy-commands).
+- [UEFITool](https://github.com/LongSoft/UEFITool) / [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI)
+  — locate hidden MMIO High / ReBAR / SR-IOV setup vars. See [Host firmware](../setup/host-firmware.md).
+- [Precision 7920 MMIO GPU Unlock Guide](https://github.com/user-attachments/files/28905671/Precision_7920_MMIO_GPU_Unlock_Guide.pdf)
+  — circulating T5820/T7820/T7920 write-up; **dump your own UEFI**, do not copy another host's
+  offsets.
 
 > Know a gfx1030 resource that belongs here? [Contribute](./contributing.md) a link and say which section
 > it fits (official / Docker / upstream / community).

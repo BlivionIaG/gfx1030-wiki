@@ -54,8 +54,8 @@ llama.cpp fork catches up. Flash-Next work is expected to land in
 
 | Metric | Earlier recipe | After Sep 4–6 prefill/decode work |
 |---|---|---|
-| Sustained **prefill** | ~580–700 tok/s | **~1000–1200 tok/s** (fork author; RESULTS.md ~1080–1180 @ 3k–30k) |
-| **Decode** (single-stream) | ~50–64 tok/s | **~60–100+ tok/s** class depending on MTP acceptance / prompt (fork RESULTS.md; community warm benches ~85 t/s) |
+| Sustained **prefill** | ~580–700 tok/s | **~1000–1400 tok/s** (fork author RESULTS.md ~1080–1180; `#vllm-rdna` Sep 13 community ~1100–1390 @ 32k–128k after latest Flash-Next pull) |
+| **Decode** (single-stream) | ~50–64 tok/s | **~60–100+ tok/s** class depending on MTP acceptance / prompt (fork RESULTS.md; community Sep 13 ~53–78 t/s on long suites, MTP=2) |
 | vs llama.cpp Flash-Next | — | Community: container **~40 t/s** vs llama.cpp ROCm **~18–19 t/s** on the same host |
 
 Docs live under

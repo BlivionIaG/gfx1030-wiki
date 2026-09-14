@@ -65,7 +65,7 @@
 | `SAFETENSORS_FAST_GPU=1` | **Community** | `#vllm-rdna` Sep 2026 + AMD optimization docs |
 | `VLLM_CACHE_ROOT` + compile cache on | **Community** | Flash-Next / recipe startups (~5 vs ~10 min) |
 | Flash-Next ~580–700 PP / ~50–53 decode | **Community** | Early Sep recipe; **superseded** by prefill campaign below |
-| Flash-Next ~1000–1200 PP / ~60–100+ decode | **Community** | `#vllm-rdna` Sep 4–7 + Flash-Next `RESULTS.md`; host-dependent |
+| Flash-Next ~1000–1400 PP / ~53–100+ decode | **Community** | `#vllm-rdna` Sep 4–7 + Sep 13 suite + Flash-Next `RESULTS.md`; host-dependent |
 | Flash-Next container ~40 t/s vs llama.cpp ~18–19 | **Community** | `#vllm-rdna` Sep 2026 same-host comparison |
 | Intel AutoRound Flash-Next ~962 PP / ~41–56 decode | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5`; 4× V620; dirty PR |
 | `--max-num-batched-tokens 4096` fixes 128k PP cliff | **Community** | `#vllm-rdna` Sep 11 — 375 → ~950 PP; A/B on your scheduler |
@@ -82,7 +82,7 @@
 | `opengfx1030/vllm-rdna` ready as published Docker | **Needs verify** | Org repo exists; `vllm-rdna-docker` bake still `VLLM_REPOSITORY=https://github.com/BlivionIaG/vllm.git` |
 | Flash-Next still separate from org extras | **Community** | `#vllm-rdna` Sep 2026: `leapdragon/vllm-rdna2-qwen` until merge |
 | Org 0.28 rebase / Flash-Next cherry-picks | **Community** | `#vllm-rdna` Sep 3–7: regressions under debug; PR `#1` review-only |
-| LMCache RDNA Docker integration | **Needs verify** | `#lmcache` WIP — no recipe yet |
+| LMCache RDNA Docker integration | **Needs verify** | `#lmcache` Sep 12–14: standalone server + vLLM connector on `rdna_extras`; vLLM-only. No published recipe |
 | Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep extras |
 
 ### `quantization.md`
@@ -221,6 +221,21 @@
 | `tuning/p2p.md` layer vs tensor split explainer | **Community** | `#benchmarks` Sep 2026 |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
 | `setup/hardware.md` W6800 BIOS on V620 → 54 CU | **Community** | `#general` Sep 2026 PSA — stay on stock V620 VBIOS |
+| `setup/host-firmware.md` Dell Precision MMIO High / `mmiohsize` | **Community** | `#motherboard` / `#general` Sep 12–14 2026 — dump your own UEFI; 0x03 vs 0x04 |
+| `setup/host-firmware.md` T7820 4× V620 + PEX880xx POSTed after SR-IOV off | **Needs verify** | Single-host `#motherboard` Sep 14 2026 — board-specific hidden vars |
+| `setup/host-firmware.md` 256 GB MMIO window for 4× V620 | **Community** | `#motherboard` — 64 GB too small; no known 128 GB option |
+| `tuning/p2p.md` 4-slot vs 5-slot PLX card width | **Community** | `#general` Sep 12 2026 |
+| `tuning/p2p.md` 5 GPUs → TP=4 + 1 standalone | **Community** | `#general` Sep 11 2026 |
+| `troubleshooting/llama-cpp.md` lemonade-sdk M-RoPE A/B | **Needs verify** | `#llamacpp` Sep 13 — one host; not the RDNA2 fork |
+| `troubleshooting/general.md` blower vs unducted 120 mm | **Community** | `#general` Sep 13 2026 |
+
+### `setup/host-firmware.md`
+
+| Statement | Status | Verify how |
+|---|---|---|
+| Dell Precision MMIO High / `mmiohsize` 0x03 or 0x04 | **Community** | `#motherboard` / `#general` Sep 12–14 — dump your own UEFI |
+| T7820 4× V620 + PEX880xx POSTed after SR-IOV off | **Needs verify** | Single-host `#motherboard` Sep 14 — board-specific |
+| 256 GB MMIO window for 4× V620 | **Community** | `#motherboard` — 64 GB too small |
 
 ---
 

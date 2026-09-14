@@ -103,6 +103,12 @@ Fedora 43 AMD validation).
 
 - Intra-switch P2P can stay full-width (e.g. 4× Gen4 x16 behind one PLX 88096). The **host↔switch
   uplink** (typically one x16) is the bottleneck.
+- **4-slot vs 5-slot** switch boards (`#general`, Sep 2026): a common **5-slot** PLX only fits
+  **double-width** cards; a **4-slot** board can take **triple-width** GPUs (future cooler
+  upgrades). Pick the board for card thickness, not just GPU count.
+- **5 GPUs:** community prefers **TP=4** plus a **standalone** fifth card (draft / embedder /
+  second model). Pipeline-parallel on 5 can work but is “not optimal.” Odd counts still have
+  [TP3 crash notes](../llama-cpp/rdna2-serving.md#notable-limits).
 - **Without tensor parallel**, a PLX box is usually **slower** than native CPU lanes: higher
   latency and less aggregate host bandwidth.
 - **Do not tensor-split across a daisy-chained pair of switches** — that single inter-switch link
@@ -111,6 +117,8 @@ Fedora 43 AMD validation).
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).
+- Workstation hosts that **do not POST** with 4× V620 + PLX (Dell Precision MMIO High / SR-IOV):
+  [Host firmware](../setup/host-firmware.md).
 - **External PCIe expansion** (`#general`, Sep 2026 — e.g. Cubix Xpander–class enclosures): each
   group of cards may get full-width slots **behind the switch**, while only **one x16** (often
   **PCIe 3.0**) returns to the host. Community: 8× GPU on that pattern was fine at low context but
