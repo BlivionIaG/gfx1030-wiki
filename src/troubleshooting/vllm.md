@@ -111,17 +111,21 @@ model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay 
 
 Symptom (Flash-Next fork / recipe containers, `#vllm-rdna` Sep 2026): short prompts decode fine, but
 **large prompts** (tens of k tokens — agentic coding, session resume) take many minutes, timeout, or
-appear wedged. Temps and power caps look healthy.
+appear wedged. Temps and power caps look healthy. Sep 15 community add-on: **intermittent** TTFT
+from a few seconds to **minutes** (one host: up to ~300 s on a tiny prompt), with one or more GPUs
+at **100% util but ~40 W** — not a PCIe drop; looks like an RCCL / runner stall.
 
-**Community fix that unblocked one 4× V620 host:**
+**Community fix that unblocked 4× V620 hosts:**
 
 ```bash
 export VLLM_USE_V2_MODEL_RUNNER=0
 ```
 
-Reporter then saw stable **~68 tok/s** with dense INT8 + custom all-reduce, including large prompts.
-The Flash-Next fork author added this to their docs / troubleshooting. Official-extras authors note
-separate Dense-on-V2 fixes in progress on the org rebase — A/B both values on your image.
+One host then saw stable **~68 tok/s** with dense INT8 + custom all-reduce; another (leapdragon
+container, TP4) reported the stall **gone** after the same switch. `#vllm-rdna` Sep 15: **MoE on
+the 0.28 Flash-Next line wants V1** until upstream **0.29** (V2 becomes the default). The Flash-Next
+docs already call `V2=0` out. Official-extras authors note separate Dense-on-V2 fixes on the org
+rebase — A/B both values on your image.
 
 Also rule out thermal / power first ([Power tuning](../../tuning/power.md)), and measure expected
 prefill time (~1k tok/s class ⇒ ~40 s for 40k tokens, not minutes). Prefill campaign numbers:

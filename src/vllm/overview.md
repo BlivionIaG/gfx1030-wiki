@@ -35,20 +35,29 @@ you already had that tag.
 
 > **Official source moved.** Kernel work lives in
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`). Day-to-day serving
-> is still Hub **`blivioniag/vllm-rdna:*-extras`** (v0.27.1; bake still clones the historical personal
-> fork). Flash-Next = **`leapdragon/vllm-rdna2-qwen`** until that line merges into the org. Details:
-> [Fork landscape](../fork.md#fork-landscape).
+> is still Hub **`blivioniag/vllm-rdna:*-extras`** (v0.27.1; published bake still clones the historical
+> personal fork). `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
+> [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is no longer
+> the moving target. Published Flash-Next **containers** may still be the older leapdragon image.
+> Details: [Fork landscape](../fork.md#fork-landscape).
 >
 > **Upstream vLLM 0.28.x:** Official GPU docs still omit Navi 21 / gfx1030. Keep community forks until
 > upstream documents it.
 
 ### Qwen3.8 Flash-Next on vLLM
 
-llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). Community production path is the
+llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). On **4× V620**, community
+production is the Flash-Next vLLM stack — **not** Hub `-extras`. `#vllm-rdna` Sep 14–15: that work
+now lives on [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`;
 [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
-fork — not the Hub `-extras` image. Prefer that stack over llama.cpp for Flash-Next until the RDNA2
-llama.cpp fork catches up. Flash-Next work is expected to land in
-[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) after the 0.28 rebase / merge.
+is the older published container / docs tree and is **not being updated**. Prefer latest `rdna_extras`
+(or the last known-good leapdragon image if you need a container today) over llama.cpp until the
+RDNA2 llama.cpp fork catches up.
+
+**2× V620 / RAM offload:** vLLM is a poor fit when weights or MoE experts must spill to host RAM.
+`#vllm-rdna` (Sep 14): use [llama.cpp](../../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4)
+(`--n-cpu-moe`, `-ot …=CPU`) instead. Community 2-card llama.cpp Flash-Next is still **~25 t/s**
+decode / **~150–200** PP — far below the 4-card vLLM class.
 
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
@@ -64,9 +73,19 @@ Docs live under
 tags and container `latest` move with the prefill campaign.
 
 **Long-prompt stalls / timeouts:** if large agentic prompts (tens of k tokens) hang or take many minutes
-while short prompts are fine, try `VLLM_USE_V2_MODEL_RUNNER=0` — community report of stable **~68 t/s**
-with dense INT8 + custom all-reduce after that switch; fork docs now call it out. See
+while short prompts are fine — or GPUs sit at **100% util / ~40 W** with TTFT swinging from seconds
+to minutes — try `VLLM_USE_V2_MODEL_RUNNER=0`. `#vllm-rdna` Sep 15: that switch unblocked a TP4
+leapdragon container. Community: **MoE on the 0.28 Flash-Next line wants the V1 runner** until
+upstream **0.29** (V2 becomes the default). See
 [vLLM troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
+
+**KV / concurrency (4× 32 GB, `#vllm-rdna` Sep 14):** Flash-Next KV is expensive. Community ballpark
+**~24 GiB ≈ 300k tokens** once the PLE sidecar is loaded — a 4× V620 box can still be **tight**
+(~280k tokens left on one host). Offloading KV to **128 GB** of system RAM was **not** enough;
+budget **>128 GB** host RAM if you try that path. Concurrent streams split decode (community: total
+TG stayed near single-stream ~70–80 t/s while **PP fell to ~500 t/s**) and re-prefill on every
+tool-call session. Prefer **one stream** plus prefix / radix cache; do not expect a linear
+multi-agent multiplier.
 
 ### Intel AutoRound Flash-Next (draft, `#vllm-rdna` Sep 10–11 2026) {#intel-autoround-flash-next}
 

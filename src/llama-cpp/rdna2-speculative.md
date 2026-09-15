@@ -71,12 +71,47 @@ use vLLM for Flash-Next until upstream/fork gaps close.
 |---|---|---|---|---|
 | **2× V620**, LocalAI `rocm-llama-cpp-development` | Qwen3.8 Flash-Next **Q4** | low | **~6 t/s** | n-gram offloaded to NVMe; 64 GB host RAM |
 | **2× V620**, 64 GB VRAM | [`mudler/Qwen3.8-Flash-Next-APEX-GGUF`](https://huggingface.co/mudler/Qwen3.8-Flash-Next-APEX-GGUF) compact (~85 GB GGUF) | **~370+ t/s** | **~26 t/s** | n-gram table on NVMe (no extra host RAM); **156k** KV at **q8** |
+| **2× V620**, layer split + CPU MoE | Flash-Next **UD-IQ4_XS** + F16 mmproj | **~150–200 t/s** | **~25 t/s** | `#vllm-rdna` / `#llamacpp` Sep 14–15 — see recipe below; vLLM not recommended on 2 cards |
 | **4× V620**, n-gram in host RAM | Flash-Next (non-APEX) | **~200–400 t/s** | **~20–35 t/s** | Context-dependent; PP/tg still below 27B on the same rig |
 
 **Host RAM for Flash-Next n-gram:** keeping the n-gram table off storage is on the order of
 **~50 GB** of system RAM (community, 4× V620). Budget that on top of OS + any CPU offload — or
 keep the table on fast NVMe and accept the slower path (APEX report: NVMe-resident n-gram was
 fine).
+
+`#vllm-rdna` (Sep 14): if you **must** CPU/RAM-offload Flash-Next (2× V620, or 4× with a too-small
+KV pool), **llama.cpp is the better offload engine** than vLLM. vLLM still wins on **4×** when
+everything stays in VRAM.
+
+### 2× V620 community recipe (IQ4_XS, layer split) {#flash-next-2x-iq4}
+
+Sanitized from a community “fastest I got” serve line. **`-t` / `--threads-batch` are host-specific**
+— set them to your cores. Layer-split ratios (`-ts 53,47`) and `--n-cpu-moe 6` are starting points,
+not a fork profile.
+
+```bash
+ROCBLAS_USE_HIPBLASLT=1 ./build/bin/llama-server \
+  -m /path/to/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf \
+  --alias flashnext \
+  -ngl 99 -sm layer -ts 53,47 \
+  -c 65000 --flash-attn on --parallel 1 \
+  --cache-type-k f16 --cache-type-v f16 \
+  --n-cpu-moe 6 \
+  --mmproj /path/to/mmproj-F16.gguf \
+  -ot "ple_ngram_embd=CPU" \
+  -t 8 --threads-batch 14 -b 2048 -ub 512 \
+  --spec-type ngram-mod \
+  --spec-ngram-mod-n-match 24 \
+  --spec-ngram-mod-n-min 12 \
+  --spec-ngram-mod-n-max 16 \
+  --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 \
+  --host 0.0.0.0 --port 8081 --jinja --load-mode none
+```
+
+Community snapshot on that host: **~25 t/s** decode, **~150–200 t/s** prefill. Prefer the
+[RDNA2 fork](../rdna2-overview.md) over a random ROCm build. `--load-mode none` avoids
+[DAX mmap](../../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm) issues if the GGUF
+sits on a special mount.
 
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
 

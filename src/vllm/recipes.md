@@ -14,12 +14,12 @@ on [Configuration](../configuration.md); fork history on [vLLM forks](../fork.md
 |---|---|---|
 | Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.27.1-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Running](../running.md) |
 | Tuned **27B / 122B** presets, host needs only `amdgpu` + Docker | Recipe book container | [`ghcr.io/leapdragon/vllm-rdna2-recipe:0.27.1-rocm7.2.3-gfx1030`](https://github.com/leapdragon/vllm-rdna2-recipe) (`preset:…`) — mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) |
-| **Qwen3.8 Flash-Next** on **4×** V620 | Flash-Next fork | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (+ its GHCR image) — [overview](../overview.md#qwen38-flash-next-on-vllm) |
+| **Qwen3.8 Flash-Next** on **4×** V620 | `rdna_extras` + Flash-Next | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) HEAD; published container may still be [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) — [overview](../overview.md#qwen38-flash-next-on-vllm) |
 
 `#vllm-rdna` (Sep 2026): the recipe repo is treated as a **parts pile** (compose/env/patches against
-pristine vLLM 0.27.1). New Flash-Next work lives in `vllm-rdna2-qwen`. Official kernel development is
-[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` — Hub `-extras` tags
-may lag HEAD until bake retargets.
+pristine vLLM 0.27.1). New Flash-Next work lives on **`opengfx1030/vllm-rdna` `rdna_extras`** (Sep
+14–15 cherry-picks); `vllm-rdna2-qwen` is the older published container. Official kernel
+development is the same org extras repo — Hub `-extras` tags may lag HEAD until bake retargets.
 
 **Do not mix** host ROCm userspace into the recipe container — the image carries its own stack.
 Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
@@ -29,8 +29,9 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | Cards | Community starting point (`#vllm-rdna`) |
 |---|---|
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
-| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. |
-| **4× V620** | Best path for **Flash-Next**; also TP=4 dense 27B on `-extras` (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) below). |
+| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
+| **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14): use **pipeline parallel 3** (`PP=3`) on vLLM; llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
+| **4× V620** | Best vLLM path for **Flash-Next**; also TP=4 dense 27B on `-extras` (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) below). |
 
 Also see [What fits well on V620](../overview.md#what-fits-well-on-v620).
 
@@ -165,17 +166,18 @@ they are missing (recipe troubleshooting).
 
 ## Path C — Flash-Next (`vllm-rdna2-qwen`)
 
-For agentic / long-context Flash-Next on **4× V620**, use the dedicated fork and its docs — not Hub
+For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM stack — not Hub
 `-extras` and not the 27B recipe presets:
 
-- Repo: [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
-- Docs: [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2)
+- **Source of truth (Sep 14–15):** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` (leapdragon work cherry-picked; PLE load path on HEAD)
+- **Published container / docs (may lag):** [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) — [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2)
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
 - PLE sidecar: [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
 
-Expect large **host DRAM** for the n-gram / PLE store (~64 GB class called out in-channel). Long-prompt
-stalls: try `VLLM_USE_V2_MODEL_RUNNER=0` — [troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
-Throughput snapshot: [overview](../overview.md#qwen38-flash-next-on-vllm).
+Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class; **128 GB**
+host RAM was **not** enough for KV offload on one 4× host). Long-prompt / intermittent stalls: try
+`VLLM_USE_V2_MODEL_RUNNER=0` — [troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
+Throughput and KV tightness: [overview](../overview.md#qwen38-flash-next-on-vllm).
 
 ---
 

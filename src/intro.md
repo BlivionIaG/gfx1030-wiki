@@ -28,9 +28,9 @@ kernels) takes a bit of extra work. That's what this wiki documents.
   [recipes](./vllm/recipes.md) for Hub vs recipe container vs Flash-Next
   ([`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) on a
   [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base), how they are
-  built with [`vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker), and the **official**
-  vLLM extras fork [`opengfx1030/vllm-rdna`](./vllm/fork.md) (`rdna_extras`) plus the separate
-  Flash-Next fork (better for multi-stream / agentic loads once llama.cpp is working).
+  built with [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker), and
+  the **official** vLLM extras fork [`opengfx1030/vllm-rdna`](./vllm/fork.md) (`rdna_extras`, now
+  including Flash-Next cherry-picks). Published Hub `-extras` tags still lag HEAD.
 
 New here? Start with [Supported Hardware](./setup/hardware.md) and [Getting Started](./setup/getting-started.md).
 
