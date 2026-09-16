@@ -17,6 +17,10 @@ as `gfx1030`.
 
 Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you want the full 32 GB.
 
+`#general` (Sep 15 2026): versus a **32 GB MI50** (gfx906), community first-pass on V620 was **more
+prefill, less decode** — PP “almost 2×”, TG behind but **not far**. That is a **community** A/B, not
+a wiki bench. Sibling notes: [wiki-gfx906](https://github.com/skyne98/wiki-gfx906).
+
 > **Do not flash W6800 VBIOS onto a V620.** `#general` (Sep 2026): pre-modded eBay cards and DIY flashes
 > that load a **W6800** BIOS on a **V620** drop active CUs from **72 → 54** (W6800's different CU
 > layout). That is a large compute hit — stay on **stock V620 BIOS**. Cooling shroud mods are fine;

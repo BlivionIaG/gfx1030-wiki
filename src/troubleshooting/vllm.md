@@ -160,6 +160,10 @@ prefill runs; or graph + MTP3 reaches "Application startup complete" then hangs 
 Community notes (`#vllm-rdna`):
 
 - Prefer **GPTQ + RDNA2 W4A16** (or AWQ HIP) paths over GGUF-in-vLLM for these cards.
+  `#vllm-rdna` (Sep 15): `RDNA2W4A16MoEExperts` was reported to raise **usable concurrency** vs the
+  older MoE path — confirm the kernel name in logs; A/B if your image is older.
+- **One prefill stream can fully block other decode streams** (community Sep 15). When you bench,
+  alternate prefill+decode in flight — concurrency-only or decode-only numbers miss this.
 - Concurrent MTP / prefill-vs-decode fixes land in community recipes first — see open PRs on
   [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe).
 - MTP=0 vs MTP=3 are different bug surfaces; a commit that "works" at MTP=3 can still emit spurious
@@ -167,6 +171,32 @@ Community notes (`#vllm-rdna`):
 - Slow or broken P2P + custom all-reduce can look like MTP latency bugs — A/B the
   [disable vs PIX custom AR](../../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks)
   stacks.
+
+## Flash-Next PP3 output corruption on `rdna_extras` {#flash-next-pp3-output-corruption}
+
+`#vllm-rdna` (Sep 15): **Qwen Next / Flash-Next** on **3× V620**, `PP=3` / `TP=1`, TheRock **10.0**,
+`--enforce-eager`. A **leapdragon** tree (with the same local PP patches) decoded correctly. The same
+prompt on **`rdna_extras` HEAD** (community pin `f663686`) **corrupted after ~3 chunks** — first
+request of a fresh server, ~4k-token prompt, only a fraction of tokens correct.
+
+Disabling `VLLM_USE_V2_MODEL_RUNNER`, `VLLM_USE_RDNA2_FA`, `VLLM_GDN_HIP_PREFILL`, prefix cache, and
+forcing single-chunk prefill (`--max-num-batched-tokens 8192`) **did not** fix it. Suspected area:
+HIP GDN decode / prefix-cache interaction — **not confirmed**.
+
+**What to do:** if you need 3-card Flash-Next today, stay on a **known-good leapdragon image**. Do
+not treat current org HEAD as a drop-in for PP3. Report a matched A/B (same prompt, both trees) on
+`#vllm-rdna`.
+
+## Upstream KV offload tanks decode {#upstream-kv-offload-tanks-decode}
+
+`#vllm-rdna` (Sep 15): **upstream vLLM** CPU → SSD **KV cache offload** (not LMCache) failed to
+bring blocks back to VRAM usefully. Community: decode fell to the **~1 t/s** class. **Mamba / SSM**
+state models are called out as especially unreliable on this path (including on Hopper-class hosts
+in-channel).
+
+Do not plan production multi-chat overflow on native vLLM KV offload. `#lmcache` is still the
+intended gfx1030 path (standalone LMCache server + vLLM connector) but has **no published recipe**
+yet. See [fork landscape](../../vllm/fork.md#consolidation-status).
 
 ## ROCR idle CPU spin (TheRock 7.14) {#rocr-idle-cpu-spin-therock-714}
 

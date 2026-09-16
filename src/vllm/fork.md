@@ -40,10 +40,13 @@ cherry-picking into either stack.
 | **Intel AutoRound / FP16 Flash-Next** | Draft [`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5) — large, **dirty** vs `rdna_extras`. Validated short-run on 4× V620 (see [overview](../overview.md#intel-autoround-flash-next)). Not a Hub image. |
 | **Recipe ports + Hybrid W4A16 gfx10** | Draft [`opengfx1030/vllm-rdna#6`](https://github.com/opengfx1030/vllm-rdna/pull/6) — in-tree Apache ports from the recipe book (Triton LDS/softmax, skinny MoE GEMV, MTP `SupportsPP`). **RDNA2 HIP stays the auto default**; Hybrid is opt-in (`--linear-backend rdna_hybrid`). Needs gfx1030 A/B. |
 | **Kernel gap audit after `RDNA_ATTN` port** | Community audit list (fix only): missing/partial `layernorm` bindings, FA int8/fp8 variants, some W8A8 / MLA / int8 cache bindings, `VLLM_FORCE_CUSTOM_ALL_REDUCE` wiring, MXFP4 oracle backend, stricter custom-paged-attention gate. Already clean on that pass: W4A16 dense+MoE, MLA sparse file, dynamo `_SimpleCData` fix, EXL3, arch helpers |
-| **Flash-Next production** | **4× V620** still the vLLM path; prefer **latest `rdna_extras`** over a stale leapdragon checkout. Published containers may lag. See [overview](../overview.md#qwen38-flash-next-on-vllm) |
+| **Flash-Next production** | **4× V620** still the vLLM path; prefer **latest `rdna_extras`** over a stale leapdragon checkout. Published containers may lag. **3× PP3:** leapdragon image decoded correctly; `rdna_extras` HEAD produced **garbage after ~3 chunks** (`#vllm-rdna` Sep 15) — [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption) |
 | **Docker bake** | Source moved to [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker). Next intended bake: `blivioniag/rocm-rdna:7.14.0` + current `rdna_extras` — **WIP**, PLE offload still under test. Hub `-extras` remains **0.27.1**. |
 | **Upstream vLLM 0.29** | `#vllm-rdna` (Sep 11): **V2 model runner becomes the default** on 0.29. Hub `-extras` is still 0.27.1. Flash-Next long-prompt hosts that needed `VLLM_USE_V2_MODEL_RUNNER=0` should re-A/B before bumping. |
-| **LMCache** | `#lmcache` (Sep 9): still **plan-only** — add gfx1030 to a fork, try the standalone image, then plug into the vLLM Docker/pip stack. Disaggregated prefill/decode is later. No wiki recipe yet. |
+| **MTP under pipeline parallel** | Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) merged (`#vllm-rdna` Sep 15). Needed for **PP3 + MTP** on 3× V620 — [recipes](../recipes.md#flash-next-3x-pp3-mtp). Not in Hub `-extras` 0.27.1. |
+| **`rdna_ar`** | `#vllm-rdna` Sep 15: experimental `VLLM_RDNA_AR=1` path was generating more issues than it solved; the intended replacement is **unlocked custom all-reduce** when P2P works. Do **not** treat `VLLM_RDNA_AR` as a recommended default. |
+| **hippihx** | [`BlivionIaG/hippihx`](https://github.com/BlivionIaG/hippihx) (`#hippihx` Sep 16): HIP kernel op zoo meant to keep `rdna_extras` thin. **Not** wired into a published image yet. |
+| **LMCache** | `#lmcache` / `#vllm-rdna` Sep 15: still **no published RDNA recipe**. Community: **upstream vLLM CPU/SSD KV offload** (not LMCache) fell to **~1 t/s** decode — worse on **Mamba/SSM** models. Prefer waiting for an LMCache connector over native KV offload — [troubleshooting](../../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode). |
 
 Official-fork feature set called out in-channel (HIP): **MXFP4**, **AWQ INT4**, **GPTQ INT4**, GDN
 prefill/decode linear attention, and FlashAttention-equivalent kernels. Treat as **fork-source /
@@ -167,7 +170,10 @@ Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLine
 
 ### Attention backends
 
-- `VLLM_USE_RDNA2_FA=1` — enables the custom `fa_rdna2.cu` FlashAttention backend.
+- `VLLM_USE_RDNA2_FA=1` — enables the custom `fa_rdna2.cu` FlashAttention backend on **Hub `-extras`**.
+  `#vllm-rdna` (Sep 15): on current **Flash-Next / `rdna_extras` HEAD**, native FA is still **WIP** —
+  community A/B used `VLLM_USE_RDNA2_FA=0` (and sometimes `VLLM_GDN_HIP_PREFILL=0`) when chasing PP3
+  correctness. Do not copy that disable onto a working 0.27.1 `-extras` 27B serve.
 - `--attention-backend RDNA_ATTN` — alternative RDNA-tuned attention path (useful for Qwen models with
   head size 256 where generic AMD Triton FA is slow or broken).
 - `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE` — enables AMD Triton FA as a fallback; often slower on gfx1030.

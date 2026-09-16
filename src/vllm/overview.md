@@ -59,6 +59,10 @@ RDNA2 llama.cpp fork catches up.
 (`--n-cpu-moe`, `-ot …=CPU`) instead. Community 2-card llama.cpp Flash-Next is still **~25 t/s**
 decode / **~150–200** PP — far below the 4-card vLLM class.
 
+**3× V620:** vLLM wants **PP=3** (even TP). `#vllm-rdna` (Sep 15): a leapdragon image ran Flash-Next
+PP3 without MTP; `rdna_extras` HEAD **corrupted** decode — [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
+Fitting MTP on 3 cards is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
+
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
 | Metric | Earlier recipe | After Sep 4–6 prefill/decode work |

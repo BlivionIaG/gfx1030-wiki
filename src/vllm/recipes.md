@@ -30,7 +30,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 |---|---|
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
 | **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
-| **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14): use **pipeline parallel 3** (`PP=3`) on vLLM; llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
+| **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Flash-Next **without MTP** fit on a **leapdragon** image; `rdna_extras` HEAD corrupted output — [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). MTP on 3 cards is **Needs verify** — [PP3 + MTP](#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next**; also TP=4 dense 27B on `-extras` (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) below). |
 
 Also see [What fits well on V620](../overview.md#what-fits-well-on-v620).
@@ -178,6 +178,34 @@ Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB*
 host RAM was **not** enough for KV offload on one 4× host). Long-prompt / intermittent stalls: try
 `VLLM_USE_V2_MODEL_RUNNER=0` — [troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [overview](../overview.md#qwen38-flash-next-on-vllm).
+
+### 3× V620 Flash-Next PP3 + MTP (community, Needs verify) {#flash-next-3x-pp3-mtp}
+
+`#vllm-rdna` (Sep 15): one host fitted **Qwen3.8-Flash-Next + MTP** on **3× V620 32 GB** using a
+**leapdragon** image (W4A16 + PLE int4 CPU offload), `PP=3` / `TP=1`. Treat as a **single-host**
+write-up — some steps were **local source patches**, not a published tag.
+
+Operational facts that are safe to copy:
+
+- Baseline **PP3 without MTP** already sat at **~30 GiB/card** with `--gpu-memory-utilization 0.95`.
+- The MTP head (`model_mtp.safetensors`, unquantized **fp16 MoE**, ~**5 GB**) is instantiated on the
+  **last pipeline stage only**, so that stage OOMs first.
+- Uneven layers: `VLLM_PP_LAYER_PARTITION=17,18,13` (48 layers) to leave the last stage light. The
+  **PLE offload worker** can inherit that env, see `pp_size=1`, and refuse
+  (`len(partitions)=3` ≠ `pp_size=1`) — **unset** `VLLM_PP_LAYER_PARTITION` in the PLE worker process.
+- `VLLM_ROCM_MOE_PADDING=0` (do not pad routed-expert weights).
+- Serve knobs on that host: `--enforce-eager`, context **32768**, `--max-num-seqs 4`,
+  `--max-num-batched-tokens 2048`.
+- Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (MTP under pipeline
+  parallel on the V2 runner) merged days earlier — expect it in a **future** vLLM release, not Hub
+  `-extras` 0.27.1.
+
+Community also rewrote `VLLM_RDNA_DENSE_INT8` shadow quant to **row blocks** so a 2.4 GiB fp32
+temporary would not OOM a nearly full card, then `VLLM_RDNA_DENSE_INT8_ONLY=1` to drop fp16 copies
+(~2 GB/rank). Those int8 changes were **local** — do not assume they are in `rdna_extras` HEAD.
+
+If `rdna_extras` HEAD **corrupts** PP3 decode, stay on a known-good leapdragon container until the
+org tree matches — [PP3 corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
 
 ---
 

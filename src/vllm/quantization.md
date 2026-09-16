@@ -41,6 +41,11 @@ MTP is **not free at high concurrency**. A `#vllm-rdna` TP4 matrix on **Qwen3.6-
 (4× V620, `--enforce-eager`, 16k/1k-style bench) reported MTP-2 **+17%** output tok/s at `c=1`, but
 **−53%** at `c=8`. Use MTP for latency-critical single-stream; leave it off for batched throughput.
 
+`#vllm-rdna` (Sep 15): `RDNA2W4A16MoEExperts` was reported to raise **usable concurrency** on MoE
+W4A16 — confirm the kernel in logs. **Pipeline-parallel MTP** needs upstream
+[`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (merged; next vLLM release). A 3×
+V620 Flash-Next + MTP squeeze is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
+
 ## INT4 on gfx1030 (no native int4 ALUs)
 
 RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly

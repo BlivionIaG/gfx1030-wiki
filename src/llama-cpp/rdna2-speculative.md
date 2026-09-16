@@ -72,6 +72,7 @@ use vLLM for Flash-Next until upstream/fork gaps close.
 | **2× V620**, LocalAI `rocm-llama-cpp-development` | Qwen3.8 Flash-Next **Q4** | low | **~6 t/s** | n-gram offloaded to NVMe; 64 GB host RAM |
 | **2× V620**, 64 GB VRAM | [`mudler/Qwen3.8-Flash-Next-APEX-GGUF`](https://huggingface.co/mudler/Qwen3.8-Flash-Next-APEX-GGUF) compact (~85 GB GGUF) | **~370+ t/s** | **~26 t/s** | n-gram table on NVMe (no extra host RAM); **156k** KV at **q8** |
 | **2× V620**, layer split + CPU MoE | Flash-Next **UD-IQ4_XS** + F16 mmproj | **~150–200 t/s** | **~25 t/s** | `#vllm-rdna` / `#llamacpp` Sep 14–15 — see recipe below; vLLM not recommended on 2 cards |
+| **2× V620**, official llama.cpp **ROCm** server | Unsloth Flash-Next **UD-IQ3_XXS** + F16 mmproj, n-gram in host RAM | **~530 t/s** (lower `-ub`; **600+** if it fits) | **~30 t/s** empty / **~10 t/s** at **80k+** ctx | `#general` / `#forum` Sep 15 — **stock** ROCm server, not the RDNA2 fork; Vulkan A/B was **~25% slower** |
 | **4× V620**, n-gram in host RAM | Flash-Next (non-APEX) | **~200–400 t/s** | **~20–35 t/s** | Context-dependent; PP/tg still below 27B on the same rig |
 
 **Host RAM for Flash-Next n-gram:** keeping the n-gram table off storage is on the order of

@@ -75,7 +75,7 @@ switch** on a **bifurcation** card, guest **Proxmox**.
 | Platform | Community note |
 |---|---|
 | **HP Z4 G4** | Firmware described as **32-bit MMIO** with V620 — BAR / crosstalk pain; dual-CPU Z6/Z8 G4 are a different (more complex) story. |
-| **ASUS WS-Z270 + ReBAR** | `#motherboard` WIP on **MI50** (not V620). **Above 4G on**, **CSM off**, [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI). One card at 32 GB ReBAR, two cards collapsing to 16 GB / POST code **96** is **not** a gfx1030 recipe — skip unless you are on that board. |
+| **ASUS WS-Z270 + ReBAR** | `#motherboard` WIP on **MI50** (not V620). **Above 4G on**, **CSM off**, [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI). One card at 32 GB ReBAR, two cards collapsing to 16 GB / POST code **96** is **not** a gfx1030 recipe. Sep 15: `ReBarState` **> 14** with two 32 GB cards threw code **96**; UEFIPatch hit **PciBus** only, not **PciRootBridge**. Suggested A/B: [GpuMMIOFix](https://github.com/Radi0Glitch/GpuMMIOFix) (OS remap, typically **every boot**) — **Needs verify**. |
 | **Modern desktop (Z690-class, etc.)** | Often POSTs 4× V620 + PLX **without** hidden MMIO patches (community contrast to Precision). |
 
 BIOS editors and unsigned flashes **void warranty** and can brick the board. Use the vendor
@@ -87,6 +87,7 @@ flashback / recovery path if you have one. This wiki does not publish byte patch
 |---|---|
 | [UEFITool](https://github.com/LongSoft/UEFITool) | Decode the **same** BIOS update you are running; find hidden setup variables. |
 | [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI) | Expose / patch ReBAR + related MMIO options when the menu hides them. |
+| [GpuMMIOFix](https://github.com/Radi0Glitch/GpuMMIOFix) | OS-side BAR remap above 4 GB (`#motherboard` Sep 15–16). Community: load **each boot**. **Needs verify** — not a substitute for a correct MMIO High / SR-IOV firmware fix on Precision towers. |
 | Vendor BIOS **.exe** / capsule for **your** revision | Source of truth for variable layouts. |
 
 ## Related
