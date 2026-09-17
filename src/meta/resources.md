@@ -61,6 +61,7 @@ performance work happens first.
 | [`BlivionIaG/vllm-rdna-docker`](https://github.com/BlivionIaG/vllm-rdna-docker) | **Historical** bake repo (pre-move) |
 | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) | **Official vLLM extras fork** — RDNA HIP kernels + Flash-Next cherry-picks (Sep 14–15); PRs/issues here — [fork landscape](../vllm/fork.md#fork-landscape) |
 | [`BlivionIaG/hippihx`](https://github.com/BlivionIaG/hippihx) | HIP kernel op zoo (gfx1030 / gfx1100 / gfx900 tile contracts) — `#hippihx` Sep 16: intended to keep `rdna_extras` thin; **not** a published vLLM image yet |
+| [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa) | Maintainer QA / landing playbook for `opengfx1030/vllm-rdna` (`#vllm-rdna` Sep 17) — not a second kernel wiki |
 | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) | Older **Flash-Next** container / `docs/rdna2` — **not being updated** (`#vllm-rdna` Sep 15); keep for published images — [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md) |
 | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | **Historical** — predecessor of `opengfx1030/vllm-rdna`; Hub `-extras` still clones this until docker bake is retargeted |
 | [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community recipe book + GHCR presets (27B/122B; parts pile; concurrent MTP PRs) — [wiki recipes](../vllm/recipes.md) |
@@ -74,6 +75,8 @@ performance work happens first.
 
 ## Tools & write-ups
 
+- [Unsloth: Qwen3.8-Flash-Next / MTP llama.cpp](https://unsloth.ai/docs/models/qwen3.8-next) —
+  public MTP build notes (`#llamacpp` / `#general` Sep 16–17).
 - [Disabling ECC on Radeon Pro GPUs (lunnova.dev)](https://lunnova.dev/articles/amdgpu-disabling-ecc/) —
   `amdgpu.ras_enable=0` + two reboots; pinned in `#vllm-rdna`. See [Disabling ECC](../tuning/ecc.md).
 - `rocminfo`, `rocm-smi`, `amd-smi`, `clinfo` — GPU visibility, topology, and P2P checks. See

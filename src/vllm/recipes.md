@@ -179,6 +179,95 @@ host RAM was **not** enough for KV offload on one 4× host). Long-prompt / inter
 `VLLM_USE_V2_MODEL_RUNNER=0` — [troubleshooting](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [overview](../overview.md#qwen38-flash-next-on-vllm).
 
+`#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound.
+EXL3 ~3 bpw is still **experimental** — [Quantization](../quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+
+### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
+
+Sanitized from a `#vllm-rdna` (Sep 17) host-venv recipe on **4× V620**. **Community / Needs verify**
+— not a published Hub tag. Requires [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
+`rdna_extras` including the **GDN sanitizer** commit `388a61b6f`, and a **rocm_sdk** venv
+(`torch 2.12` + **ROCm 7.14**). Paths below are generalized.
+
+**Why this differs from the Hub `-extras` TP4 block:** Flash-Next on current `rdna_extras` **FULL**
+decode graphs still **corrupt** output. Community: switch
+`--compilation-config` to **`PIECEWISE`**, keep `--max-num-batched-tokens 2048`, and cap
+`--max-num-seqs` at **4–6**. See
+[FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
+Do **not** copy this graph mode onto the 27B `-extras` recipe unless you are A/B testing.
+
+Community snapshot on that host (16k prompt / 1k gen, concurrency 8): **~3331 tok/s** prefill,
+**~72.7 tok/s** decode, TTFT **~39 s**. Treat as a single-host number.
+
+```bash
+MODEL="wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16"
+export VLLM_PLE_QUANT_DIR="$(python -c "from huggingface_hub import snapshot_download; print(snapshot_download('primitive-ai/Qwen3.8-Flash-Next-PLE-quant'))")/ples_int4"
+
+export VLLM_PLE_CPU_OFFLOAD=1
+export VLLM_PLE_OFFLOAD_READY_TIMEOUT=3600
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False
+export VLLM_FORCE_CUSTOM_ALL_REDUCE=1   # only if GPU↔GPU P2P works
+export VLLM_USE_V2_MODEL_RUNNER=0
+export VLLM_USE_AOT_COMPILE=0
+export VLLM_DISABLE_COMPILE_CACHE=1
+export VLLM_USE_BREAKABLE_CUDAGRAPH=1
+export VLLM_RDNA_FUSED_HC=0
+export VLLM_ROCM_USE_AITER=0
+export VLLM_ROCM_USE_AITER_MOE=0
+export FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
+export VLLM_RDNA_FORCE_FP16=1
+export TORCH_BLAS_PREFER_HIPBLASLT=0
+export PYTORCH_TUNABLEOP_ENABLED=1
+export PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED=0
+export PYTORCH_TUNABLEOP_FILENAME="${PYTORCH_TUNABLEOP_FILENAME:-/path/to/tunableop_results.csv}"
+export VLLM_BATCH_INVARIANT=0
+export GPU_MAX_HW_QUEUES=2
+export VLLM_WORKER_MULTIPROC_METHOD=spawn
+export NCCL_P2P_LEVEL=pix
+export RCCL_P2P_NET_DISABLE=1
+export RCCL_P2P_BATCH_ENABLE=1
+export NCCL_PROTO=Simple
+export RCCL_MSCCL_ENABLE=0
+export HSA_FORCE_FINE_GRAIN_PCIE=1
+
+cd /tmp   # avoid sys.path collisions with a local vllm checkout
+python -m vllm.entrypoints.cli.main serve "$MODEL" \
+  --host 0.0.0.0 --port 8000 \
+  --tensor-parallel-size 4 \
+  --max-model-len 32768 \
+  --max-num-seqs 6 \
+  --max-num-batched-tokens 2048 \
+  --kv-cache-memory-bytes 5000000000 \
+  --gpu-memory-utilization 0.88 \
+  --dtype float16 \
+  --trust-remote-code \
+  --enable-prefix-caching \
+  --language-model-only \
+  --skip-mm-profiling \
+  --enable-expert-parallel \
+  --block-size 16 \
+  --distributed-timeout-seconds 1800 \
+  --compilation-config '{"cudagraph_mode":"PIECEWISE","compile_ranges_endpoints":[]}'
+```
+
+Shared P2P / all-reduce env is the same as
+[Hub `-extras` TP4](#hub--extras-tp4-qwen38-27b-awq). Drop the custom-AR block if P2P is broken.
+
+**Concurrency vs batch:** `#vllm-rdna` (Sep 16): `--max-num-batched-tokens 2048` keeps prefill
+turns ~**1 s** at ~1300 tok/s; **8192** can block other streams for ~**6 s**. Raise toward **4096**
+only if you hit the [128k prefill cliff](../../troubleshooting/vllm.md#flash-next-128k-prefill-cliff)
+on Intel AutoRound — that 4096 knob and this PIECEWISE stability recipe are **different bugs**.
+
+If you turn **vision** back on (`#vllm-rdna` Sep 17), cap multimodal allocs or vLLM can over-reserve
+VRAM:
+
+```bash
+--limit-mm-per-prompt '{"image":1}' \
+--mm-processor-kwargs '{"max_pixels":1605632}'
+```
+
+Maintainer QA playbook (not a second wiki): [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa).
+
 ### 3× V620 Flash-Next PP3 + MTP (community, Needs verify) {#flash-next-3x-pp3-mtp}
 
 `#vllm-rdna` (Sep 15): one host fitted **Qwen3.8-Flash-Next + MTP** on **3× V620 32 GB** using a

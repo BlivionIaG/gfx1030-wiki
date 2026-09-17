@@ -46,6 +46,7 @@
 | Gemma 4 unfinished on gfx1030 vLLM | **Needs verify** | `#vllm-rdna` Sep 13 — single-thread reports |
 | Flash-Next weights `wtdcode` + `primitive-ai` PLE | **Community** | `#vllm-rdna` Aug 30 / Sep 13 |
 | TP4 cyankiwi AWQ env block | **Community** | `#vllm-rdna` Aug 31 bench paste (paths sanitized) |
+| Flash-Next 4× PIECEWISE serve (Sep 17) | **Community** | `#vllm-rdna` — GDN sanitizer `388a61b6f`; ~3331/73 @ 16k/1k c=8 |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 
 ### `configuration.md`
@@ -87,7 +88,13 @@
 | 2× V620 Flash-Next: llama.cpp not vLLM | **Community** | `#vllm-rdna` Sep 14 — RAM offload |
 | vLLM 3-card → PP=3 (even TP) | **Community** | `#vllm-rdna` Sep 14 |
 | Flash-Next V2=0: 100% util / ~40 W stall | **Community** | `#vllm-rdna` Sep 15 — TP4 leapdragon container; MoE wants V1 before 0.29 |
-| Flash-Next PP3: leapdragon OK, `rdna_extras` garbage | **Needs verify** | `#vllm-rdna` Sep 15 — 3× V620 TheRock 10.0; FA/V2/GDN disables did not fix |
+| Flash-Next PP3: leapdragon OK, `rdna_extras` garbage | **Needs verify** | `#vllm-rdna` Sep 15–16 — fresh pull still corrupt; GDN decode suspect |
+| Flash-Next FULL graphs corrupt; PIECEWISE holds | **Needs verify** | `#vllm-rdna` Sep 16–17 — TP `rdna_extras`; `--max-num-seqs` 4–6 + batched 2048 |
+| Flash-Next 4× PIECEWISE serve ~3331 PP / ~73 TG | **Community** | `#vllm-rdna` Sep 17 — 16k/1k c=8; GDN sanitizer `388a61b6f`; not Hub |
+| No Q3 on vLLM Flash-Next | **Community** | `#vllm-rdna` Sep 17 — stay W4A16 / AWQ; EXL3 3bpw experimental |
+| `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM packs; prefer LMCache |
+| Intel AutoRound 32–128k ~1296–1393 PP / ~56–73 TG | **Community** | `#vllm-rdna` Sep 16 — 4× V620; pin `4c67bf6…`; int8 decode-shadow quality |
+| vllm-rdna-qa playbook | **Needs verify** | `#vllm-rdna` Sep 17 — public repo; maintainer QA only |
 | Flash-Next PP3 + MTP on 3× V620 | **Needs verify** | `#vllm-rdna` Sep 15 — leapdragon image; uneven `VLLM_PP_LAYER_PARTITION`; local int8 patches |
 | Upstream MTP under PP (`vllm#46994`) | **Fork-source** | Merged Sep 2026; not in Hub `-extras` 0.27.1 |
 | `RDNA2W4A16MoEExperts` raises concurrency | **Community** | `#vllm-rdna` Sep 15 — confirm kernel in logs |
@@ -153,6 +160,10 @@
 | Flash-Next APEX GGUF ~370 PP / ~26 t/s (2× V620) | **Community** | `#llamacpp` Sep 11 — `mudler/Qwen3.8-Flash-Next-APEX-GGUF` |
 | Flash-Next Q4 ~6 t/s on 2× V620 (LocalAI) | **Community** | `#llamacpp` Sep 10 — n-gram on NVMe |
 | Flash-Next IQ4_XS ~150–200 PP / ~25 t/s (2× V620) | **Community** | `#llamacpp` / `#vllm-rdna` Sep 14–15 — layer split + `--n-cpu-moe` |
+| Flash-Next llama.cpp ~300 PP / ~25 t/s “normal” (2×) | **Community** | `#llamacpp` Sep 16 — drops ~200/15 on long ctx |
+| Flash-Next MTP needs PR / Unsloth desktop | **Community** | `#llamacpp` Sep 17 — stock / Studio refuse MTP |
+| Flash-Next 4× patched MTP ~400 PP / ~27–45 t/s | **Needs verify** | `#llamacpp` Sep 17 — others call 400 PP low |
+| Flash-Next 3× + 32 GB RAM does not load | **Community** | `#llamacpp` Sep 17 — n-gram / host RAM bound |
 | Flash-Next UD-IQ3_XXS ~530 PP / ~30 t/s (2× V620, stock ROCm) | **Community** | `#general` / `#forum` Sep 15 — official llama.cpp ROCm; ~10 t/s at 80k+; Vulkan ~25% slower |
 | Flash-Next n-gram table ~50 GB RAM | **Community** | `#llamacpp` Sep 10 — 4× V620 to avoid storage offload |
 | PR #10 / #12 status | **Needs verify** | Re-check fork PRs |
@@ -224,7 +235,9 @@
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
 | `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |
 | `troubleshooting/vllm.md` Flash-Next V2=0 long prompts | **Community** | `#vllm-rdna` Sep 2026; Sep 15 100%/~40 W stall |
-| `troubleshooting/vllm.md` Flash-Next PP3 `rdna_extras` corruption | **Needs verify** | `#vllm-rdna` Sep 15 — leapdragon OK |
+| `troubleshooting/vllm.md` Flash-Next PP3 `rdna_extras` corruption | **Needs verify** | `#vllm-rdna` Sep 15–16 — leapdragon OK; fresh pull still bad |
+| `troubleshooting/vllm.md` Flash-Next FULL-graph corruption | **Needs verify** | `#vllm-rdna` Sep 16–17 — PIECEWISE workaround |
+| `vllm/recipes.md` 4× PIECEWISE Flash-Next serve | **Community** | `#vllm-rdna` Sep 17 — host venv, not Hub |
 | `troubleshooting/vllm.md` upstream KV offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 — Mamba/SSM worse |
 | `vllm/recipes.md` 3× PP3 + MTP VRAM squeeze | **Needs verify** | `#vllm-rdna` Sep 15 — local patches |
 | `setup/hardware.md` V620 vs 32 GB MI50 more PP less TG | **Community** | `#general` Sep 15 — first-pass A/B |
@@ -258,6 +271,7 @@
 | T7820 4× V620 + PEX880xx POSTed after SR-IOV off | **Needs verify** | Single-host `#motherboard` Sep 14 — board-specific |
 | 256 GB MMIO window for 4× V620 | **Community** | `#motherboard` — 64 GB too small |
 | GpuMMIOFix OS BAR remap | **Needs verify** | `#motherboard` Sep 15–16 — typically every boot |
+| HP Z4 G4 32-bit MIMO + ReBAR + `pci=realloc=off` | **Needs verify** | `#motherboard` Sep 16 — Xeon W-2133; Linux reallocates 64 GB VRAM |
 
 ---
 

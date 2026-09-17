@@ -148,6 +148,9 @@ The suspected combination was `enable_chunked_prefill=True` with **2048** schedu
 tokens. After 4096, 128k prose/code PP returned to the **~950 tok/s** class (same 4× V620, FP16
 KV, CPU PLE offload). See [overview](../../vllm/overview.md#intel-autoround-flash-next).
 
+If output is **wrong** rather than just slow, stay on **2048** and switch graphs to **PIECEWISE**
+first — [FULL-graph corruption](#flash-next-full-graph-corruption).
+
 If 128k is still slow after 4096, A/B [V2 runner](#flash-next-long-prompt-stalls) and confirm you
 are not on quantized PLE (known-good is the embedded BF16 n-gram table).
 
@@ -183,9 +186,38 @@ Disabling `VLLM_USE_V2_MODEL_RUNNER`, `VLLM_USE_RDNA2_FA`, `VLLM_GDN_HIP_PREFILL
 forcing single-chunk prefill (`--max-num-batched-tokens 8192`) **did not** fix it. Suspected area:
 HIP GDN decode / prefix-cache interaction — **not confirmed**.
 
+`#vllm-rdna` (Sep 16): a **fresh `rdna_extras` pull still corrupted** on PP3. One host still decoded
+on a **leapdragon** tree. Community suspected
+`vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py` (`_forward_core_decode_non_spec` /
+`gdn_decode_rdna2`) — **Needs verify**. `--max-num-seqs 4` (and later **6** with CUDA-graph capture
+sizes `[1,2,4,8]`) reduced some TP corruption while debugging; it is **not** a PP3 fix.
+
 **What to do:** if you need 3-card Flash-Next today, stay on a **known-good leapdragon image**. Do
 not treat current org HEAD as a drop-in for PP3. Report a matched A/B (same prompt, both trees) on
 `#vllm-rdna`.
+
+## Flash-Next FULL-graph decode corruption {#flash-next-full-graph-corruption}
+
+Symptom (`#vllm-rdna` Sep 16–17, `rdna_extras` Flash-Next, **TP**): serve starts, then output
+**corrupts** after a few chunks or after turning features back on. Prefix cache + graphs can look
+healthy, then fail again. Community isolated **FULL** CUDA graphs (decode) as the bad path;
+**`PIECEWISE` held**.
+
+**Community workarounds that unblocked a 4× V620 host:**
+
+```bash
+--compilation-config '{"cudagraph_mode":"PIECEWISE","compile_ranges_endpoints":[]}'
+--max-num-seqs 6
+--max-num-batched-tokens 2048
+```
+
+Also used while hunting: `HSA_NO_SCRATCH_RECLAIM=1`, `--max-num-seqs 4` (stricter), and leaving
+CUDA-graph capture sizes **unpinned** so vLLM chose `[1,2,4,8]`. A 16k/1k × 8 concurrency
+snapshot was called a **stable base** before performance claw-back.
+
+This does **not** replace [PP3 corruption](#flash-next-pp3-output-corruption). Hub `-extras` **27B**
+can still use `FULL_AND_PIECEWISE` — see [Configuration](../../vllm/configuration.md#cuda-graphs-preferred-over---enforce-eager).
+Sanitized serve line: [Flash-Next PIECEWISE recipe](../../vllm/recipes.md#flash-next-4x-piecewise).
 
 ## Upstream KV offload tanks decode {#upstream-kv-offload-tanks-decode}
 
@@ -193,6 +225,12 @@ not treat current org HEAD as a drop-in for PP3. Report a matched A/B (same prom
 bring blocks back to VRAM usefully. Community: decode fell to the **~1 t/s** class. **Mamba / SSM**
 state models are called out as especially unreliable on this path (including on Hopper-class hosts
 in-channel).
+
+`#vllm-rdna` (Sep 16): public RAM-offload Flash-Next packs (example:
+[`Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound`](https://huggingface.co/Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound))
+are interesting for long context, but recipes that need **`--no-enable-prefix-caching`** are a
+**non-starter** on gfx1030 vLLM. Qwen4exp KV is already relatively efficient; parking **non-linear**
+state in host RAM fights prefix cache. **LMCache** is still the intended overflow path.
 
 Do not plan production multi-chat overflow on native vLLM KV offload. `#lmcache` is still the
 intended gfx1030 path (standalone LMCache server + vLLM connector) but has **no published recipe**

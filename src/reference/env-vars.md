@@ -80,7 +80,8 @@ Prefer the **short stack** below. Long lists of `GGML_HIP_GFX1030_*` knobs are u
 
 | Flag | Example | What it does |
 | --- | --- | --- |
-| `--compilation-config` | `'{"cudagraph_mode":"FULL_AND_PIECEWISE","compile_ranges_endpoints":[]}'` | Enable CUDA graphs (preferred fast path on current images). |
+| `--compilation-config` | `'{"cudagraph_mode":"FULL_AND_PIECEWISE","compile_ranges_endpoints":[]}'` | Enable CUDA graphs (preferred fast path on current **`-extras` 27B** images). |
+| `--compilation-config` | `'{"cudagraph_mode":"PIECEWISE","compile_ranges_endpoints":[]}'` | Flash-Next on `rdna_extras` (`#vllm-rdna` Sep 16–17): **FULL** decode graphs corrupt; use **PIECEWISE**. |
 | `--compilation-config` | `'{"mode":"NONE","cudagraph_mode":"FULL","compile_ranges_endpoints":[]}'` | Alternative graph mode without torch.compile. |
 | `--compilation-config` | `'{"cudagraph_mode":"NONE"}'` | Disable graphs entirely. |
 | `--enforce-eager` | — | Fallback: disable all graph capture. Use only when graphs crash. |

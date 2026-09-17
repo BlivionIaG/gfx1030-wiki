@@ -59,9 +59,16 @@ RDNA2 llama.cpp fork catches up.
 (`--n-cpu-moe`, `-ot …=CPU`) instead. Community 2-card llama.cpp Flash-Next is still **~25 t/s**
 decode / **~150–200** PP — far below the 4-card vLLM class.
 
-**3× V620:** vLLM wants **PP=3** (even TP). `#vllm-rdna` (Sep 15): a leapdragon image ran Flash-Next
-PP3 without MTP; `rdna_extras` HEAD **corrupted** decode — [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
+**3× V620:** vLLM wants **PP=3** (even TP). `#vllm-rdna` (Sep 15–16): a leapdragon image ran Flash-Next
+PP3 without MTP; `rdna_extras` HEAD **still corrupted** decode on a fresh pull —
+[troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
 Fitting MTP on 3 cards is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
+
+**4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–17):** use **`PIECEWISE`**, not
+`FULL_AND_PIECEWISE` — [FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption)
+and the [Sep 17 serve line](../recipes.md#flash-next-4x-piecewise). Community snapshot on that
+recipe: **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3**
+path on vLLM.
 
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
@@ -112,6 +119,7 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 | Short decode + MTP | **~41 tok/s**, ~61% MTP accept |
 | Prose / code 16–64k | **~950–980 tok/s** PP, **~48–56 tok/s** decode |
 | 128k after `4096` batched tokens | PP stays **~950 tok/s** class (was **~375 tok/s** at 2048 scheduled tokens) |
+| Community long-suite (Sep 16, 4× V620) | Regular **32–128k**: **~1296–1393 tok/s** PP / **~56–60 tok/s** TG; coding suites **~68–73 tok/s** TG. Pin cited: `Intel/Qwen3.8-Flash-Next-W4A16-AutoRound` @ `4c67bf686b7f7fd386bae6b07ab59e8ff1d5b897`. Further push hit **int8 decode-shadow** quality loss. |
 | Startup (warm-ish) | ~**4 min** vs earlier **8–10 min** on the same host |
 | fp16 KV fit | ~**291k** tokens on 4 cards (one report) |
 

@@ -109,6 +109,12 @@ If graph capture still crashes, fall back to `--enforce-eager` — but try the u
 (`docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0`). See
 [vLLM troubleshooting](../../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
+**Flash-Next on `rdna_extras` (Sep 16–17):** do **not** start from `FULL_AND_PIECEWISE`. Community:
+**FULL** decode graphs **corrupt** output; **`PIECEWISE`** held. Use the
+[4× PIECEWISE recipe](../recipes.md#flash-next-4x-piecewise) and
+[FULL-graph troubleshooting](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
+The table above is the **27B `-extras`** path.
+
 ### Cache volumes (first boot is slow)
 
 Mount these so Triton and torch-compile artifacts persist across container restarts:
@@ -140,6 +146,8 @@ workaround unless you have verified your image needs that disable path.
 On **Flash-Next** long-context serves, if prefill falls off a cliff around **128k** while decode
 stays flat, raise `--max-num-batched-tokens` to **4096** before blaming kernels — see
 [128k prefill cliff](../../troubleshooting/vllm.md#flash-next-128k-prefill-cliff).
+On current `rdna_extras` Flash-Next **TP** serves, keep **2048** first if **FULL** graphs are
+corrupting — 4096 is the Intel AutoRound scheduler knob, not the graph-corruption fix.
 
 `SAFETENSORS_FAST_GPU=1` is also commonly set (and already present in some `vllm-rdna` Dockerfiles) to
 speed weight load into GPU memory — see [AMD vLLM optimization notes](https://rocm.docs.amd.com/projects/ai-ecosystem/en/latest/optimization/vllm-v1-optimization.html).
