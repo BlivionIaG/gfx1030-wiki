@@ -63,6 +63,8 @@ decode / **~150–200** PP — far below the 4-card vLLM class.
 PP3 without MTP; `rdna_extras` HEAD **still corrupted** decode on a fresh pull —
 [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
 Fitting MTP on 3 cards is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
+Sep 17–18: a public overlay that ports org **MoE HIP** onto leapdragon reports **~1078–2493** PP /
+**~57–63** TG with MTP k=2 — [overlay](../recipes.md#flash-next-3x-moe-hip-overlay).
 
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–17):** use **`PIECEWISE`**, not
 `FULL_AND_PIECEWISE` — [FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption)
@@ -97,6 +99,14 @@ budget **>128 GB** host RAM if you try that path. Concurrent streams split decod
 TG stayed near single-stream ~70–80 t/s while **PP fell to ~500 t/s**) and re-prefill on every
 tool-call session. Prefer **one stream** plus prefix / radix cache; do not expect a linear
 multi-agent multiplier.
+
+`#vllm-rdna` (Sep 17): the **logged** hybrid KV token count can be **~2.5× too high** versus a
+measured peak — size `--max-model-len` from a real request, not the banner
+([overstated pool](../../troubleshooting/vllm.md#flash-next-hybrid-kv-overstated)). Prefix cache on
+`rdna_extras` needed
+[`e45dd5cb`](https://github.com/opengfx1030/vllm-rdna/commit/e45dd5cb2de8218defe19878fd75e39528f0acbc)
+before repeat prompts actually hit
+([zero hits](../../troubleshooting/vllm.md#flash-next-prefix-cache-zero)).
 
 ### Intel AutoRound Flash-Next (draft, `#vllm-rdna` Sep 10–11 2026) {#intel-autoround-flash-next}
 

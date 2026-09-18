@@ -6,7 +6,7 @@ Common errors on gfx1030 / RDNA2 and how to fix them. Pick the section that matc
 |---|---|
 | ROCm install, hipBLASLt, BF16, iGPU, Secure Boot, CPU governor, V620 cooling | [General](./general.md) |
 | Host never POSTs with 4× V620 / PLX | [Host firmware](../setup/host-firmware.md) |
-| vLLM Docker, CUDA graphs, kernel dispatch, AMDSMI, RCCL 7.2.1+, MTP stalls | [vLLM](./vllm.md) |
+| vLLM Docker, CUDA graphs, kernel dispatch, AMDSMI, RCCL 7.2.1+, MTP stalls, wvSplitK, hybrid KV | [vLLM](./vllm.md) |
 | llama.cpp RCCL, KV checkpoints, FA occupancy abort, DAX mmap, tensor split, PSU, Vulkan ICD | [llama.cpp](./llama-cpp.md) |
 
 > **WIP:** Fixes involving latest `-extras` images assume a current image pull — see

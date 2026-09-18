@@ -199,6 +199,14 @@ Do **not** copy this graph mode onto the 27B `-extras` recipe unless you are A/B
 Community snapshot on that host (16k prompt / 1k gen, concurrency 8): **~3331 tok/s** prefill,
 **~72.7 tok/s** decode, TTFT **~39 s**. Treat as a single-host number.
 
+`#vllm-rdna` (Sep 17–18): pin `rdna_extras` **at or after**
+[`e45dd5cb`](https://github.com/opengfx1030/vllm-rdna/commit/e45dd5cb2de8218defe19878fd75e39528f0acbc)
+if you want prefix cache to actually hit, and set `VLLM_RDNA_DENSE_GEMV=1` if skinny `wvSplitK`
+faults after the profile run. `VLLM_USE_BREAKABLE_CUDAGRAPH=1` is the **stable / no-compile** path
+(~39 t/s class in one A/B); `0` plus compile can be faster once graphs are clean — see
+[FULL-graph troubleshooting](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
+Do not trust the logged hybrid KV token count — [overstated pool](../../troubleshooting/vllm.md#flash-next-hybrid-kv-overstated).
+
 ```bash
 MODEL="wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16"
 export VLLM_PLE_QUANT_DIR="$(python -c "from huggingface_hub import snapshot_download; print(snapshot_download('primitive-ai/Qwen3.8-Flash-Next-PLE-quant'))")/ples_int4"
@@ -210,7 +218,8 @@ export VLLM_FORCE_CUSTOM_ALL_REDUCE=1   # only if GPU↔GPU P2P works
 export VLLM_USE_V2_MODEL_RUNNER=0
 export VLLM_USE_AOT_COMPILE=0
 export VLLM_DISABLE_COMPILE_CACHE=1
-export VLLM_USE_BREAKABLE_CUDAGRAPH=1
+export VLLM_USE_BREAKABLE_CUDAGRAPH=1   # compile off; A/B 0 after output is clean
+export VLLM_RDNA_DENSE_GEMV=1           # if wvSplitK faults after profile
 export VLLM_RDNA_FUSED_HC=0
 export VLLM_ROCM_USE_AITER=0
 export VLLM_ROCM_USE_AITER_MOE=0
@@ -295,6 +304,35 @@ temporary would not OOM a nearly full card, then `VLLM_RDNA_DENSE_INT8_ONLY=1` t
 
 If `rdna_extras` HEAD **corrupts** PP3 decode, stay on a known-good leapdragon container until the
 org tree matches — [PP3 corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
+
+### 3× overlay: leapdragon + org MoE HIP (Sep 17–18) {#flash-next-3x-moe-hip-overlay}
+
+`#vllm-rdna` (Sep 17–18): a **temporary public overlay**
+([`alanoo81/flashnext-v620-pp3`](https://github.com/alanoo81/flashnext-v620-pp3)) ports
+`opengfx1030`'s fused **W4A16 MoE HIP** kernel (`moe_gptq_gemm_rdna2`) onto a **leapdragon**
+Flash-Next image so **3× V620 / PP=3** can keep leapdragon CUDA graphs + MTP while picking up
+org-class prefill. **Not** a published Hub tag; treat as **Community / Needs verify**.
+
+Public README snapshot (same harness; 160 W cap; AWQ-W4A16 + int4 PLE in host RAM):
+
+| Stack | Prefill 4K / 16K / 64K / 130K | Decode |
+|---|---|---|
+| leapdragon image as shipped, graphs, PP3 | 409 / 738 / 1349 / — | ~32 t/s (~48 with dense int8) |
+| leapdragon + org MoE HIP + graphs + MTP k=2 + prefix cache | **1078 / 1863 / 1989 / 2493** | **~57–63 t/s** |
+
+Community: use **MTP for one user**; from **two streams** up, leave MTP off (plain graphs scaled
+better in that write-up). Also backports [vLLM #46994](https://github.com/vllm-project/vllm/pull/46994)
+and [#54044](https://github.com/vllm-project/vllm/pull/54044) (MTP + graphs + prefix cache). Follow
+the overlay README — do not copy host paths from Discord.
+
+### DeepSeek-V4 Flash (community, Needs verify) {#deepseek-v4-flash}
+
+`#vllm-rdna` (Sep 17): public INT4-W4A16 weights
+[`yiminyuan/DeepSeek-V4-Flash-0731-INT4-W4A16`](https://huggingface.co/yiminyuan/DeepSeek-V4-Flash-0731-INT4-W4A16)
+plus a gfx1030 vLLM tree
+[`yiminyuan/vllm` @ `gfx1030/v0.28.0`](https://github.com/yiminyuan/vllm/tree/gfx1030/v0.28.0).
+Publisher intent: **TP=4 / PP=2**. This is **not** Hub `-extras` and **not** wiki-tested. `#llamacpp`
+also mentioned a RDNA2 TP4 DeepSeek-V4 serve (~22 t/s, kernel unpublished) — **Needs verify**.
 
 ---
 

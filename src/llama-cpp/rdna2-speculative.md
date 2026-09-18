@@ -65,13 +65,15 @@ hosts and is widely called out as weaker than the
 after the Sep prefill campaign). Prefer stable Qwen3.8-27B / MoE recipes for production TP on llama.cpp;
 use vLLM for Flash-Next until upstream/fork gaps close.
 
-**MTP load:** `#llamacpp` / `#general` (Sep 16–17): stock llama.cpp and **Unsloth Studio** often
+**MTP load:** `#llamacpp` / `#general` (Sep 16–18): **Unsloth Studio** and some **RDNA2 forks** often
 **refuse Flash-Next MTP** until you build a tree that includes the **upstream MTP PR**, or use
-**Unsloth desktop**. Public walkthrough:
+**Unsloth desktop**. Community Sep 18: **stock** llama.cpp + MTP was the path that loaded for one
+host when forks did not. Public walkthrough:
 [Unsloth Qwen3.8-Flash-Next / MTP](https://unsloth.ai/docs/models/qwen3.8-next). Ubuntu **26.04**
 shipping **ROCm 7.1** is a separate A/B from MTP (wiki still prefers **7.2.0** or **7.14.0** for
-multi-GPU). **3× V620 + 32 GB host RAM** was not enough to load Flash-Next in-channel; **4× + 128 GB**
-with Q4 weights / Q8 KV / Q8 MTP is the class that got a server up.
+multi-GPU). **3× V620 + 32 GB host RAM** was not enough; community later loaded **3× + MTP** with
+about **64 GB** host RAM (SSD offload untested). **4× + 128 GB** with Q4 weights / Q8 KV / Q8 MTP
+is the class that got a larger server up.
 
 `#llamacpp` (Sep 10–11 2026) community snapshots — still **not** a polished gfx1030 profile:
 
@@ -82,6 +84,7 @@ with Q4 weights / Q8 KV / Q8 MTP is the class that got a server up.
 | **2× V620**, layer split + CPU MoE | Flash-Next **UD-IQ4_XS** + F16 mmproj | **~150–200 t/s** | **~25 t/s** | `#vllm-rdna` / `#llamacpp` Sep 14–15 — see recipe below; vLLM not recommended on 2 cards |
 | **2× V620**, official llama.cpp **ROCm** server | Unsloth Flash-Next **UD-IQ3_XXS** + F16 mmproj, n-gram in host RAM | **~530 t/s** (lower `-ub`; **600+** if it fits) | **~30 t/s** empty / **~10 t/s** at **80k+** ctx | `#general` / `#forum` Sep 15 — **stock** ROCm server, not the RDNA2 fork; Vulkan A/B was **~25% slower** |
 | **2× V620**, llama.cpp Flash-Next | UD-IQ4_XS class (layer split) | **~300 t/s** | **~25 t/s** | `#llamacpp` Sep 16 — called **normal** for llama.cpp Flash-Next; drops toward **~200 PP / ~15 t/s** on long agentic ctx |
+| **3× V620**, llama.cpp + MTP | Flash-Next | — | loaded | `#llamacpp` Sep 17 — **~64 GB** host RAM; 32 GB did not load. SSD offload untested. |
 | **4× V620**, patched llama.cpp MTP | Q4 + Q8 KV + Q8 MTP | **~400 t/s** | **~27–45 t/s** | `#llamacpp` Sep 17 — MTP needed a compiled PR; others call **400 PP low** vs **~700–800 PP** on 2× at low ctx. Layer split can **halve TG**. |
 | **4× V620**, n-gram in host RAM | Flash-Next (non-APEX) | **~200–400 t/s** | **~20–35 t/s** | Context-dependent; PP/tg still below 27B on the same rig |
 

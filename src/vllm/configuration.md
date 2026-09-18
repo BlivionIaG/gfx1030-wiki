@@ -115,6 +115,9 @@ If graph capture still crashes, fall back to `--enforce-eager` — but try the u
 [FULL-graph troubleshooting](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
 The table above is the **27B `-extras`** path.
 
+`VLLM_USE_BREAKABLE_CUDAGRAPH=1` in that recipe **disables torch.compile** (`mode=NONE`). Community
+Sep 17 A/B: keep it for the no-corruption path, then try `0` if you want compile speed back.
+
 ### Cache volumes (first boot is slow)
 
 Mount these so Triton and torch-compile artifacts persist across container restarts:

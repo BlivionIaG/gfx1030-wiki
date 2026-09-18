@@ -219,6 +219,57 @@ This does **not** replace [PP3 corruption](#flash-next-pp3-output-corruption). H
 can still use `FULL_AND_PIECEWISE` — see [Configuration](../../vllm/configuration.md#cuda-graphs-preferred-over---enforce-eager).
 Sanitized serve line: [Flash-Next PIECEWISE recipe](../../vllm/recipes.md#flash-next-4x-piecewise).
 
+`#vllm-rdna` (Sep 17): `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (in that recipe) **turns torch.compile off**.
+Community A/B on a 4× TP Flash-Next tree: **~39 t/s** with breakable/eager vs **~55 t/s** after compile
+stayed on (`VLLM_USE_BREAKABLE_CUDAGRAPH=0`) plus a `.contiguous()` on a hyper-connection injection
+view. Keep `1` until output is clean; then A/B `0` if you want the compile path back.
+
+## wvSplitK GPU fault after profile {#wvsplitk-gpu-fault}
+
+`#vllm-rdna` (Sep 17), `rdna_extras` pin `50120e13b`, TheRock **7.14.1**, **4× V620** TP4: right after
+the profile run, skinny GEMM `wvSplitK_hf_sml_<half,…>` (`skinny_gemms`) raised
+`HSA_STATUS_ERROR_EXCEPTION`. **`VLLM_RDNA_DENSE_GEMV=1`** avoided the fault on more than one host.
+It does **not** fix [PP3 corruption](#flash-next-pp3-output-corruption).
+
+The GPU core dumps written on that path are **several GB each** and land in the **process working
+directory** — start the server from a scratch dir (the 4× recipe already `cd`s to `/tmp`).
+
+## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
+
+`#vllm-rdna` (Sep 17): Flash-Next **hybrid** KV (main KV + GDN conv/SSM + PLE conv **per page**) can
+**overstate usable tokens by ~2.5×**. Community measured vs log:
+
+| What the log said | Measured single-request peak | Notes |
+|---|---|---|
+| ~411k tokens | ~166k (MTP=0) / ~100k (MTP=3) | One tree on 4× V620 |
+| ~468k tokens | ~190k (100k prompt ≈ 52%; 150k ≈ 79%) | `rdna_extras` `50120e13b`, no MTP |
+
+A prompt **between the real pool and `--max-model-len`** can **livelock**: KV fills, resets, refills,
+and `num_preemptions` stays **0**. Size `--max-model-len` / `--kv-cache-memory-bytes` from a
+**measured** peak (one long request, watch `%` usage), not the advertised token count.
+
+## Flash-Next prefix cache never hits (pre-fix HEAD) {#flash-next-prefix-cache-zero}
+
+`#vllm-rdna` (Sep 17): on `rdna_extras` **before**
+[`e45dd5cb`](https://github.com/opengfx1030/vllm-rdna/commit/e45dd5cb2de8218defe19878fd75e39528f0acbc),
+`--enable-prefix-caching` reported **0%** hits on repeat Flash-Next / Qwen4Exp prompts (community
+18k / 4.7k tests). The QSA compression ring returned length 0 at a group boundary, and the hybrid
+coordinator took the **min** across groups.
+
+**Fix (fork-source):** pull `rdna_extras` **at or after** that commit. Maintainer validation on 4×
+V620 TP4 PIECEWISE: repeat ~18.8k prompt TTFT **12.2 s → 0.3 s**, server hit rate **0% → ~50%**.
+
+A leapdragon tree without MTP still showed **97–99%** hits from the second request; leapdragon + MTP
+needed a second computation and
+[vLLM #54044](https://github.com/vllm-project/vllm/pull/54044) (reset Mamba align metadata after
+profiling) before MTP + graphs + prefix cache stayed correct. `#55506` /
+[`741e5bc3`](https://github.com/opengfx1030/vllm-rdna/commit/741e5bc31ae5a14ab8926e2defaa616fdd87408a)
+is a **separate** V2 mamba spec-decode block-table port — community: it did **not** fix the 0% /
+`!!!` prefix-cache path on V1.
+
+If you still see 0% hits, confirm the commit, then A/B `--no-enable-prefix-caching` only as a
+correctness test (you lose the TTFT win).
+
 ## Upstream KV offload tanks decode {#upstream-kv-offload-tanks-decode}
 
 `#vllm-rdna` (Sep 15): **upstream vLLM** CPU → SSD **KV cache offload** (not LMCache) failed to
