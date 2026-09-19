@@ -30,7 +30,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 |---|---|
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
 | **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
-| **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Flash-Next **without MTP** fit on a **leapdragon** image; `rdna_extras` HEAD corrupted output — [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). MTP on 3 cards is **Needs verify** — [PP3 + MTP](#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
+| **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../../troubleshooting/vllm.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next**; also TP=4 dense 27B on `-extras` (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) below). |
 
 Also see [What fits well on V620](../overview.md#what-fits-well-on-v620).
@@ -318,8 +318,10 @@ Community also rewrote `VLLM_RDNA_DENSE_INT8` shadow quant to **row blocks** so 
 temporary would not OOM a nearly full card, then `VLLM_RDNA_DENSE_INT8_ONLY=1` to drop fp16 copies
 (~2 GB/rank). Those int8 changes were **local** — do not assume they are in `rdna_extras` HEAD.
 
-If `rdna_extras` HEAD **corrupts** PP3 decode, stay on a known-good leapdragon container until the
-org tree matches — [PP3 corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption).
+If an older `rdna_extras` pin **corrupts** PP3 decode, stay on a known-good leapdragon container —
+[PP3 corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). Sep 19 pin
+`b33f9b6` is a different failure (graphs boot, small prefill `KeyError`) —
+[workaround](../../troubleshooting/vllm.md#flash-next-pp3-graph-keyerror).
 
 ### 3× overlay: leapdragon + org MoE HIP (Sep 17–18) {#flash-next-3x-moe-hip-overlay}
 
@@ -340,6 +342,10 @@ Community: use **MTP for one user**; from **two streams** up, leave MTP off (pla
 better in that write-up). Also backports [vLLM #46994](https://github.com/vllm-project/vllm/pull/46994)
 and [#54044](https://github.com/vllm-project/vllm/pull/54044) (MTP + graphs + prefix cache). Follow
 the overlay README — do not copy host paths from Discord.
+
+`#vllm-rdna` (Sep 19): that same **HIP MoE** kernel was reported **non-deterministic** (~3.5% of
+top tokens change between identical runs; Triton MoE did not). See
+[fork MoE note](../fork.md#moe-mixture-of-experts). **Needs verify.**
 
 `#vllm-rdna` (Sep 18): the published Flash-Next checkpoint can leave the **MTP draft head's 512
 experts in bf16**, so speculative decode runs those through the generic **Triton MoE** kernel.

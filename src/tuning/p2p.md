@@ -103,6 +103,11 @@ Fedora 43 AMD validation).
 
 - Intra-switch P2P can stay full-width (e.g. 4× Gen4 x16 behind one PLX 88096). The **host↔switch
   uplink** (typically one x16) is the bottleneck.
+- `#general` (Sep 19): one gen4 x16 on the host → community suggestion is a **PEX88096** broken
+  out to SlimSAS and **8** risers. Alternative board: dual-SP3 **Supermicro H12D-8D**, bifurcate
+  all **4** PCIe ports to **x8x8 gen4**. **6** GPUs is still awkward (not a clean TP size; the
+  open question was TP=8 vs TP=2 × PP=3). One camp says buy **2/4/8** only; another says any
+  **even** count can work if you plan the split — do not add a third card assuming TP=3.
 - **4-slot vs 5-slot** switch boards (`#general`, Sep 2026): a common **5-slot** PLX only fits
   **double-width** cards; a **4-slot** board can take **triple-width** GPUs (future cooler
   upgrades). Pick the board for card thickness, not just GPU count.

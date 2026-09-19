@@ -81,8 +81,26 @@ and rebuild from that branch, or wait for a tagged image.
 
 | Format | Status | Notes |
 |---|---|---|
-| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. `#general` Sep 18: current gfx1030 EXL3 kernels are **3inst**, not mul1 (lower quality, less math). Community: a ~12.5 GB EXL3 pack **unpacked to ~54 GB** and OOM'd on a 0.27.1 image — size the host RAM, not just the download. Not a drop-in on every Hub tag. |
+| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Kernel constraints: [3inst only](#exl3-3inst-only-vllm-rdna-sep-19). Not a drop-in on every Hub tag. |
 | **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
+
+### EXL3: 3inst only (`#vllm-rdna`, Sep 19) {#exl3-3inst-only-vllm-rdna-sep-19}
+
+`#general` (Sep 18) and `#vllm-rdna` (Sep 19): the gfx1030 EXL3 kernel is **3inst**, not **mul1**.
+3inst is easier to execute at inference, **not** higher quality. The current kernel was written
+**only for 3inst** — mul1 packs **do not run**. Mixed bit-widths are not wired yet either: MTP at
+6 bpw, `lm_head` at 8 bpw, and vision in bf16 will not load together. To try the kernel now, use
+**uniform 3 bpw** and keep the **head in bf16**. 6 bpw support is still planned. Long-term target
+stated in-channel: `lm_head` **8 bpw**, MTP **6 bpw**, n-gram **bf16**, vision **bf16**.
+
+A mixed 3+6 bpw pack around **50 GB** was called tight for **2× V620** and still needed
+calibration. Experimental kernels had only been tried on an **Ornith 1.5 9B** quant — not
+confirmed on 2× Flash-Next. `#general` (Sep 18): a ~12.5 GB EXL3 pack **unpacked to ~54 GB** and
+OOM'd on a 0.27.1 image — size host RAM, not just the download.
+
+An uncalibrated public 3inst upload was posted and immediately flagged for rework — do not treat
+it as a stable checkpoint:
+[`BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated`](https://huggingface.co/BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated).
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 

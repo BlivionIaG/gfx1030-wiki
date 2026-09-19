@@ -192,9 +192,49 @@ on a **leapdragon** tree. Community suspected
 `gdn_decode_rdna2`) — **Needs verify**. `--max-num-seqs 4` (and later **6** with CUDA-graph capture
 sizes `[1,2,4,8]`) reduced some TP corruption while debugging; it is **not** a PP3 fix.
 
-**What to do:** if you need 3-card Flash-Next today, stay on a **known-good leapdragon image**. Do
-not treat current org HEAD as a drop-in for PP3. Report a matched A/B (same prompt, both trees) on
-`#vllm-rdna`.
+**What to do:** if you need 3-card Flash-Next today, stay on a **known-good leapdragon image** unless
+you are on the later pin below. Do not treat an arbitrary org HEAD as a drop-in for PP3.
+
+## Flash-Next PP3 graph KeyError on small prefill (`b33f9b6`) {#flash-next-pp3-graph-keyerror}
+
+`#vllm-rdna` (Sep 19): community test of
+[`rdna_extras` @ `b33f9b6`](https://github.com/opengfx1030/vllm-rdna/commit/b33f9b66eb2b90d62b8febd78b53aab1f4fd30c2)
+with a production config transposed to **PP=3 / TP=1** on **3× V620** (P2P distance **PHB**, V1
+runner, `FULL_AND_PIECEWISE` + breakable graphs). Six PP3 patches for that pin are public in
+[`alanoo81/flashnext-v620-pp3` `patches/rdna_extras-b33f9b6`](https://github.com/alanoo81/flashnext-v620-pp3/tree/master/patches/rdna_extras-b33f9b6)
+(write-up: `docs/opengfx1030-report.md`). This is a **later** pin than the
+[Sep 15–16 corruption](#flash-next-pp3-output-corruption) — do not collapse the two bugs.
+
+On that pin:
+
+- CUDA graphs **booted** under PP.
+- Deterministic **NaN** with prefix caching + concurrent requests was **gone** on their stab
+  (seed 1, 45 iterations including 4-stream bursts, 0 corrupted outputs). That does **not**
+  retract older pins.
+
+**Still blocking, PP only:** the engine dies on the first prefill batch small enough to hit a
+**captured CUDA-graph size**. A **74-token** prompt failed, and so did the **240-token** tail of a
+**4336-token** prompt; **2048** and **4096** passed. Symptom: `KeyError` on the request id inside
+`scheduler.py` `update_from_output` (`model_runner_output.req_id_to_index`, path
+`step_with_batch_queue`). No worker-side error. Same failure with `cudagraph_mode=PIECEWISE`,
+prefix caching off, and TunableOp off. **Eager is fine.**
+
+Workaround — pin capture sizes so prefill stays eager:
+
+```bash
+--compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[1,2,4,8]}'
+```
+
+Community numbers **with** that workaround on the same host: prefill **1077 / 1611 tok/s** at
+4K / 16K, decode **27.8 tok/s** versus **26.7** eager (graphs bought ~4% under PP). **Needs verify.**
+
+Also on that run:
+
+- Stage 0 **OOM** when `--kv-cache-memory-bytes` went above about **1.5e9** (`qsa_mqa_paged` on
+  the first long prompt at **2.5e9**). Do not copy the 4× recipe's **7 GiB** cap onto this PP3 pin.
+- Logged prefix-cache hit rate stayed **0.0%**. Maintainer: the cache fix is in, but **hit-rate
+  reporting is unreliable** — judge by repeat-prompt TTFT, not the counter. See
+  [prefix cache](#flash-next-prefix-cache-zero).
 
 ## Flash-Next FULL-graph decode corruption {#flash-next-full-graph-corruption}
 
@@ -269,6 +309,11 @@ is a **separate** V2 mamba spec-decode block-table port — community: it did **
 
 If you still see 0% hits, confirm the commit, then A/B `--no-enable-prefix-caching` only as a
 correctness test (you lose the TTFT win).
+
+`#vllm-rdna` (Sep 19): a PP3 run on `b33f9b6` still logged **0.0%** hits for the whole session.
+Maintainer: prefix caching **was fixed**, but the **reported** hit rate can stay wrong. A 0%
+counter is not proof the cache is dead — A/B repeat-prompt TTFT. Details:
+[PP3 graph KeyError](#flash-next-pp3-graph-keyerror).
 
 ## Upstream KV offload tanks decode {#upstream-kv-offload-tanks-decode}
 

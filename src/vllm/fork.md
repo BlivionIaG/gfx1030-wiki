@@ -124,6 +124,14 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 - Python experts `fused_moe/experts/rdna2_mxfp4_moe.py`, `rdna2_w8a16_fp8_moe.py`, and
   `compressed_tensors` MoE glue (`..._fp8_rdna2`, `..._w4a4_mxfp4_rdna2`, `..._wna16_rdna2`).
 
+`#vllm-rdna` (Sep 19): a quality A/B reported the fused **HIP MoE** kernel is **not deterministic**.
+On the same server and the same tokens, about **3.5%** of the most-probable tokens changed between
+runs, costing about **+0.2–0.3%** perplexity versus the best reference that host could run. The
+**Triton MoE** path was **bit-identical** across repeats. Cause not isolated (fp16 accumulation
+order vs a real race). Proposed, **not landed**: replace the `atomic_add_pk4_f16` CAS loop with
+`global_atomic_add_f32` (fewer atomics, possibly worse bandwidth). Maintainer: cannot test until
+the **0.29.0** rebase is unblocked. **Needs verify** — do not switch kernels on this note alone.
+
 ### GDN (gated delta-net / linear attention)
 
 Kernels for gated-delta-net models (e.g. Qwen3.8-27B hybrid linear attention). As of Aug 2026 the

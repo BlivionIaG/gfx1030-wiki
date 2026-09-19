@@ -68,7 +68,11 @@ use vLLM for Flash-Next until upstream/fork gaps close.
 **MTP load:** `#llamacpp` / `#general` (Sep 16–18): **Unsloth Studio** and some **RDNA2 forks** often
 **refuse Flash-Next MTP** until you build a tree that includes the **upstream MTP PR**, or use
 **Unsloth desktop**. Community Sep 18: **stock** llama.cpp + MTP was the path that loaded for one
-host when forks did not. Public walkthrough:
+host when forks did not. `#llamacpp` (Sep 19): two public trees **did** load MTP when Unsloth
+Studio's bundled llama.cpp would not (including versus that Studio fine-tune) —
+[`markldn/llama.cpp-qwen4exp-rdnaport-latest`](https://github.com/markldn/llama.cpp-qwen4exp-rdnaport-latest)
+and [`okigan/llama.cpp` `qwen4exp-mtp-fix`](https://github.com/okigan/llama.cpp/tree/qwen4exp-mtp-fix).
+The same host **could not get tensor parallel** on either. **Needs verify** (one report). Public walkthrough:
 [Unsloth Qwen3.8-Flash-Next / MTP](https://unsloth.ai/docs/models/qwen3.8-next). Ubuntu **26.04**
 shipping **ROCm 7.1** is a separate A/B from MTP (wiki still prefers **7.2.0** or **7.14.0** for
 multi-GPU). **3× V620 + 32 GB host RAM** was not enough; community later loaded **3× + MTP** with
