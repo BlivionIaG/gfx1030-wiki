@@ -287,6 +287,37 @@ Do not plan production multi-chat overflow on native vLLM KV offload. `#lmcache`
 intended gfx1030 path (standalone LMCache server + vLLM connector) but has **no published recipe**
 yet. See [fork landscape](../../vllm/fork.md#consolidation-status).
 
+`#vllm-rdna` / `#general` (Sep 18–19): official **`rocm/pytorch`** images are the **wrong** place to
+compile an LMCache connector (missing HIP / developer packages). Intended shape:
+
+1. Run [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone) in **CPU** mode — see the
+   [standalone starter](https://docs.lmcache.ai/getting_started/quickstart/standalone_starter.html).
+2. Add the LMCache connector to a **bare-metal / venv** `rdna_extras` serve, or patch it onto
+   [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) / [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna).
+3. Do **not** use `lmcache/vllm-openai` on gfx1030 — that image is the CUDA path.
+
+NVMe-as-KV is the usual motive (low host RAM). Until someone posts a working gfx1030 compose, treat
+this as **Needs verify**.
+
+## Leftover vLLM / PLE workers after a restart {#leftover-vllm-workers}
+
+`#vllm-rdna` (Sep 18): killing the OpenAI API process is **not** enough. `VLLM::Worker`,
+`VLLM::EngineCore`, and `PleOffloadWorker` can stay up and hold VRAM / the PLE sidecar. Before
+relaunch, stop those leftover processes (match the **process names**, not a broad pattern) and wait
+a few seconds. The [4× Flash-Next recipe](../../vllm/recipes.md#flash-next-4x-piecewise) already
+`cd`s to `/tmp` so GPU coredumps do not land in a checkout.
+
+## Flash-Next: no P2P, or MTP blocks PLE {#flash-next-no-p2p-or-mtp-blocks-ple}
+
+Two `#vllm-rdna` (Sep 18) reports that look like “this image is slow” but are env / feature
+mismatches:
+
+| Symptom | What to try |
+|---|---|
+| Custom all-reduce / PIX recipe **fails to load** or logs **PYNCCL** | Host has **no GPU↔GPU P2P**. Drop `VLLM_FORCE_CUSTOM_ALL_REDUCE` and the PIX/RCCL P2P block — those are **env flags**, not a different tree. Use `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` — [Configuration](../../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks). |
+| Bench ~800 PP / ~50 t/s, then Open WebUI / Hermes ~14 t/s | Client / harness, **or** MTP on while PLE fused decode is required. Community: **MTP off** recovered **~38 t/s** decode and **~95%** prefix reuse on a no-P2P host (plus `--enable-prefix-caching`). Treat tok/s as **Community**. |
+| GDN decode on Triton, gfx1030 FP16 | Expected fallback when the HIP GDN path is not selected — confirm `VLLM_RDNA_FORCE_FP16=1` and native GDN in logs before chasing P2P. |
+
 ## ROCR idle CPU spin (TheRock 7.14) {#rocr-idle-cpu-spin-therock-714}
 
 Symptom: after starting a multi-GPU vLLM serve on **TheRock / ROCm 7.14** (ROCR **1.21**), the host

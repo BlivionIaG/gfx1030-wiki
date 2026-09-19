@@ -27,6 +27,7 @@ image targets seven RDNA architectures (gfx1030 through RDNA4).
 |---|---|
 | `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. |
 | `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Official extras kernels — [`rdna_extras`](../fork.md#the-rdna_extras-fork) lineage; **recommended** day-to-day on gfx1030. |
+| `v0.28.0-extras` | `#vllm-rdna` Sep 18 **test** bake of the 0.28 extras line. **Needs verify** — Hub CI is not fully tracked; A/B against `v0.27.1-extras` before treating as default. |
 
 Image tags are **refreshed in place** when fixes land — always `docker pull` before debugging. Confirm your
 `-extras` image includes the latest extras commits (AWQ dispatch, GDN HIP, TP graph fix).
@@ -35,8 +36,9 @@ you already had that tag.
 
 > **Official source moved.** Kernel work lives in
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`). Day-to-day serving
-> is still Hub **`blivioniag/vllm-rdna:*-extras`** (v0.27.1; published bake still clones the historical
-> personal fork). `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
+> is still Hub **`blivioniag/vllm-rdna:*-extras`** (`v0.27.1-extras*` day-to-day; `v0.28.0-extras` is a
+> Sep 18 **test** tag). Published bake still clones the historical
+> personal fork. `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
 > [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is no longer
 > the moving target. Published Flash-Next **containers** may still be the older leapdragon image.
 > Details: [Fork landscape](../fork.md#fork-landscape).

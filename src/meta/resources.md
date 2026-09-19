@@ -70,7 +70,8 @@ performance work happens first.
 | [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) | Org mirror of the recipe book (`#vllm-rdna`) |
 | [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) | RDNA2/V620 llama.cpp fork — see [overview](../llama-cpp/rdna2-overview.md) |
 | [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench) | Reproducible long-context PP/TG benches (real prompts) — used by `#benchmarks` |
-| [`LMCache/LMCache`](https://github.com/LMCache/LMCache) | KV cache layer (RAM/SSD/remote) — `#lmcache` WIP for RDNA vLLM Docker; not wiki-validated yet |
+| [`LMCache/LMCache`](https://github.com/LMCache/LMCache) | KV cache layer (RAM/SSD/remote) — `#lmcache` WIP for RDNA vLLM; intended shape is [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone) (CPU) + connector — [docs](https://docs.lmcache.ai/getting_started/quickstart/standalone_starter.html); not wiki-validated yet |
+| [`alanoo81/flashnext-v620-pp3`](https://github.com/alanoo81/flashnext-v620-pp3) | Temporary 3× V620 / PP3 overlay (leapdragon + org MoE HIP; `quant_mtp_experts.py`) — [recipes](../vllm/recipes.md#flash-next-3x-moe-hip-overlay) |
 | [`intentee/paddler`](https://github.com/intentee/paddler) | LLM load balancer / multi-instance router — discussed for multi-agent llama.cpp; **not wiki-validated** |
 | [`sebastianmechno-sys/vllm-rocm-windows-rdna2`](https://github.com/sebastianmechno-sys/vllm-rocm-windows-rdna2) | Unofficial Windows 11 + ROCm 7.x vLLM for RX 6000 — **not wiki-validated** |
 | [`skyne98/wiki-gfx906`](https://github.com/skyne98/wiki-gfx906) | Sibling wiki for gfx906 (Vega 20 / MI50) |

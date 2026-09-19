@@ -12,7 +12,7 @@ on [Configuration](../configuration.md); fork history on [vLLM forks](../fork.md
 
 | Goal | Use | Image / repo |
 |---|---|---|
-| Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.27.1-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Running](../running.md) |
+| Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.27.1-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Running](../running.md). `#vllm-rdna` Sep 18 also posted **`v0.28.0-extras`** as a **test** pull (`docker.io/blivioniag/vllm-rdna:v0.28.0-extras`); A/B before replacing 0.27.1. |
 | Tuned **27B / 122B** presets, host needs only `amdgpu` + Docker | Recipe book container | [`ghcr.io/leapdragon/vllm-rdna2-recipe:0.27.1-rocm7.2.3-gfx1030`](https://github.com/leapdragon/vllm-rdna2-recipe) (`preset:…`) — mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) |
 | **Qwen3.8 Flash-Next** on **4×** V620 | `rdna_extras` + Flash-Next | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) HEAD; published container may still be [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) — [overview](../overview.md#qwen38-flash-next-on-vllm) |
 
@@ -207,6 +207,22 @@ faults after the profile run. `VLLM_USE_BREAKABLE_CUDAGRAPH=1` is the **stable /
 [FULL-graph troubleshooting](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
 Do not trust the logged hybrid KV token count — [overstated pool](../../troubleshooting/vllm.md#flash-next-hybrid-kv-overstated).
 
+`#vllm-rdna` (Sep 18): maintainer posted an updated **host-venv** production block that still keeps
+`VLLM_USE_V2_MODEL_RUNNER=0` (**V2 blocked on Qwen4Exp**), `VLLM_USE_BREAKABLE_CUDAGRAPH=1`, and
+`--max-num-batched-tokens 2048`, but:
+
+- uses `--compilation-config` **`FULL_AND_PIECEWISE`** (do **not** treat FULL-only as fixed —
+  [FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption) still applies)
+- raises `--kv-cache-memory-bytes` to **7000000000** (7 GiB) and `--gpu-memory-utilization 0.90`
+- reported a **16× 16k** concurrency test as fine (earlier `--max-num-seqs` tightness)
+- **kills leftover processes** before relaunch — `VLLM::Worker`, `VLLM::EngineCore`, and
+  `PleOffloadWorker` can survive an API/port kill ([troubleshooting](../../troubleshooting/vllm.md#leftover-vllm-workers))
+- custom all-reduce / PIX is **optional** — hosts without GPU↔GPU P2P should drop that block
+  (vLLM falls back to PYNCCL) — [no P2P](../../troubleshooting/vllm.md#flash-next-no-p2p-or-mtp-blocks-ple)
+
+Hub **`v0.28.0-extras`** is the container to A/B against this host-venv line; it is **not** yet the
+wiki default.
+
 ```bash
 MODEL="wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16"
 export VLLM_PLE_QUANT_DIR="$(python -c "from huggingface_hub import snapshot_download; print(snapshot_download('primitive-ai/Qwen3.8-Flash-Next-PLE-quant'))")/ples_int4"
@@ -324,6 +340,14 @@ Community: use **MTP for one user**; from **two streams** up, leave MTP off (pla
 better in that write-up). Also backports [vLLM #46994](https://github.com/vllm-project/vllm/pull/46994)
 and [#54044](https://github.com/vllm-project/vllm/pull/54044) (MTP + graphs + prefix cache). Follow
 the overlay README — do not copy host paths from Discord.
+
+`#vllm-rdna` (Sep 18): the published Flash-Next checkpoint can leave the **MTP draft head's 512
+experts in bf16**, so speculative decode runs those through the generic **Triton MoE** kernel.
+The overlay README adds `scripts/quant_mtp_experts.py` (offline **W4A16**, RTN int4 g128, same
+packing as the main experts) so the draft experts hit the **same HIP kernel**. Community on
+**3× V620 PP3**: **+4–7%** single-stream decode (~65–66 t/s), no acceptance loss (~70→75%), and
+**+60%** wall throughput at 8 streams (~77 → ~123 t/s). **Community / Needs verify** — run the
+script from the overlay repo; do not invent a Hub tag for the derived checkpoint.
 
 ### DeepSeek-V4 Flash (community, Needs verify) {#deepseek-v4-flash}
 

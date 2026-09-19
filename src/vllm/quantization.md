@@ -46,6 +46,13 @@ W4A16 — confirm the kernel in logs. **Pipeline-parallel MTP** needs upstream
 [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (merged; next vLLM release). A 3×
 V620 Flash-Next + MTP squeeze is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
 
+`#vllm-rdna` (Sep 18): on Flash-Next, **MTP can block the int4 PLE fused decode path**. If logs show
+Triton GDN / PLE fallback and decode is stuck in the teens of t/s, A/B **MTP off** before blaming
+P2P. Separately, the MTP **draft head** may still be **bf16 MoE** even when the main experts are
+W4A16 — quantize those draft experts offline if you stay on MTP
+([3× overlay](../recipes.md#flash-next-3x-moe-hip-overlay)). `#vllm-rdna` Sep 18: **no MTP on the
+Hub `v0.28.0-extras` line**; that work is aimed at the `rdna_extra/v0.29.0` rebase.
+
 ## INT4 on gfx1030 (no native int4 ALUs)
 
 RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly
@@ -74,7 +81,7 @@ and rebuild from that branch, or wait for a tagged image.
 
 | Format | Status | Notes |
 |---|---|---|
-| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Needs a rebuilt image that includes the EXL3 path. |
+| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. `#general` Sep 18: current gfx1030 EXL3 kernels are **3inst**, not mul1 (lower quality, less math). Community: a ~12.5 GB EXL3 pack **unpacked to ~54 GB** and OOM'd on a 0.27.1 image — size the host RAM, not just the download. Not a drop-in on every Hub tag. |
 | **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
