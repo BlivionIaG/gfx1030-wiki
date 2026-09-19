@@ -41,6 +41,18 @@ MTP is **not free at high concurrency**. A `#vllm-rdna` TP4 matrix on **Qwen3.6-
 (4× V620, `--enforce-eager`, 16k/1k-style bench) reported MTP-2 **+17%** output tok/s at `c=1`, but
 **−53%** at `c=8`. Use MTP for latency-critical single-stream; leave it off for batched throughput.
 
+`#vllm-rdna` (Sep 15): `RDNA2W4A16MoEExperts` was reported to raise **usable concurrency** on MoE
+W4A16 — confirm the kernel in logs. **Pipeline-parallel MTP** needs upstream
+[`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (merged; next vLLM release). A 3×
+V620 Flash-Next + MTP squeeze is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
+
+`#vllm-rdna` (Sep 18): on Flash-Next, **MTP can block the int4 PLE fused decode path**. If logs show
+Triton GDN / PLE fallback and decode is stuck in the teens of t/s, A/B **MTP off** before blaming
+P2P. Separately, the MTP **draft head** may still be **bf16 MoE** even when the main experts are
+W4A16 — quantize those draft experts offline if you stay on MTP
+([3× overlay](../recipes.md#flash-next-3x-moe-hip-overlay)). `#vllm-rdna` Sep 18: **no MTP on the
+Hub `v0.28.0-extras` line**; that work is aimed at the `rdna_extra/v0.29.0` rebase.
+
 ## INT4 on gfx1030 (no native int4 ALUs)
 
 RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly
@@ -69,8 +81,26 @@ and rebuild from that branch, or wait for a tagged image.
 
 | Format | Status | Notes |
 |---|---|---|
-| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Needs a rebuilt image that includes the EXL3 path. |
+| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Kernel constraints: [3inst only](#exl3-3inst-only-vllm-rdna-sep-19). Not a drop-in on every Hub tag. |
 | **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
+
+### EXL3: 3inst only (`#vllm-rdna`, Sep 19) {#exl3-3inst-only-vllm-rdna-sep-19}
+
+`#general` (Sep 18) and `#vllm-rdna` (Sep 19): the gfx1030 EXL3 kernel is **3inst**, not **mul1**.
+3inst is easier to execute at inference, **not** higher quality. The current kernel was written
+**only for 3inst** — mul1 packs **do not run**. Mixed bit-widths are not wired yet either: MTP at
+6 bpw, `lm_head` at 8 bpw, and vision in bf16 will not load together. To try the kernel now, use
+**uniform 3 bpw** and keep the **head in bf16**. 6 bpw support is still planned. Long-term target
+stated in-channel: `lm_head` **8 bpw**, MTP **6 bpw**, n-gram **bf16**, vision **bf16**.
+
+A mixed 3+6 bpw pack around **50 GB** was called tight for **2× V620** and still needed
+calibration. Experimental kernels had only been tried on an **Ornith 1.5 9B** quant — not
+confirmed on 2× Flash-Next. `#general` (Sep 18): a ~12.5 GB EXL3 pack **unpacked to ~54 GB** and
+OOM'd on a 0.27.1 image — size host RAM, not just the download.
+
+An uncalibrated public 3inst upload was posted and immediately flagged for rework — do not treat
+it as a stable checkpoint:
+[`BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated`](https://huggingface.co/BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated).
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 

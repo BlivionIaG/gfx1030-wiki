@@ -57,25 +57,41 @@ performance work happens first.
 |---|---|
 | [`blivioniag/v620_toolbox`](https://github.com/blivioniag/v620_toolbox) | V620 power cap + PCIe P2P — [`powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/powertuning) (Fedora), [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning) (Ubuntu 26.04); see [Power tuning](../tuning/power.md) |
 | [`Tamalero/amd-v620-soft-unlock`](https://github.com/Tamalero/amd-v620-soft-unlock) | V620 OverDrive soft unlock in **passthrough VMs** (QEMU `romfile=` pptable patch; no flash, keeps 72 CUs) — [Power tuning](../tuning/power.md#soft-unlock-passthrough-vms) |
-| [`blivioniag/vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker) | Docker build system for `rocm-rdna` / `vllm-rdna` images |
-| [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) | **Official vLLM extras fork** — RDNA HIP kernels; PRs/issues here — [fork landscape](../vllm/fork.md#fork-landscape) |
-| [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) | **Flash-Next / Qwen3.8** fork (still separate until merged into the org) — [docs/rdna2](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2), [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md) |
+| [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker) | Docker bake for `rocm-rdna` / `vllm-rdna` — **moved here** `#vllm-rdna` Sep 14 2026; Hub tags still `blivioniag/*` — [Building images](../vllm/images.md) |
+| [`BlivionIaG/vllm-rdna-docker`](https://github.com/BlivionIaG/vllm-rdna-docker) | **Historical** bake repo (pre-move) |
+| [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) | **Official vLLM extras fork** — RDNA HIP kernels + Flash-Next cherry-picks (Sep 14–15); PRs/issues here — [fork landscape](../vllm/fork.md#fork-landscape) |
+| [`BlivionIaG/hippihx`](https://github.com/BlivionIaG/hippihx) | HIP kernel op zoo (gfx1030 / gfx1100 / gfx900 tile contracts) — `#hippihx` Sep 16: intended to keep `rdna_extras` thin; **not** a published vLLM image yet |
+| [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa) | Maintainer QA / landing playbook for `opengfx1030/vllm-rdna` (`#vllm-rdna` Sep 17) — not a second kernel wiki |
+| [`alanoo81/flashnext-v620-pp3`](https://github.com/alanoo81/flashnext-v620-pp3) | Temporary 3× V620 PP3 overlay (leapdragon image + org MoE HIP) — `#vllm-rdna` Sep 17–18; [recipe](../vllm/recipes.md#flash-next-3x-moe-hip-overlay) |
+| [`yiminyuan/vllm` @ `gfx1030/v0.28.0`](https://github.com/yiminyuan/vllm/tree/gfx1030/v0.28.0) | Community DeepSeek-V4 Flash gfx1030 tree — `#vllm-rdna` Sep 17; [weights](https://huggingface.co/yiminyuan/DeepSeek-V4-Flash-0731-INT4-W4A16); **Needs verify** |
+| [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) | Older **Flash-Next** container / `docs/rdna2` — **not being updated** (`#vllm-rdna` Sep 15); keep for published images — [ROCR idle-CPU fix](https://github.com/leapdragon/vllm-rdna2-qwen/blob/rdna2/qwen38-flash-next/docs/rdna2/ROCR-CPU-FIX.md) |
 | [`blivioniag/vllm` @ `rdna2_extras`](https://github.com/blivioniag/vllm/tree/rdna2_extras) | **Historical** — predecessor of `opengfx1030/vllm-rdna`; Hub `-extras` still clones this until docker bake is retargeted |
 | [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community recipe book + GHCR presets (27B/122B; parts pile; concurrent MTP PRs) — [wiki recipes](../vllm/recipes.md) |
 | [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) | Org mirror of the recipe book (`#vllm-rdna`) |
 | [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) | RDNA2/V620 llama.cpp fork — see [overview](../llama-cpp/rdna2-overview.md) |
 | [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench) | Reproducible long-context PP/TG benches (real prompts) — used by `#benchmarks` |
-| [`LMCache/LMCache`](https://github.com/LMCache/LMCache) | KV cache layer (RAM/SSD/remote) — `#lmcache` WIP for RDNA vLLM Docker; not wiki-validated yet |
+| [`LMCache/LMCache`](https://github.com/LMCache/LMCache) | KV cache layer (RAM/SSD/remote) — `#lmcache` WIP for RDNA vLLM; intended shape is [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone) (CPU) + connector — [docs](https://docs.lmcache.ai/getting_started/quickstart/standalone_starter.html); not wiki-validated yet |
+| [`alanoo81/flashnext-v620-pp3`](https://github.com/alanoo81/flashnext-v620-pp3) | Temporary 3× V620 / PP3 overlay (leapdragon + org MoE HIP; `quant_mtp_experts.py`) — [recipes](../vllm/recipes.md#flash-next-3x-moe-hip-overlay) |
 | [`intentee/paddler`](https://github.com/intentee/paddler) | LLM load balancer / multi-instance router — discussed for multi-agent llama.cpp; **not wiki-validated** |
 | [`sebastianmechno-sys/vllm-rocm-windows-rdna2`](https://github.com/sebastianmechno-sys/vllm-rocm-windows-rdna2) | Unofficial Windows 11 + ROCm 7.x vLLM for RX 6000 — **not wiki-validated** |
 | [`skyne98/wiki-gfx906`](https://github.com/skyne98/wiki-gfx906) | Sibling wiki for gfx906 (Vega 20 / MI50) |
 
 ## Tools & write-ups
 
+- [Unsloth: Qwen3.8-Flash-Next / MTP llama.cpp](https://unsloth.ai/docs/models/qwen3.8-next) —
+  public MTP build notes (`#llamacpp` / `#general` Sep 16–17).
 - [Disabling ECC on Radeon Pro GPUs (lunnova.dev)](https://lunnova.dev/articles/amdgpu-disabling-ecc/) —
   `amdgpu.ras_enable=0` + two reboots; pinned in `#vllm-rdna`. See [Disabling ECC](../tuning/ecc.md).
 - `rocminfo`, `rocm-smi`, `amd-smi`, `clinfo` — GPU visibility, topology, and P2P checks. See
   [Environment variables](../reference/env-vars.md#handy-commands).
+- [UEFITool](https://github.com/LongSoft/UEFITool) / [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI)
+  — locate hidden MMIO High / ReBAR / SR-IOV setup vars. See [Host firmware](../setup/host-firmware.md).
+- [Precision 7920 MMIO GPU Unlock Guide](https://github.com/user-attachments/files/28905671/Precision_7920_MMIO_GPU_Unlock_Guide.pdf)
+  — circulating T5820/T7820/T7920 write-up; **dump your own UEFI**, do not copy another host's
+  offsets.
+- [GpuMMIOFix](https://github.com/Radi0Glitch/GpuMMIOFix) — OS-side PCI BAR remap above 4 GB
+  (`#motherboard` Sep 15–16). Community: typically **reload each boot**; **Needs verify** on V620
+  hosts — [Host firmware](../setup/host-firmware.md).
 
 > Know a gfx1030 resource that belongs here? [Contribute](./contributing.md) a link and say which section
 > it fits (official / Docker / upstream / community).

@@ -11,6 +11,7 @@ src/
 
   setup/                   # Hardware and ROCm install
     hardware.md
+    host-firmware.md       # MMIO High / SR-IOV / large-BAR POST
     getting-started.md
     installing-rocm.md
     hsa-override.md
@@ -86,6 +87,7 @@ src/
 | Content type | Location |
 |---|---|
 | Install ROCm, hardware list | `setup/` |
+| BIOS / MMIO High / SR-IOV so 4× V620 POSTs | `setup/host-firmware.md` |
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
 | Which image / model / card-count recipe | `vllm/recipes.md` |

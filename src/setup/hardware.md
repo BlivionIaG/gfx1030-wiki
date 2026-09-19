@@ -17,6 +17,15 @@ as `gfx1030`.
 
 Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you want the full 32 GB.
 
+`#general` (Sep 15 2026): versus a **32 GB MI50** (gfx906), community first-pass on V620 was **more
+prefill, less decode** — PP “almost 2×”, TG behind but **not far**. That is a **community** A/B, not
+a wiki bench. Sibling notes: [wiki-gfx906](https://github.com/skyne98/wiki-gfx906).
+
+`#general` (Sep 17 2026): **do not tensor-parallel a V620 with an NVIDIA card** (community example:
+RTX 5090 + V620). Opposite strengths (RDNA2 has no matrix cores; the NVIDIA card has little VRAM
+per dollar) — mixed decode gains were small and **prefill collapsed**. Prefer a homogeneous V620
+(or W6800) box, or run the NVIDIA card **standalone**.
+
 > **Do not flash W6800 VBIOS onto a V620.** `#general` (Sep 2026): pre-modded eBay cards and DIY flashes
 > that load a **W6800** BIOS on a **V620** drop active CUs from **72 → 54** (W6800's different CU
 > layout). That is a large compute hit — stay on **stock V620 BIOS**. Cooling shroud mods are fine;
@@ -73,3 +82,9 @@ rocminfo | grep -m1 -o 'gfx[0-9]*'
 
 If the output shows `gfx1030`, everything in this wiki applies directly. If it shows `gfx1031`,
 `gfx1032`, etc., head to [HSA_OVERRIDE for RDNA2 Cousins](./hsa-override.md) first.
+
+## Host firmware (large BAR / no POST)
+
+4× V620 behind a PLX switch can fail to **POST** on older workstation BIOS (community: Dell
+Precision T5820 / T7820 / T7920) even when the same kit boots on a modern desktop board. That is
+firmware MMIO High / SR-IOV work — see [Host firmware](./host-firmware.md) — not a ROCm bug.
