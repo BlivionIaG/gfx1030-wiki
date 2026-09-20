@@ -51,6 +51,7 @@
 | PP3 `b33f9b6` graph KeyError / 1.5e9 KV | **Needs verify** | `#vllm-rdna` Sep 19 — public overlay patches; not a 7 GiB 4× cap |
 | TP4 cyankiwi AWQ env block | **Community** | `#vllm-rdna` Aug 31 bench paste (paths sanitized) |
 | Flash-Next 4× PIECEWISE serve (Sep 17) | **Community** | `#vllm-rdna` — GDN sanitizer `388a61b6f`; ~3331/73 @ 16k/1k c=8 |
+| Flash-Next vLLM PP4 ~1950 PP / decode collapse | **Needs verify** | `#vllm-rdna` Sep 19 — same host returned to TP4 (~1550 PP; ~30–35 t/s MTP-2) |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 
 ### `configuration.md`
@@ -177,7 +178,8 @@
 | Flash-Next Q4 ~6 t/s on 2× V620 (LocalAI) | **Community** | `#llamacpp` Sep 10 — n-gram on NVMe |
 | Flash-Next IQ4_XS ~150–200 PP / ~25 t/s (2× V620) | **Community** | `#llamacpp` / `#vllm-rdna` Sep 14–15 — layer split + `--n-cpu-moe` |
 | Flash-Next llama.cpp ~300 PP / ~25 t/s “normal” (2×) | **Community** | `#llamacpp` Sep 16 — drops ~200/15 on long ctx |
-| Flash-Next MTP needs PR / Unsloth desktop | **Community** | `#llamacpp` Sep 17 — stock / Studio refuse MTP |
+| Flash-Next MTP needs PR / Unsloth desktop | **Community** | `#llamacpp` Sep 17 — stock / Studio bundled llama.cpp refused MTP |
+| Unsloth Studio bundled llama.cpp loads Flash-Next MTP | **Needs verify** | `#llamacpp` Sep 20 — one host; called a same-day bundle fix |
 | Flash-Next 4× patched MTP ~400 PP / ~27–45 t/s | **Needs verify** | `#llamacpp` Sep 17 — others call 400 PP low |
 | Flash-Next 3× + 32 GB RAM does not load | **Community** | `#llamacpp` Sep 17 — n-gram / host RAM bound |
 | Flash-Next 3× + MTP needs ~64 GB RAM | **Community** | `#llamacpp` Sep 17 — later report; SSD offload untested |
@@ -206,6 +208,7 @@
 | Full DFlash2 TP4 command | **Community** | Author production recipe |
 | MTP + LCP prompt-cache position desync | **Community** | `#llamacpp` Sep 10 — HTTP 200 / no tokens; `--ctx-checkpoints 0` does not fix |
 | `markldn` / `okigan` MTP trees, no tensor parallel | **Needs verify** | `#llamacpp` Sep 19 — one host |
+| Unsloth Studio bundled llama.cpp loads Flash-Next MTP | **Needs verify** | `#llamacpp` Sep 20 — one host; re-try bundled binary first |
 
 ### `rdna2-serving.md`
 

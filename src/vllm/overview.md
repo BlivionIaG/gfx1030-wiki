@@ -74,6 +74,11 @@ and the [Sep 17 serve line](../recipes.md#flash-next-4x-piecewise). Community sn
 recipe: **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3**
 path on vLLM.
 
+`#vllm-rdna` (Sep 19): **pipeline parallel 4** on Flash-Next was reported to hit **~1950 tok/s**
+prefill at 32k while **decode collapsed**. The same host dropped PP4 and continued on **TP=4**
+(~**1550** tok/s prefill at long context; decode **~30–35 t/s** with MTP-2). Treat PP4 as a
+prefill experiment, not a 4-card default. **Needs verify.**
+
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
 | Metric | Earlier recipe | After Sep 4–6 prefill/decode work |
