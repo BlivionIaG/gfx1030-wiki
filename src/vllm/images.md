@@ -1,9 +1,16 @@
 # Building the Images
 
 The [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) and
-[`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) images are produced by the
-[`vllm-rdna-docker`](https://github.com/blivioniag/vllm-rdna-docker) repo. It's deliberately small: two
-Dockerfiles, one bake graph, one CI workflow — no Python layer, no custom linter.
+[`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) images are produced by
+[`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker)
+(`#vllm-rdna`, Sep 14 2026 — moved from
+[`BlivionIaG/vllm-rdna-docker`](https://github.com/BlivionIaG/vllm-rdna-docker)). The bake repo is
+deliberately small: two Dockerfiles, one bake graph, one CI workflow — no Python layer, no custom
+linter.
+
+`#vllm-rdna` (Sep 14–15 2026): a **0.28 / `rdna_extras`** bake on top of
+`docker.io/blivioniag/rocm-rdna:7.14.0` is the intended next image, but Flash-Next **PLE offload**
+is still being validated — do **not** treat that combo as a published Hub `-extras` tag yet.
 
 ## Layout
 
@@ -77,7 +84,7 @@ file(s) into `patches/`, verify it applies against a clean checkout of that tag,
 - **New vLLM source:** add a `target "vllm-<source>-<base>"` block per base with `VLLM_REPOSITORY`,
   `VLLM_REF`, `VLLM_COMMIT`, `VLLM_VARIANT`, `IMAGE_TAG`, and add the ids to `all-vllm`.
 
-See the [`vllm-rdna-docker` README](https://github.com/blivioniag/vllm-rdna-docker) for the full,
+See the [`vllm-rdna-docker` README](https://github.com/opengfx1030/vllm-rdna-docker) for the full,
 authoritative instructions.
 
 ## CI

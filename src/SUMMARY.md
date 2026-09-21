@@ -5,6 +5,7 @@
 # Setup
 
 - [Supported Hardware](./setup/hardware.md)
+- [Host firmware (MMIO High / SR-IOV)](./setup/host-firmware.md)
 - [Getting Started](./setup/getting-started.md)
 - [Installing ROCm](./setup/installing-rocm.md)
 - [HSA_OVERRIDE for RDNA2 Cousins](./setup/hsa-override.md)

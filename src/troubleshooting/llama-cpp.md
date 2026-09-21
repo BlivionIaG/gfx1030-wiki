@@ -146,6 +146,10 @@ Mitigations to try (in order):
    [Sidecar / DFlash gotchas](../../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas).
 4. Pull latest `edwinbrowwn/llama.cpp-rdna2` and report the three-step fingerprint on `#llamacpp`
    if it still wedges.
+5. Community (`#llamacpp`, Sep 13 2026): the same config **stopped** throwing the M-RoPE
+   `X < Y` draft error on [`lemonade-sdk/llamacpp-rocm`](https://github.com/lemonade-sdk/llamacpp-rocm)
+   (not the RDNA2 fork). Tok/s were **about the same** (~5% less PP in a casual log compare). Treat
+   as an A/B, not a replacement for the gfx1030 fork.
 
 If the hang is a **failed tool call** or a premature stop token (raw payload looks complete), that
 is a different class — inspect the harness payload before blaming MTP.
