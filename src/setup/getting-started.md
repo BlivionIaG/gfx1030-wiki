@@ -57,6 +57,9 @@ Prefer GGUF and building from source? See [Building & Running llama.cpp](../llam
 Want to build the images yourself, or use the RDNA-tuned kernels? See
 [Building the Images](../vllm/images.md) and [The rdna_extras fork](../vllm/fork.md).
 
+Need the same stack in a host `uv` venv instead of Docker? See
+[Host venv](../vllm/host-venv.md) (ROCm 7.2.0 index wheels, or 7.14.0 multi-arch wheels).
+
 ## 5. Smoke test
 
 ```sh

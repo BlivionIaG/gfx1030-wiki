@@ -19,6 +19,7 @@ image targets seven RDNA architectures (gfx1030 through RDNA4).
 | Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](../fork.md) (`rdna_extras`) |
 | Which fork / Flash-Next / official org | [Fork landscape](../fork.md#fork-landscape) |
 | Rebuild or extend Docker images | [Building images](../images.md) |
+| Host `uv` venv (7.2.0 or 7.14.0) | [Host venv](../host-venv.md) |
 | Something broke | [vLLM troubleshooting](../../troubleshooting/vllm.md) |
 
 ## Image variants
