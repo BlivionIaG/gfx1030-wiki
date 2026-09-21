@@ -121,3 +121,9 @@ large **CPU PLE / n-gram** table (embedded BF16 table is ~**95 GiB** — offload
 
 Do **not** assume group-16 INT4 PLE sidecars match the published benches. See
 [overview](../overview.md#intel-autoround-flash-next).
+
+`#vllm-rdna` (Sep 20): merged [`opengfx1030/vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15)
+used this Intel AutoRound pack with the **unquantized / original BF16** PLE table (~**100 GB** class
+in RAM), **not** `wtdcode` AWQ + `primitive-ai` PLE-quant. **INT8 decode shadows** remain
+experimental — they are **excluded** from that merge (one host reported ~42 → ~55 t/s without MTP;
+**Needs verify**, and quality loss was already seen on Sep 16).

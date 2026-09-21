@@ -52,6 +52,7 @@
 | TP4 cyankiwi AWQ env block | **Community** | `#vllm-rdna` Aug 31 bench paste (paths sanitized) |
 | Flash-Next 4× PIECEWISE serve (Sep 17) | **Community** | `#vllm-rdna` — GDN sanitizer `388a61b6f`; ~3331/73 @ 16k/1k c=8 |
 | Flash-Next vLLM PP4 ~1950 PP / decode collapse | **Needs verify** | `#vllm-rdna` Sep 19 — same host returned to TP4 (~1550 PP; ~30–35 t/s MTP-2) |
+| QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Community** | `#vllm-rdna` Sep 20 + merged `opengfx1030/vllm-rdna#15`; combined stack, not isolated QSA A/B |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 
 ### `configuration.md`
@@ -109,6 +110,10 @@
 | No Q3 on vLLM Flash-Next | **Community** | `#vllm-rdna` Sep 17 — stay W4A16 / AWQ; EXL3 3bpw experimental |
 | `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM packs; prefer LMCache |
 | Intel AutoRound 32–128k ~1296–1393 PP / ~56–73 TG | **Community** | `#vllm-rdna` Sep 16 — 4× V620; pin `4c67bf6…`; int8 decode-shadow quality |
+| QSA live-context bound merged on `rdna_extras` | **Fork-source** | `opengfx1030/vllm-rdna#15` merged 20 Sep 2026; Hub `-extras` lags |
+| QSA `#15` combined-stack ~1830–2040 PP / ~54–73 TG | **Community** | PR recorded table + `#vllm-rdna` Sep 20; TP4 PP1 EP4 MTP-2; Intel AutoRound + BF16 CPU PLE |
+| QSA fused MTP-3 draft decode no gain | **Needs verify** | `#vllm-rdna` Sep 20 — one host; prefill held ~2k |
+| INT8 decode shadows excluded from `#15` | **Fork-source** | PR body; Discord ~42 → ~55 t/s without MTP is **Needs verify** / quality risk |
 | vllm-rdna-qa playbook | **Needs verify** | `#vllm-rdna` Sep 17 — public repo; maintainer QA only |
 | Flash-Next PP3 + MTP on 3× V620 | **Needs verify** | `#vllm-rdna` Sep 15 — leapdragon image; uneven `VLLM_PP_LAYER_PARTITION`; local int8 patches |
 | Upstream MTP under PP (`vllm#46994`) | **Fork-source** | Merged Sep 2026; not in Hub `-extras` 0.27.1 |
@@ -117,6 +122,7 @@
 | `rdna_ar` not a recommended default | **Community** | `#vllm-rdna` Sep 15 — prefer custom AR when P2P works |
 | hippihx kernel zoo | **Needs verify** | `#hippihx` Sep 16 — public repo; not in published images |
 | Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 — worse on Mamba/SSM; prefer LMCache when it lands |
+| `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; not confirmed on `rdna_extras` |
 | LMCache RDNA Docker integration | **Needs verify** | `#lmcache` / `#general` Sep 18–19: `lmcache/standalone` CPU + connector; official `rocm/pytorch` images lack HIP/dev tools. No working gfx1030 compose yet |
 | Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep extras |
 
@@ -137,7 +143,8 @@
 | GDN hybrid ~93/331 tok/s | **Community** | Fork author bench |
 | EXL3 9B / Quark W4A16 | **Needs verify** | `#vllm-rdna` Sep 2026 — experimental; Sep 19 kernel is 3inst-only, uniform 3 bpw + bf16 head |
 | HIP MoE non-deterministic vs Triton | **Needs verify** | `#vllm-rdna` Sep 19 — ~3.5% top-token drift; `global_atomic_add_f32` not landed (blocked on 0.29.0) |
-| Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5` |
+| Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5`; Sep 20 QSA `#15` used this pack + BF16 PLE (not `wtdcode` + PLE-quant) |
+| INT8 decode shadows not in QSA `#15` | **Fork-source** | `#vllm-rdna` Sep 20 — excluded from merge; quality loss already noted Sep 16 |
 
 ### `fork.md`
 
@@ -152,6 +159,8 @@
 | GDN full HIP prefill chain | **Fork-source** | Commits `69d2efe`, `b53a7a2c` |
 | TP `allow_in_graph` fix | **Fork-source** | Commit `b583d64` |
 | HIP MoE non-deterministic (~3.5% top-token drift) | **Needs verify** | `#vllm-rdna` Sep 19 — Triton MoE bit-identical; f32 atomic not landed |
+| QSA live-context prefill bound | **Fork-source** | Merged `opengfx1030/vllm-rdna#15`; Python-only scoring width change |
+| Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; may not apply to current `rdna_extras` |
 
 ---
 
@@ -273,6 +282,7 @@
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |
 | `vllm/recipes.md` 4× PIECEWISE Flash-Next serve | **Community** | `#vllm-rdna` Sep 17 — host venv, not Hub |
 | `troubleshooting/vllm.md` upstream KV offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 — Mamba/SSM worse |
+| `troubleshooting/vllm.md` `vllm#57160` pinned CPU KV | **Needs verify** | `#vllm-rdna` Sep 20 — mainline; not on `rdna_extras` yet |
 | `vllm/recipes.md` 3× PP3 + MTP VRAM squeeze | **Needs verify** | `#vllm-rdna` Sep 15 — local patches |
 | `setup/hardware.md` V620 vs 32 GB MI50 more PP less TG | **Community** | `#general` Sep 15 — first-pass A/B |
 | `setup/host-firmware.md` GpuMMIOFix every-boot remap | **Needs verify** | `#motherboard` Sep 15–16 — suggested for WS-Z270 ReBAR |

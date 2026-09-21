@@ -79,6 +79,28 @@ prefill at 32k while **decode collapsed**. The same host dropped PP4 and continu
 (~**1550** tok/s prefill at long context; decode **~30–35 t/s** with MTP-2). Treat PP4 as a
 prefill experiment, not a 4-card default. **Needs verify.**
 
+`#vllm-rdna` (Sep 20): [`opengfx1030/vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15)
+**merged** into `rdna_extras`. AMD **QSA prefill scoring is bounded to the live prompt context**
+(decode / missing metadata still use the capacity-wide path). The same PR folds V620 startup
+prerequisites from superseded PR `#12`. Combined-stack benches on **TP=4 / PP=1 / EP=4 / MTP-2**,
+Intel AutoRound INT4 experts, FP16 dense, original BF16 PLE in CPU RAM — **Community / Needs verify**
+(full host stack, not an isolated QSA A/B):
+
+| Suite | Context | Prefill tok/s | Decode tok/s |
+|---|---:|---:|---:|
+| Regular | 16k | 2,011 | 63.5 |
+| Coding | 16k | 2,036 | 68.5 |
+| Regular | 32k | 2,024 | 55.2 |
+| Regular | 64k | 1,974 | 59.4 |
+| Coding | 64k | 1,986 | 70.6 |
+| Regular | 128k | 1,859 | 53.9 |
+| Coding | 128k | 1,832 | 72.5 |
+
+The PR records a **31–33%** 16k/32k prefill lift versus an immediately collected **~1529–1543 tok/s**
+baseline on that same combined stack. Community take: **near-PP4 prefill with TP4 decode**. TP2+PP2
+was not tried. Fused QSA multi-step draft decode with **MTP-3** did not help. **INT8 decode shadows
+are not in this merge.** Pull latest `rdna_extras` — Hub `-extras` tags still lag.
+
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
 | Metric | Earlier recipe | After Sep 4–6 prefill/decode work |
@@ -137,6 +159,7 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 | Prose / code 16–64k | **~950–980 tok/s** PP, **~48–56 tok/s** decode |
 | 128k after `4096` batched tokens | PP stays **~950 tok/s** class (was **~375 tok/s** at 2048 scheduled tokens) |
 | Community long-suite (Sep 16, 4× V620) | Regular **32–128k**: **~1296–1393 tok/s** PP / **~56–60 tok/s** TG; coding suites **~68–73 tok/s** TG. Pin cited: `Intel/Qwen3.8-Flash-Next-W4A16-AutoRound` @ `4c67bf686b7f7fd386bae6b07ab59e8ff1d5b897`. Further push hit **int8 decode-shadow** quality loss. |
+| QSA live-context (`rdna_extras` `#15`, Sep 20) | Combined stack **~1830–2040 tok/s** PP / **~54–73 tok/s** TG at 16k–128k; **TP=4 PP=1**. Not an isolated QSA A/B. See [QSA merge](#qwen38-flash-next-on-vllm). |
 | Startup (warm-ish) | ~**4 min** vs earlier **8–10 min** on the same host |
 | fp16 KV fit | ~**291k** tokens on 4 cards (one report) |
 

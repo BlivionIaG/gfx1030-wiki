@@ -332,6 +332,11 @@ Do not plan production multi-chat overflow on native vLLM KV offload. `#lmcache`
 intended gfx1030 path (standalone LMCache server + vLLM connector) but has **no published recipe**
 yet. See [fork landscape](../../vllm/fork.md#consolidation-status).
 
+`#vllm-rdna` (Sep 20): upstream [`vllm#57160`](https://github.com/vllm-project/vllm/pull/57160)
+(mainline ROCm, **not** v0.29 and **not** confirmed on `rdna_extras`) changes CPU KV offload to
+private pinned tensors after `cudaHostRegister` failures on large TP. Treat as a tracking note —
+do not assume it restores usable decode on gfx1030.
+
 `#vllm-rdna` / `#general` (Sep 18–19): official **`rocm/pytorch`** images are the **wrong** place to
 compile an LMCache connector (missing HIP / developer packages). Intended shape:
 
