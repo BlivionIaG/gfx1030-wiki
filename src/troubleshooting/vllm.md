@@ -259,6 +259,12 @@ This does **not** replace [PP3 corruption](#flash-next-pp3-output-corruption). H
 can still use `FULL_AND_PIECEWISE` — see [Configuration](../../vllm/configuration.md#cuda-graphs-preferred-over---enforce-eager).
 Sanitized serve line: [Flash-Next PIECEWISE recipe](../../vllm/recipes.md#flash-next-4x-piecewise).
 
+The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) uses
+`FULL_AND_PIECEWISE` and states that mode **executes as PIECEWISE on ROCm**
+(`rocm_full_executes_as_piecewise`). It also attributes an earlier “corrupts at c=8” report to
+**probe artifacts** (reasoning-parser field / reasoning-budget), not the graphs. Treat
+**`PIECEWISE` and `FULL_AND_PIECEWISE` as equivalent on ROCm**; do **not** switch to **FULL-only**.
+
 `#vllm-rdna` (Sep 17): `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (in that recipe) **turns torch.compile off**.
 Community A/B on a 4× TP Flash-Next tree: **~39 t/s** with breakable/eager vs **~55 t/s** after compile
 stayed on (`VLLM_USE_BREAKABLE_CUDAGRAPH=0`) plus a `.contiguous()` on a hyper-connection injection
@@ -273,6 +279,18 @@ It does **not** fix [PP3 corruption](#flash-next-pp3-output-corruption).
 
 The GPU core dumps written on that path are **several GB each** and land in the **process working
 directory** — start the server from a scratch dir (the 4× recipe already `cd`s to `/tmp`).
+
+## Flash-Next vision startup / runtime OOM {#flash-next-vision-oom}
+
+Two different OOM modes (`#vllm-rdna` Sep 17–21 + the in-tree launcher):
+
+| When | Cause | What to do |
+|---|---|---|
+| **Startup** | mm-profiling dummy image (~24.8M px) → vision SDPA math backend builds a **~64 GiB** L×L fp32 score matrix | Set `--mm-processor-kwargs '{"max_pixels":1605632}'`. `--limit-mm-per-prompt '{"image":1}'` alone is **not** enough (count was already 1). |
+| **Runtime** | vLLM may **not reserve** vision memory; a **tight KV** plus an image OOMs after a clean start | Leave more free VRAM / lower `--max-model-len`; community **~15–20 s per image**. `#general` (Sep 21): vision + **PP3** is especially tight. |
+
+Leave `--language-model-only --skip-mm-profiling` if you do not need images. See
+[4× recipe vision notes](../../vllm/recipes.md#flash-next-4x-piecewise).
 
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 

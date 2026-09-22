@@ -102,7 +102,10 @@ Fedora 43 AMD validation).
 ### PLX / PCIe switches
 
 - Intra-switch P2P can stay full-width (e.g. 4× Gen4 x16 behind one PLX 88096). The **host↔switch
-  uplink** (typically one x16) is the bottleneck.
+  uplink** (typically one x16) is the bottleneck. `#general` (Sep 21): a **single gen4 x16** uplink
+  to a PEX88096 is still “full speed to the switch”; cards talk to each other on the switch bus.
+  Consumer **X570** boards that expose **two CPU x16** (bifurcated **x8x8 gen4** when both slots
+  are filled) were called a cheaper host than a workstation board if you only need that uplink.
 - `#general` (Sep 19): one gen4 x16 on the host → community suggestion is a **PEX88096** broken
   out to SlimSAS and **8** risers. Alternative board: dual-SP3 **Supermicro H12D-8D**, bifurcate
   all **4** PCIe ports to **x8x8 gen4**. **6** GPUs is still awkward (not a clean TP size; the

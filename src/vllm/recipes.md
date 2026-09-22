@@ -31,7 +31,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
 | **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
 | **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../../troubleshooting/vllm.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
-| **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4** (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) and [PIECEWISE](#flash-next-4x-piecewise)). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill (~**1950** tok/s) then **tank decode** — the same host went back to TP4 (~**1550** tok/s long-ctx prefill; decode **~30–35 t/s** with MTP-2). `#vllm-rdna` (Sep 20): merged [`vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15) QSA live-context bound reports **~1.8–2.0k tok/s** PP on **TP=4 / PP=1** with TP4-class decode — prefer that over PP4. **Needs verify.** |
+| **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4** (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) and [PIECEWISE](#flash-next-4x-piecewise)). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill (~**1950** tok/s) then **tank decode** — the same host went back to TP4 (~**1550** tok/s long-ctx prefill; decode **~30–35 t/s** with MTP-2). `#vllm-rdna` (Sep 20): merged [`vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15) QSA live-context **author-host** table is **~1.8–2.0k tok/s** PP on **TP=4 / PP=1**. `#vllm-rdna` (Sep 21): other 4× hosts on the public merge reproduced **~1.1–1.45k** PP (decode often still **~50–77 t/s**). Prefer TP4 over PP4. **Needs verify.** |
 
 Also see [What fits well on V620](../overview.md#what-fits-well-on-v620).
 
@@ -170,6 +170,7 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 `-extras` and not the 27B recipe presets:
 
 - **Source of truth (Sep 14–15):** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` (leapdragon work cherry-picked; PLE load path on HEAD)
+- **In-tree launcher (flags / vision):** [`scripts/serve_gfx1030_flashnext.sh`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/scripts/serve_gfx1030_flashnext.sh) — `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions here. Do **not** copy the script’s host paths.
 - **Published container / docs (may lag):** [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) — [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2)
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
 - PLE sidecar: [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
@@ -211,8 +212,11 @@ Do not trust the logged hybrid KV token count — [overstated pool](../../troubl
 `VLLM_USE_V2_MODEL_RUNNER=0` (**V2 blocked on Qwen4Exp**), `VLLM_USE_BREAKABLE_CUDAGRAPH=1`, and
 `--max-num-batched-tokens 2048`, but:
 
-- uses `--compilation-config` **`FULL_AND_PIECEWISE`** (do **not** treat FULL-only as fixed —
-  [FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption) still applies)
+- uses `--compilation-config` **`FULL_AND_PIECEWISE`**. The in-tree launcher comment (Sep 18) says
+  that mode **executes as PIECEWISE on ROCm** (`rocm_full_executes_as_piecewise`) and that an earlier
+  “FULL_AND_PIECEWISE corrupts at c=8” report was **probe artifacts** (reasoning-parser field /
+  reasoning-budget), **not** the graphs. Still do **not** use **FULL-only** —
+  [FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption)
 - raises `--kv-cache-memory-bytes` to **7000000000** (7 GiB) and `--gpu-memory-utilization 0.90`
 - reported a **16× 16k** concurrency test as fine (earlier `--max-num-seqs` tightness)
 - **kills leftover processes** before relaunch — `VLLM::Worker`, `VLLM::EngineCore`, and
@@ -283,13 +287,22 @@ turns ~**1 s** at ~1300 tok/s; **8192** can block other streams for ~**6 s**. Ra
 only if you hit the [128k prefill cliff](../../troubleshooting/vllm.md#flash-next-128k-prefill-cliff)
 on Intel AutoRound — that 4096 knob and this PIECEWISE stability recipe are **different bugs**.
 
-If you turn **vision** back on (`#vllm-rdna` Sep 17), cap multimodal allocs or vLLM can over-reserve
-VRAM:
+Vision (`#vllm-rdna` Sep 17–21 + the in-tree launcher): **on by default** in
+[`serve_gfx1030_flashnext.sh`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/scripts/serve_gfx1030_flashnext.sh)
+and **requires a pixel cap**. `--limit-mm-per-prompt '{"image":1}'` alone is **not** enough (count
+is already 1). Without `max_pixels`, mm-profiling can feed a huge dummy image (~24.8M px) and the
+vision encoder SDPA math backend materializes a **~64 GiB** L×L fp32 score matrix — **startup OOM**
+on 32 GB cards. `max_pixels=1605632` keeps images up to about **1424×1424**.
 
 ```bash
 --limit-mm-per-prompt '{"image":1}' \
 --mm-processor-kwargs '{"max_pixels":1605632}'
 ```
+
+`#vllm-rdna` (Sep 21): vision **works** on `rdna_extras` with those flags; community **~15–20 s per
+image**. Runtime is a second OOM: vLLM may **not reserve** vision memory, so a **tight KV** plus an
+image can OOM after a clean start. `#general` (Sep 21): vision + **PP3** is especially tight. Keep
+`--language-model-only --skip-mm-profiling` if you do not need images.
 
 Maintainer QA playbook (not a second wiki): [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa).
 

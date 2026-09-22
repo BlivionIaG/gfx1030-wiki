@@ -52,7 +52,7 @@
 | TP4 cyankiwi AWQ env block | **Community** | `#vllm-rdna` Aug 31 bench paste (paths sanitized) |
 | Flash-Next 4× PIECEWISE serve (Sep 17) | **Community** | `#vllm-rdna` — GDN sanitizer `388a61b6f`; ~3331/73 @ 16k/1k c=8 |
 | Flash-Next vLLM PP4 ~1950 PP / decode collapse | **Needs verify** | `#vllm-rdna` Sep 19 — same host returned to TP4 (~1550 PP; ~30–35 t/s MTP-2) |
-| QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Community** | `#vllm-rdna` Sep 20 + merged `opengfx1030/vllm-rdna#15`; combined stack, not isolated QSA A/B |
+| QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Needs verify** | `#vllm-rdna` Sep 20 author-host table + merged `opengfx1030/vllm-rdna#15`. Sep 21: other 4× hosts on the public merge got **~1.1–1.45k** PP; author cited unpublished local changes |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 
 ### `configuration.md`
@@ -111,7 +111,11 @@
 | `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM packs; prefer LMCache |
 | Intel AutoRound 32–128k ~1296–1393 PP / ~56–73 TG | **Community** | `#vllm-rdna` Sep 16 — 4× V620; pin `4c67bf6…`; int8 decode-shadow quality |
 | QSA live-context bound merged on `rdna_extras` | **Fork-source** | `opengfx1030/vllm-rdna#15` merged 20 Sep 2026; Hub `-extras` lags |
-| QSA `#15` combined-stack ~1830–2040 PP / ~54–73 TG | **Community** | PR recorded table + `#vllm-rdna` Sep 20; TP4 PP1 EP4 MTP-2; Intel AutoRound + BF16 CPU PLE |
+| QSA `#15` combined-stack ~1830–2040 PP / ~54–73 TG | **Needs verify** | PR recorded table + `#vllm-rdna` Sep 20 author-host; **not reproduced** on two other 4× hosts Sep 21 (~1.07–1.45k PP; decode often still ~50–77 t/s) |
+| QSA `#15` public-merge prefill ~1.1–1.45k PP | **Community** | `#vllm-rdna` Sep 21 — two 4× hosts after the merge; one gen4 x16 / DDR4-3200 / NVMe, one gen3 / DDR4-2144 / SATA SSD |
+| Flash-Next vision pixel cap (`max_pixels=1605632`) | **Fork-source** | `rdna_extras` `scripts/serve_gfx1030_flashnext.sh`; `--limit-mm-per-prompt` alone is not enough |
+| Flash-Next vision ~15–20 s/image + runtime OOM | **Community** | `#vllm-rdna` / `#general` Sep 21 — works with launcher flags; no reserved vision pool; PP3 especially tight |
+| Flash-Next `FULL_AND_PIECEWISE` executes as PIECEWISE on ROCm | **Fork-source** | Launcher comment 18 Sep 2026 (`rocm_full_executes_as_piecewise`); earlier c=8 corruption called probe artifacts. **FULL-only** still the bad path |
 | QSA fused MTP-3 draft decode no gain | **Needs verify** | `#vllm-rdna` Sep 20 — one host; prefill held ~2k |
 | INT8 decode shadows excluded from `#15` | **Fork-source** | PR body; Discord ~42 → ~55 t/s without MTP is **Needs verify** / quality risk |
 | vllm-rdna-qa playbook | **Needs verify** | `#vllm-rdna` Sep 17 — public repo; maintainer QA only |
@@ -262,11 +266,13 @@
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
+| `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
 | `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
 | `troubleshooting/llama-cpp.md` FA `max_blocks_per_sm` abort | **Community** | head-256 occupancy 0 on gfx1030; q8 KV needs FA |
 | `troubleshooting/llama-cpp.md` DAX mmap SVM oops | **Community** | `--no-mmap` mandatory on `dax=always` |
 | `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris/WX4100-in-box ROCm skip; unbind > ROCR_VISIBLE alone |
 | `troubleshooting/vllm.md` leftover EngineCore / PleOffloadWorker | **Community** | `#vllm-rdna` Sep 18 |
+| `troubleshooting/vllm.md` Flash-Next vision pixel-cap / runtime OOM | **Fork-source / Community** | Launcher `max_pixels`; `#vllm-rdna` Sep 21 ~15–20 s/image |
 | `troubleshooting/vllm.md` no-P2P PYNCCL / MTP vs PLE | **Community** | `#vllm-rdna` Sep 18 |
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
 | `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |

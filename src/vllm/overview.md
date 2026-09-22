@@ -101,6 +101,18 @@ baseline on that same combined stack. Community take: **near-PP4 prefill with TP
 was not tried. Fused QSA multi-step draft decode with **MTP-3** did not help. **INT8 decode shadows
 are not in this merge.** Pull latest `rdna_extras` — Hub `-extras` tags still lag.
 
+`#vllm-rdna` (Sep 21): **do not treat the ~1.8–2.0k PP table as the public-merge floor.** Two other
+4× hosts on `rdna_extras` after `#15` landed **~1.07–1.45k tok/s** prefill. Decode often **did**
+reach the PR band (**~50–77 t/s**) once CUDA graphs were on (one host: **~24 t/s** eager vs
+**~66–76 t/s** with graphs). One of those hosts had octachannel DDR4-3200, PCIe gen4 x16 on all
+four cards, and NVMe ~6.5 GB/s — so the gap is **not** just “slow RAM / gen3”. A second host
+(DDR4-2144 ECC, PCIe gen3, SATA SSD, ~96 GB RAM, int4 PLE in RAM) sat around **~1.1–1.2k** PP /
+**~45–50 t/s** with MTP-1. The PR author later said the 1350 → 1550 → 2000 prefill steps needed
+**two local changes that were not on the git checkout** others pulled, and planned to re-apply
+those from current `rdna_extras` through git. Treat **~1.1–1.5k PP** as the **reproduced**
+public-merge class and the **~2k** table as an **author-host snapshot**. **Needs verify** once
+those commits land.
+
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
 | Metric | Earlier recipe | After Sep 4–6 prefill/decode work |
@@ -159,7 +171,7 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 | Prose / code 16–64k | **~950–980 tok/s** PP, **~48–56 tok/s** decode |
 | 128k after `4096` batched tokens | PP stays **~950 tok/s** class (was **~375 tok/s** at 2048 scheduled tokens) |
 | Community long-suite (Sep 16, 4× V620) | Regular **32–128k**: **~1296–1393 tok/s** PP / **~56–60 tok/s** TG; coding suites **~68–73 tok/s** TG. Pin cited: `Intel/Qwen3.8-Flash-Next-W4A16-AutoRound` @ `4c67bf686b7f7fd386bae6b07ab59e8ff1d5b897`. Further push hit **int8 decode-shadow** quality loss. |
-| QSA live-context (`rdna_extras` `#15`, Sep 20) | Combined stack **~1830–2040 tok/s** PP / **~54–73 tok/s** TG at 16k–128k; **TP=4 PP=1**. Not an isolated QSA A/B. See [QSA merge](#qwen38-flash-next-on-vllm). |
+| QSA live-context (`rdna_extras` `#15`, Sep 20) | **Author-host** combined stack **~1830–2040 tok/s** PP / **~54–73 tok/s** TG. `#vllm-rdna` Sep 21: other 4× hosts on the public merge reproduced **~1.1–1.45k** PP (decode often still **~50–77 t/s**). Not an isolated QSA A/B. See [QSA merge](#qwen38-flash-next-on-vllm). |
 | Startup (warm-ish) | ~**4 min** vs earlier **8–10 min** on the same host |
 | fp16 KV fit | ~**291k** tokens on 4 cards (one report) |
 
