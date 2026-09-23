@@ -149,6 +149,13 @@ leaving headroom for CPU/board. One reported pick that avoids sketchy splitters:
 for that class of load — stock **250 W × 8** on a 120 V / 20 A breaker is a non-starter. Prefer
 the [120–180 W](#token-cost-vs-stock-250-w) caps for both thermals and wall power.
 
+`#general` (Sep 22–23): **1600 W Platinum** was enough for **5× V620 at stock 250 W**
+(~**1250 W** GPU TDP). A **1200 W** ATX 3.1 for **4×** at stock is **tight** (1000 W GPU TDP
+before CPU/board). Same thread: **0.7 A** blowers were enough at **180 W**; stock **250 W**
+full-power inference hit **~86 °C** on that host. Community is still unsure whether
+`rocm-smi` caps catch brief transients — size the PSU for **stock TDP** if you have not
+applied the floor yet.
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.

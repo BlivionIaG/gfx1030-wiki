@@ -356,6 +356,12 @@ better in that write-up). Also backports [vLLM #46994](https://github.com/vllm-p
 and [#54044](https://github.com/vllm-project/vllm/pull/54044) (MTP + graphs + prefix cache). Follow
 the overlay README — do not copy host paths from Discord.
 
+`#general` (Sep 23): the overlay author is **no longer working on the repo**. Community still
+reports useful 3-card numbers (one host **~45 t/s** decode / **~1100 tok/s** PP; overlay write-up
+**120+ t/s** under multi-agent load, even **~200 t/s** with 5–6 agents). Long context can trip
+**infinite KV-pool dump loops** — the author capped **3 concurrent agents** on long prompts.
+Treat the overlay as **unmaintained / snapshot**; prefer `rdna_extras` once PP3 is clean there.
+
 `#vllm-rdna` (Sep 19): that same **HIP MoE** kernel was reported **non-deterministic** (~3.5% of
 top tokens change between identical runs; Triton MoE did not). See
 [fork MoE note](../fork.md#moe-mixture-of-experts). **Needs verify.**

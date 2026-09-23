@@ -52,7 +52,7 @@
 | TP4 cyankiwi AWQ env block | **Community** | `#vllm-rdna` Aug 31 bench paste (paths sanitized) |
 | Flash-Next 4× PIECEWISE serve (Sep 17) | **Community** | `#vllm-rdna` — GDN sanitizer `388a61b6f`; ~3331/73 @ 16k/1k c=8 |
 | Flash-Next vLLM PP4 ~1950 PP / decode collapse | **Needs verify** | `#vllm-rdna` Sep 19 — same host returned to TP4 (~1550 PP; ~30–35 t/s MTP-2) |
-| QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Needs verify** | `#vllm-rdna` Sep 20 author-host table + merged `opengfx1030/vllm-rdna#15`. Sep 21: other 4× hosts on the public merge got **~1.1–1.45k** PP; author cited unpublished local changes |
+| QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Needs verify** | `#vllm-rdna` Sep 20 author-host table + merged `opengfx1030/vllm-rdna#15`. Sep 21: other 4× hosts on the public merge got **~1.1–1.45k** PP; Sep 22: author **recovered ~1950** locally, still unpublished |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 
 ### `configuration.md`
@@ -111,7 +111,7 @@
 | `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM packs; prefer LMCache |
 | Intel AutoRound 32–128k ~1296–1393 PP / ~56–73 TG | **Community** | `#vllm-rdna` Sep 16 — 4× V620; pin `4c67bf6…`; int8 decode-shadow quality |
 | QSA live-context bound merged on `rdna_extras` | **Fork-source** | `opengfx1030/vllm-rdna#15` merged 20 Sep 2026; Hub `-extras` lags |
-| QSA `#15` combined-stack ~1830–2040 PP / ~54–73 TG | **Needs verify** | PR recorded table + `#vllm-rdna` Sep 20 author-host; **not reproduced** on two other 4× hosts Sep 21 (~1.07–1.45k PP; decode often still ~50–77 t/s) |
+| QSA `#15` combined-stack ~1830–2040 PP / ~54–73 TG | **Needs verify** | PR recorded table + `#vllm-rdna` Sep 20 author-host; **not reproduced** on two other 4× hosts Sep 21 (~1.07–1.45k PP; decode often still ~50–77 t/s). Sep 22: author **recovered ~1950** locally, still unpublished |
 | QSA `#15` public-merge prefill ~1.1–1.45k PP | **Community** | `#vllm-rdna` Sep 21 — two 4× hosts after the merge; one gen4 x16 / DDR4-3200 / NVMe, one gen3 / DDR4-2144 / SATA SSD |
 | Flash-Next vision pixel cap (`max_pixels=1605632`) | **Fork-source** | `rdna_extras` `scripts/serve_gfx1030_flashnext.sh`; `--limit-mm-per-prompt` alone is not enough |
 | Flash-Next vision ~15–20 s/image + runtime OOM | **Community** | `#vllm-rdna` / `#general` Sep 21 — works with launcher flags; no reserved vision pool; PP3 especially tight |
@@ -127,8 +127,8 @@
 | hippihx kernel zoo | **Needs verify** | `#hippihx` Sep 16 — public repo; not in published images |
 | Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 — worse on Mamba/SSM; prefer LMCache when it lands |
 | `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; not confirmed on `rdna_extras` |
-| LMCache RDNA Docker integration | **Needs verify** | `#lmcache` / `#general` Sep 18–19: `lmcache/standalone` CPU + connector; official `rocm/pytorch` images lack HIP/dev tools. No working gfx1030 compose yet |
-| Upstream vLLM 0.28 gfx1030 support | **Needs verify** | Official 0.28 docs still omit Navi 21; keep extras |
+| LMCache RDNA Docker integration | **Needs verify** | `#lmcache` / `#general` Sep 18–19 + Sep 22–23: still no working gfx1030 compose; V620 compile still failing. LDS ~143 KB vs 64 KB claim is unverified |
+| Upstream vLLM 0.28 / 0.30 gfx1030 support | **Needs verify** | Official 0.28–0.30 still omit Navi 21 (`#general` Sep 22: 0.30 + ROCm 10.0). Keep extras |
 
 ### `quantization.md`
 
@@ -138,7 +138,8 @@
 | AWQ dense → `RDNA2W4A16LinearKernel` | **Fork-source** | Commits `73eb04a`/`5ac31e4`; **needs verify** on image |
 | Older AWQ ~4–5 t/s (Triton) | **Community** | True on old images only |
 | KV cache prefer float16 | **Opinion** | Community quality / agents |
-| `int8_per_token_head` vs fp8 | **Community** | Faster TG than fp8 in limited `#vllm-rdna` testing |
+| `int8_per_token_head` vs fp8 | **Community** | Faster TG than fp8 in limited older `#vllm-rdna` testing; **not** the QSA path |
+| QSA / Flash-Next `--kv-cache-dtype fp8` startup fail | **Community** | `#vllm-rdna` Sep 22 — QSA backends unquantized-only + AITER/CDNA gate |
 | KVarN | **Community** | Skip for tool calling |
 | MTP acceptance ~0.25 | **Community** | Model-dependent |
 | MTP-2 hurts high concurrency (35B-A3B) | **Community** | TP4 `#vllm-rdna` 4-cell matrix |
@@ -159,6 +160,8 @@
 | No WMMA on RDNA2 | **Solid** | Architecture |
 | Kernel file list | **Solid** | Fork tree (`rdna_extras`) |
 | `fa_rdna2` head_size=256 | **Fork-source** | Commit `03b2d91` |
+| Public extras `fa_rdna2` dropped FP16 pieces | **Community** | `#vllm-rdna` Sep 22 — maintainer focused on W4A16 validation |
+| `2kiss/flash-attention-rdna2` | **Needs verify** | `#vllm-rdna` Sep 22 — independent kernel; no gfx1030 bench posted; org target is still in-tree `fa_rdna2` |
 | GDN decode ~9.3× vs Triton | **Community** | Fork microbench |
 | GDN full HIP prefill chain | **Fork-source** | Commits `69d2efe`, `b53a7a2c` |
 | TP `allow_in_graph` fix | **Fork-source** | Commit `b583d64` |
@@ -273,6 +276,7 @@
 | `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris/WX4100-in-box ROCm skip; unbind > ROCR_VISIBLE alone |
 | `troubleshooting/vllm.md` leftover EngineCore / PleOffloadWorker | **Community** | `#vllm-rdna` Sep 18 |
 | `troubleshooting/vllm.md` Flash-Next vision pixel-cap / runtime OOM | **Fork-source / Community** | Launcher `max_pixels`; `#vllm-rdna` Sep 21 ~15–20 s/image |
+| `troubleshooting/vllm.md` FP8 KV rejected on QSA | **Community** | `#vllm-rdna` Sep 22 — unquantized-only backends + AITER/CDNA |
 | `troubleshooting/vllm.md` no-P2P PYNCCL / MTP vs PLE | **Community** | `#vllm-rdna` Sep 18 |
 | `troubleshooting/vllm.md` MTP concurrency / PLE stall | **Community** | `#vllm-rdna` — recipe PRs + P2P A/B |
 | `troubleshooting/vllm.md` ROCR idle CPU spin | **Community** | TheRock 7.14 / ROCR 1.21 — Flash-Next fork patch |
@@ -299,6 +303,8 @@
 | `troubleshooting/general.md` V620 thermals / graphene pads | **Community** | `#general` Sep 2026 — mixed repaste reports |
 | `vllm/overview.md` MoE sweet spot / Flash-Next needs 4 cards | **Opinion** | `#general` Sep 2026 workload consensus |
 | `tuning/power.md` 8× @ 180 W ≈ 1440 W + HELA 2050 | **Community** | `#forum` Sep 2026 build notes |
+| `tuning/power.md` 1600 W for 5× stock 250 W; 1200 W tight for 4× | **Community** | `#general` Sep 22–23 — 0.7 A blowers OK at 180 W; ~86 °C at 250 W |
+| `vllm/recipes.md` 3× overlay unmaintained / KV dump loops | **Community** | `#general` Sep 23 — cap ~3 agents on long ctx; ~45 t/s / ~1100 PP on one 3-card host |
 | `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |
 | `tuning/p2p.md` SlimSAS / passive riser notes | **Community** | `#general` cabling |
 | `tuning/p2p.md` external Xpander / narrow uplink | **Community** | `#general` Sep 2026 — long-ctx collapse |

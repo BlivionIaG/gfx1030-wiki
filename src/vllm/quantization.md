@@ -23,12 +23,13 @@ Kernel dispatch details: [rdna_extras fork](../fork.md#kernel-dispatch-on-gfx103
 
 | Dtype | When people use it | `#vllm-rdna` notes |
 |---|---|---|
-| **`float16`** | Long-context / agents / tool calling | Default recommendation. `VLLM_USE_FA_RDNA2=1` currently needs fp16 KV. |
-| **`int8_per_token_head`** | Throughput on GPTQ | Reported **5–10 t/s above fp8** in TG (and higher PP) in limited testing. One report that it misbehaves with chunked prefill. |
-| **`fp8`** | VRAM savings | Often slower than `int8_per_token_head` on these cards. Quality drops on long sessions. |
+| **`float16`** | Long-context / agents / tool calling | Default recommendation. `VLLM_USE_FA_RDNA2=1` currently needs fp16 KV. **Required** on current QSA / Flash-Next backends (see below). |
+| **`int8_per_token_head`** | Throughput on older GPTQ / Triton FA | Reported **5–10 t/s above fp8** in TG (and higher PP) in limited testing. One report that it misbehaves with chunked prefill. **Not selected** on QSA Flash-Next — those backends do not list int8 KV. |
+| **`fp8`** | VRAM savings (older dense 27B) | `#vllm-rdna` Sep 22: **blocked** on current QSA / Flash-Next. Two independent gates — [troubleshooting](../../troubleshooting/vllm.md#fp8-kv-rejected-on-qsa). Older dense-27B reports that fp8 was slower than `int8_per_token_head` and dropped quality on long sessions. |
 | **KVarN** | Third-party KV compression | Raised concurrency on Qwen, **broke tool calling**, failed on Gemma 4. Community verdict: skip for agents. |
 
-Prefer **`float16`** unless you are A/B testing a quantized KV for a non-agentic workload.
+Prefer **`float16`**. Do not plan on `--kv-cache-dtype fp8` for QSA / Flash-Next until the extras fork
+re-enables a gfx1030 path.
 
 ## MTP speculative decoding
 

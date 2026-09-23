@@ -367,6 +367,28 @@ compile an LMCache connector (missing HIP / developer packages). Intended shape:
 NVMe-as-KV is the usual motive (low host RAM). Until someone posts a working gfx1030 compose, treat
 this as **Needs verify**.
 
+`#vllm-rdna` (Sep 22) + `#lmcache` (Sep 23): still **no working gfx1030 build**. A community prompt
+claimed LMCache HIP needs **~143 KB LDS** vs gfx1030 **64 KB** — **Needs verify** (that number came
+from an LLM, not a posted compile log). In-channel: **Mamba / SSM alignment** was the last known
+real blocker even on Hopper; another host still failed to compile against V620. Keep the
+standalone-CPU + connector shape above; do not treat LDS size as settled.
+
+## FP8 KV rejected on QSA / Flash-Next {#fp8-kv-rejected-on-qsa}
+
+`#vllm-rdna` (Sep 22): `--kv-cache-dtype fp8` **fails at startup** on current QSA Flash-Next rather
+than falling back. Two independent gates:
+
+1. **QSA backends are unquantized-only.** Community traceback: `QSAStateBackend` /
+   the AMD QSA owner declare `supported_kv_cache_dtypes = ["auto", "bfloat16", "float16"]`.
+   Backend selection records `kv_cache_dtype not supported` and never picks those layers — so
+   there is **no** backend that can serve `--kv-cache-dtype fp8` (or `int8_per_token_head`) on
+   this model.
+2. **ROCm FP8 KV path is AITER / CDNA.** Separate hosts got an **AITER and CDNA only** refusal
+   even off the QSA stack. Maintainer: fp8 KV **used to work** on older dense 27B and may be
+   re-enableable; it is **not** unlocked on current extras.
+
+Stay on **fp16 KV**. See [Quantization — KV-cache dtype](../../vllm/quantization.md#kv-cache-dtype).
+
 ## Leftover vLLM / PLE workers after a restart {#leftover-vllm-workers}
 
 `#vllm-rdna` (Sep 18): killing the OpenAI API process is **not** enough. `VLLM::Worker`,

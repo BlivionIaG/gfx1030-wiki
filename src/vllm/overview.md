@@ -109,9 +109,10 @@ four cards, and NVMe ~6.5 GB/s — so the gap is **not** just “slow RAM / gen3
 (DDR4-2144 ECC, PCIe gen3, SATA SSD, ~96 GB RAM, int4 PLE in RAM) sat around **~1.1–1.2k** PP /
 **~45–50 t/s** with MTP-1. The PR author later said the 1350 → 1550 → 2000 prefill steps needed
 **two local changes that were not on the git checkout** others pulled, and planned to re-apply
-those from current `rdna_extras` through git. Treat **~1.1–1.5k PP** as the **reproduced**
-public-merge class and the **~2k** table as an **author-host snapshot**. **Needs verify** once
-those commits land.
+those from current `rdna_extras` through git. `#vllm-rdna` (Sep 22): the author later **recovered
+~1950 tok/s PP** on a local tree and said something was **still missing** before those changes
+could land on the public branch. Treat **~1.1–1.5k PP** as the **reproduced** public-merge class
+and the **~2k** table as an **author-host snapshot**. **Needs verify** once those commits land.
 
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
