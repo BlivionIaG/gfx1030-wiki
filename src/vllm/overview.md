@@ -68,11 +68,13 @@ Fitting MTP on 3 cards is [community / Needs verify](../recipes.md#flash-next-3x
 Sep 17–18: a public overlay that ports org **MoE HIP** onto leapdragon reports **~1078–2493** PP /
 **~57–63** TG with MTP k=2 — [overlay](../recipes.md#flash-next-3x-moe-hip-overlay).
 
-**4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–17):** use **`PIECEWISE`**, not
-`FULL_AND_PIECEWISE` — [FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption)
-and the [Sep 17 serve line](../recipes.md#flash-next-4x-piecewise). Community snapshot on that
-recipe: **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3**
-path on vLLM.
+**4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–24):** the **measured `#17` path** is
+**`FULL_DECODE_ONLY`** — [Sep 23 serve notes](../recipes.md#flash-next-4x-pr17). Older hosts that
+saw **FULL** decode **corrupt** stayed on **`PIECEWISE`** —
+[FULL-graph corruption](../../troubleshooting/vllm.md#flash-next-full-graph-corruption) and the
+[Sep 17 serve line](../recipes.md#flash-next-4x-piecewise). Community snapshot on that older recipe:
+**~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3** path on
+vLLM.
 
 `#vllm-rdna` (Sep 19): **pipeline parallel 4** on Flash-Next was reported to hit **~1950 tok/s**
 prefill at 32k while **decode collapsed**. The same host dropped PP4 and continued on **TP=4**
@@ -111,8 +113,15 @@ four cards, and NVMe ~6.5 GB/s — so the gap is **not** just “slow RAM / gen3
 **two local changes that were not on the git checkout** others pulled, and planned to re-apply
 those from current `rdna_extras` through git. `#vllm-rdna` (Sep 22): the author later **recovered
 ~1950 tok/s PP** on a local tree and said something was **still missing** before those changes
-could land on the public branch. Treat **~1.1–1.5k PP** as the **reproduced** public-merge class
-and the **~2k** table as an **author-host snapshot**. **Needs verify** once those commits land.
+could land on the public branch. Treat **~1.1–1.5k PP** as the **`#15`-only** public-merge class.
+
+`#vllm-rdna` (Sep 23): that missing stack **merged** as
+[`opengfx1030/vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) into `rdna_extras`.
+PR-head 16k (same `llm-context-bench` harness): **1,957.8 / 1,982.8 tok/s** PP, decode **~69 / ~69
+t/s**. A second 4× host **confirmed** those cells (**1,983.8 / 1,985.3 tok/s** PP) after rebuilding
+TunableOp for its rocBLAS — [mismatch](../../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
+The `#15` author-host **~2k** table is no longer “unpublished”; Hub `-extras` still lags. **Community
+/ Needs verify** on your topology.
 
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
@@ -172,7 +181,7 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 | Prose / code 16–64k | **~950–980 tok/s** PP, **~48–56 tok/s** decode |
 | 128k after `4096` batched tokens | PP stays **~950 tok/s** class (was **~375 tok/s** at 2048 scheduled tokens) |
 | Community long-suite (Sep 16, 4× V620) | Regular **32–128k**: **~1296–1393 tok/s** PP / **~56–60 tok/s** TG; coding suites **~68–73 tok/s** TG. Pin cited: `Intel/Qwen3.8-Flash-Next-W4A16-AutoRound` @ `4c67bf686b7f7fd386bae6b07ab59e8ff1d5b897`. Further push hit **int8 decode-shadow** quality loss. |
-| QSA live-context (`rdna_extras` `#15`, Sep 20) | **Author-host** combined stack **~1830–2040 tok/s** PP / **~54–73 tok/s** TG. `#vllm-rdna` Sep 21: other 4× hosts on the public merge reproduced **~1.1–1.45k** PP (decode often still **~50–77 t/s**). Not an isolated QSA A/B. See [QSA merge](#qwen38-flash-next-on-vllm). |
+| QSA live-context (`rdna_extras` `#15`, Sep 20) | **Author-host** combined stack **~1830–2040 tok/s** PP / **~54–73 tok/s** TG. `#vllm-rdna` Sep 21: other 4× hosts on `#15` only reproduced **~1.1–1.45k** PP. The unpublished recovery **merged as `#17`** (Sep 23) — see [QSA merge](#qwen38-flash-next-on-vllm). |
 | Startup (warm-ish) | ~**4 min** vs earlier **8–10 min** on the same host |
 | fp16 KV fit | ~**291k** tokens on 4 cards (one report) |
 

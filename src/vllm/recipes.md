@@ -31,7 +31,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
 | **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
 | **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../../troubleshooting/vllm.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../../llama-cpp/rdna2-serving.md#notable-limits)). |
-| **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4** (see [TP4 AWQ recipe](#hub--extras-tp4-qwen38-27b-awq) and [PIECEWISE](#flash-next-4x-piecewise)). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill (~**1950** tok/s) then **tank decode** — the same host went back to TP4 (~**1550** tok/s long-ctx prefill; decode **~30–35 t/s** with MTP-2). `#vllm-rdna` (Sep 20): merged [`vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15) QSA live-context **author-host** table is **~1.8–2.0k tok/s** PP on **TP=4 / PP=1**. `#vllm-rdna` (Sep 21): other 4× hosts on the public merge reproduced **~1.1–1.45k** PP (decode often still **~50–77 t/s**). Prefer TP4 over PP4. **Needs verify.** |
+| **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub `-extras` still lags. **Needs verify.** |
 
 Also see [What fits well on V620](../overview.md#what-fits-well-on-v620).
 
@@ -182,6 +182,43 @@ Throughput and KV tightness: [overview](../overview.md#qwen38-flash-next-on-vllm
 
 `#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound.
 EXL3 ~3 bpw is still **experimental** — [Quantization](../quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+
+### 4× V620 Flash-Next serve (`rdna_extras` `#17`, Sep 23) {#flash-next-4x-pr17}
+
+[`opengfx1030/vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) **merged** 23 Sep 2026
+into `rdna_extras`. This is the public landing of the unpublished ~1950 PP recovery after `#15`.
+**Community / Needs verify.** Not a Hub tag. Do **not** copy host paths from the PR body — use the
+in-tree docs (`docs/rdna2/V620-GIT-FAST-SERVICE.md`, `docs/rdna2/V620-BASELINE-PORT-20260922.md`)
+and [`tunableop/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop).
+
+Operational facts that are safe to copy:
+
+- **Resident W4A16 MoE** (`VLLM_RDNA_MOE_RESIDENT=1`): convert the checkpoint’s packed INT4 experts
+  into the RDNA2 kernel layout **once at load**, keep that layout, and skip repacking every 4k
+  prefill chunk. Precision stays W4A16.
+- **Mamba retirement:** backport of [`vllm#55450`](https://github.com/vllm-project/vllm/pull/55450).
+  Without it, long prompts (100k+ class) hit a deterministic **preemption loop** (state blocks not
+  retired across null gaps).
+- **Graphs:** `--compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[3,6,12]}'`
+  with **MTP-2**. Prefill stays eager. This is the **measured** path, not `PIECEWISE`.
+- **TunableOp** is **rocBLAS-hash locked**. A mismatched CSV aborts the first GEMM or silently
+  uses default algorithms — [regenerate](../../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
+- Harness used for the PR numbers: [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench).
+
+PR-head 16k (author) vs second-host confirm (`#vllm-rdna` Sep 23):
+
+| Cell | PR `#17` | Second 4× host |
+|---|---:|---:|
+| Regular 16k PP | 1,957.8 | 1,983.8 |
+| Coding 16k PP | 1,982.8 | 1,985.3 |
+| Regular / coding TTFT | 8.56 / 9.11 s | 8.44 / 9.10 s |
+| Decode | 69.7 / 68.5 t/s | 63.1 / 70.1 t/s |
+
+Open follow-ups (not the default): [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes
+compiled `FULL_AND_PIECEWISE` **correct** but **slower decode** (~26–34 t/s). Draft
+[`#21`](https://github.com/opengfx1030/vllm-rdna/pull/21) tries to keep FULL decode graphs — **unbenched**.
+
+The older Sep 17 PIECEWISE host-venv block below is still useful if you are **not** on `#17` yet.
 
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
 

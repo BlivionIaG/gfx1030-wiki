@@ -109,11 +109,14 @@ If graph capture still crashes, fall back to `--enforce-eager` — but try the u
 (`docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0`). See
 [vLLM troubleshooting](../../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
-**Flash-Next on `rdna_extras` (Sep 16–17):** do **not** start from `FULL_AND_PIECEWISE`. Community:
-**FULL** decode graphs **corrupt** output; **`PIECEWISE`** held. Use the
-[4× PIECEWISE recipe](../recipes.md#flash-next-4x-piecewise) and
+**Flash-Next on `rdna_extras` (Sep 16–24):** the **measured `#17` path** is
+`cudagraph_mode=FULL_DECODE_ONLY` (mode `0`, capture `[3,6,12]` with MTP-2) — prefill stays eager.
+See [4× `#17` recipe](../recipes.md#flash-next-4x-pr17). Older Sep 16–17 hosts that saw **FULL**
+decode **corrupt** output stayed on **`PIECEWISE`** —
 [FULL-graph troubleshooting](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
-The table above is the **27B `-extras`** path.
+Open [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE`
+boot correctly but **lost decode** (~63–70 → ~26–34 t/s). The table above is the **27B `-extras`**
+path, not Flash-Next.
 
 `VLLM_USE_BREAKABLE_CUDAGRAPH=1` in that recipe **disables torch.compile** (`mode=NONE`). Community
 Sep 17 A/B: keep it for the no-corruption path, then try `0` if you want compile speed back.

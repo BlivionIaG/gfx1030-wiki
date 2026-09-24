@@ -43,6 +43,28 @@ export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
 
 Confirm `-extras` image from current extras. See [Fork kernel dispatch](../../vllm/fork.md#kernel-dispatch-on-gfx1030).
 
+## TunableOp aborts or is ~20% slow after a ROCm / rocBLAS bump {#tunableop-rocblas-mismatch}
+
+`#vllm-rdna` (Sep 23–24) + in-tree
+[`tunableop/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop): the committed
+FP16 rows are **locked to one rocBLAS library hash** (qualified example: `rocblas-c27e2252cc7a`).
+Solution IDs must **not** be reused across a different rocBLAS build, even when the version string
+matches.
+
+Symptoms:
+
+- First GEMM **aborts** / TunableOp turns itself off.
+- Prefill sits **~25% below** the `#17` published table (community: **~1496 vs ~1958** tok/s at 16k)
+  until a matching table is loaded. **ROCm 10 vs 7.14** was **not** the gap on that host.
+
+Fix: stop the serve, then regenerate and qualify for **this** library — see
+[Regenerate for another rocBLAS build](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop#regenerate-for-another-rocblas-build).
+Serve with `PYTORCH_TUNABLEOP_ENABLED=1`, `PYTORCH_TUNABLEOP_TUNING=0`, and
+`PYTORCH_TUNABLEOP_FILENAME` pointing at `tunableop/rocblas-<your-hash>/…`. The `#17` launcher
+refuses incompatible solver IDs rather than loading them.
+
+Do not commit a host-specific CSV into the wiki. Do not copy another machine’s library hash.
+
 ## vLLM picks the wrong platform / doesn't see my Radeon
 
 Use published [`blivioniag/vllm-rdna`](../../vllm/images.md) images with `patches/*rocm-platform*` fixes rather
@@ -262,8 +284,14 @@ Sanitized serve line: [Flash-Next PIECEWISE recipe](../../vllm/recipes.md#flash-
 The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) uses
 `FULL_AND_PIECEWISE` and states that mode **executes as PIECEWISE on ROCm**
 (`rocm_full_executes_as_piecewise`). It also attributes an earlier “corrupts at c=8” report to
-**probe artifacts** (reasoning-parser field / reasoning-budget), not the graphs. Treat
-**`PIECEWISE` and `FULL_AND_PIECEWISE` as equivalent on ROCm**; do **not** switch to **FULL-only**.
+**probe artifacts** (reasoning-parser field / reasoning-budget), not the graphs.
+
+`#vllm-rdna` (Sep 23–24): merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17)
+**measures `FULL_DECODE_ONLY`** (mode `0`, capture `[3,6,12]` with MTP-2). That is **not** the
+same as **FULL-only** (which still corrupted earlier). Open
+[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE` **boot
+and stay correct**, but decode dropped **~63–70 → ~26–34 t/s** (prefill held). Prefer `#17`’s
+`FULL_DECODE_ONLY` until a graph-launch follow-up lands. See [4× `#17` recipe](../../vllm/recipes.md#flash-next-4x-pr17).
 
 `#vllm-rdna` (Sep 17): `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (in that recipe) **turns torch.compile off**.
 Community A/B on a 4× TP Flash-Next tree: **~39 t/s** with breakable/eager vs **~55 t/s** after compile
@@ -367,11 +395,18 @@ compile an LMCache connector (missing HIP / developer packages). Intended shape:
 NVMe-as-KV is the usual motive (low host RAM). Until someone posts a working gfx1030 compose, treat
 this as **Needs verify**.
 
-`#vllm-rdna` (Sep 22) + `#lmcache` (Sep 23): still **no working gfx1030 build**. A community prompt
-claimed LMCache HIP needs **~143 KB LDS** vs gfx1030 **64 KB** — **Needs verify** (that number came
-from an LLM, not a posted compile log). In-channel: **Mamba / SSM alignment** was the last known
-real blocker even on Hopper; another host still failed to compile against V620. Keep the
-standalone-CPU + connector shape above; do not treat LDS size as settled.
+`#vllm-rdna` (Sep 22) + `#lmcache` (Sep 23–24): still **no working gfx1030 compose**. Extra facts:
+
+- Do **not** remake standalone — use [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone).
+- A community **0.5.6.dev** wheel built against gfx1030; that is the **library**, not a proven
+  connector. Official LMCache kernels are **CDNA-only**; generic fallback still has **Mamba align**
+  problems (last known real blocker on `0.5.4`).
+- Hybrid Qwen (MambaSpec + QSA FullAttentionSpec) creates **multiple KV groups** and needs **HMA**.
+  `LMCacheConnectorV1` is **not HMA-capable** (`SupportsHMA` missing; vendored copy still asserts
+  a single group) → startup `ValueError: Failed to promote local KV cache specs to one unified type`.
+- A community LDS **~143 KB vs 64 KB** claim is still **Needs verify** (LLM-sourced, no compile log).
+
+Keep the standalone-CPU + connector shape; expect **fork patches** before this is a recipe.
 
 ## FP8 KV rejected on QSA / Flash-Next {#fp8-kv-rejected-on-qsa}
 

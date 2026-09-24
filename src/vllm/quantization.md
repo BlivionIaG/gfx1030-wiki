@@ -29,7 +29,11 @@ Kernel dispatch details: [rdna_extras fork](../fork.md#kernel-dispatch-on-gfx103
 | **KVarN** | Third-party KV compression | Raised concurrency on Qwen, **broke tool calling**, failed on Gemma 4. Community verdict: skip for agents. |
 
 Prefer **`float16`**. Do not plan on `--kv-cache-dtype fp8` for QSA / Flash-Next until the extras fork
-re-enables a gfx1030 path.
+re-enables a gfx1030 path. `#vllm-rdna` (Sep 23–24): community is **testing INT8 KV** via upstream
+[quantized KV cache](https://docs.vllm.ai/en/latest/features/quantization/quantized_kvcache/)
+(RDNA2 has no FP8) aiming at more concurrent long context (e.g. **4× 256k**). That is **not** the
+same as INT8 **decode shadows**, and QSA backends still **do not list** int8 KV — treat as
+**Needs verify**, not a recipe.
 
 ## MTP speculative decoding
 
@@ -82,17 +86,19 @@ and rebuild from that branch, or wait for a tagged image.
 
 | Format | Status | Notes |
 |---|---|---|
-| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Kernel constraints: [3inst only](#exl3-3inst-only-vllm-rdna-sep-19). Not a drop-in on every Hub tag. |
+| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Sep 19 kernel was [3inst only](#exl3-3inst-only-vllm-rdna-sep-19); `#vllm-rdna` Sep 24: **`rdna_extra/v0.29.0` now has mul1**. Not a drop-in on every Hub tag. |
 | **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
 
 ### EXL3: 3inst only (`#vllm-rdna`, Sep 19) {#exl3-3inst-only-vllm-rdna-sep-19}
 
-`#general` (Sep 18) and `#vllm-rdna` (Sep 19): the gfx1030 EXL3 kernel is **3inst**, not **mul1**.
-3inst is easier to execute at inference, **not** higher quality. The current kernel was written
-**only for 3inst** — mul1 packs **do not run**. Mixed bit-widths are not wired yet either: MTP at
-6 bpw, `lm_head` at 8 bpw, and vision in bf16 will not load together. To try the kernel now, use
-**uniform 3 bpw** and keep the **head in bf16**. 6 bpw support is still planned. Long-term target
-stated in-channel: `lm_head` **8 bpw**, MTP **6 bpw**, n-gram **bf16**, vision **bf16**.
+`#general` (Sep 18) and `#vllm-rdna` (Sep 19): the gfx1030 EXL3 kernel on **`rdna_extras` HEAD** was
+**3inst**, not **mul1**. 3inst is easier to execute at inference, **not** higher quality. Mixed
+bit-widths are still not wired: MTP at 6 bpw, `lm_head` at 8 bpw, and vision in bf16 will not load
+together. On **published Hub `-extras`**, keep **uniform 3 bpw** and the **head in bf16**.
+
+`#vllm-rdna` (Sep 24): [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0)
+now implements **mul1**, so **existing EXL3 packs can load**. HIP EXL3 work is still in testing.
+**Needs verify** — do not assume Hub tags have this.
 
 A mixed 3+6 bpw pack around **50 GB** was called tight for **2× V620** and still needed
 calibration. Experimental kernels had only been tried on an **Ornith 1.5 9B** quant — not
