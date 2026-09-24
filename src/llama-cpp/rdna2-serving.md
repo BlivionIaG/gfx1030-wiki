@@ -21,7 +21,7 @@ GGML_TP_SHARDED_OUTPUT=1   # TP2+ only
 - Optional TP4 mode: `GGML_HIP_GFX1030_P2P_ALLREDUCE=auto-expanded` (topology-gated).
 - If you see `internal AllReduce init failed (n_devices != 2)` or wild PP variance, strip custom
   `GGML_HIP_GFX1030_*` / P2P knobs back to the short stack and re-test on **ROCm 7.2.0 or 7.14.0**
-  (not mid-7.2.x such as 7.2.4). See [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+  (not mid-7.2.x such as 7.2.4). See [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 ## Launch
 
@@ -58,7 +58,7 @@ For tensor-split prefill, `#llamacpp` often does better with **larger ubatch** t
 keeping `--batch-size` ≥ ubatch. Small prompts may regress slightly; long prompts usually win.
 
 Recent long-context community recipes commonly use `--batch-size 16384 --ubatch-size 1024` on TP4
-(see [Benchmarks](../rdna2-benchmarks.md#long-context-community-sweeps-aug-2930-2026)).
+(see [Benchmarks](rdna2-benchmarks.md#long-context-community-sweeps-aug-2930-2026)).
 
 ### Host tips that affect llama-server
 
@@ -66,10 +66,10 @@ Recent long-context community recipes commonly use `--batch-size 16384 --ubatch-
   MoE/KV offload), `powersave` can lag bursty PP. Community: switching Intel `intel_pstate` to
   `performance` improved Flash-Next PP ~33% while VRAM-resident 27B was unchanged. Check
   `/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`. See
-  [General troubleshooting](../../troubleshooting/general.md#cpu-governor-hurts-host-resident-models).
+  [General troubleshooting](../troubleshooting/general.md#cpu-governor-hurts-host-resident-models).
 - **DAX / Optane model store:** fast loads are nice for swap-testing; **never mmap** GGUFs from
   `dax=always` mounts into ROCm — use `--no-mmap` / `--load-mode none`. See
-  [troubleshooting](../../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm).
+  [troubleshooting](../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm).
 
 ### Full validated example (4× V620, Qwen3.5-122B-A10B-MTP)
 
@@ -112,13 +112,13 @@ command: >
   --ctx-checkpoints 0
 ```
 
-Build with `./scripts/build-rdna2-portable.sh`. RCCL needs working [PCIe P2P](../../tuning/p2p.md). If P2P
+Build with `./scripts/build-rdna2-portable.sh`. RCCL needs working [PCIe P2P](../tuning/p2p.md). If P2P
 is enabled but slower, set `NCCL_P2P_DISABLE=1`. If all-reduce fails, try
 `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none`.
 
 The RDNA2 fork's recent HIP/RCCL work is validated primarily against **ROCm 7.14** (`#llamacpp`,
 Sep 2026). Mid-7.2.x (e.g. 7.2.4) is not a confident target — upgrade or pin per
-[Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+[Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 ## Single-GPU community ballpark (Qwen3.8-27B)
 
@@ -169,20 +169,20 @@ fork merges if cold-start time matters.
 - **Tensor-split prefill spikes current** — layer split can look fine while TP shuts the PSU off at
   prefill start (transient on the +12 V rail, classic with old miner PSUs). Try **160 W** (~2–4%
   slower) or **140 W** (~8–10% slower vs unlocked) before blaming the fork. See
-  [Power Tuning](../../tuning/power.md).
+  [Power Tuning](../tuning/power.md).
 - **TP3** (three cards) has caused driver crashes; stick to 2 or 4 when possible. On boards with
   **three** full CPU x16 slots, community still prefers trying **tensor split** first if the links
-  are PCIe 4.0 x16 — see [Host topology](../../tuning/p2p.md#host-topology).
+  are PCIe 4.0 x16 — see [Host topology](../tuning/p2p.md#host-topology).
 - Most `GGML_HIP_GFX1030_*` flags are redundant with `HSA_OVERRIDE_GFX_VERSION=10.3.0` unless A/B
   testing — prefer the [short env stack](#recommended-env-stack).
 - **FA / q8 KV:** quantized V cache needs FA on; FA occupancy asserts on some head-256 models —
-  see [troubleshooting](../../troubleshooting/llama-cpp.md#flashattention-abort-max_blocks_per_sm--0).
+  see [troubleshooting](../troubleshooting/llama-cpp.md#flashattention-abort-max_blocks_per_sm--0).
 - **GPU sampling** (`--spec-draft-backend-sampling` and related): install `hipcub-devel` (or distro
   equivalent) at build time. Without it, expect `device 'Meta()' does not have support for op TOP_K`
   and fall back to slower CPU sampling.
 - **Long-context quant quality:** community (`#llamacpp`): below **Q6** often looks fine on short
   benches then loops / stalls as context grows; **Q8** is noticeably more stable. Pair with
-  [sidecar gotchas](../rdna2-speculative.md#sidecar-dflash-gotchas).
+  [sidecar gotchas](rdna2-speculative.md#sidecar-dflash-gotchas).
 
-For stock builds see [Building & running](../building.md). Speculative decoding configs:
-[RDNA2 speculative decoding](../rdna2-speculative.md).
+For stock builds see [Building & running](building.md). Speculative decoding configs:
+[RDNA2 speculative decoding](rdna2-speculative.md).

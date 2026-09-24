@@ -1,7 +1,7 @@
 # vLLM Configuration
 
 > **WIP:** Env recipes and throughput numbers are **community-reported**. See
-> [Verification status](../../reference/verification.md#vllm-configurationmd).
+> [Verification status](../reference/verification.md#vllm-configurationmd).
 
 ## Recommended environment (`#vllm-rdna`)
 
@@ -29,7 +29,7 @@ export SAFETENSORS_FAST_GPU=1               # faster safetensors → GPU load (`
 `VLLM_USE_V2_MODEL_RUNNER=1` remains the usual default on Hub **`-extras`**. On the **Flash-Next**
 fork, long agentic prompts that stall or timeout with V2 enabled have been fixed in-community by
 setting **`VLLM_USE_V2_MODEL_RUNNER=0`** instead — see
-[Flash-Next long-prompt stalls](../../troubleshooting/vllm.md#flash-next-long-prompt-stalls).
+[Flash-Next long-prompt stalls](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 
 ### Custom all-reduce / P2P (two community stacks)
 
@@ -47,7 +47,7 @@ fork notes.
 Prefer **`--attention-backend RDNA_ATTN`** (or `VLLM_USE_RDNA2_FA=1`) over **`ROCM_ATTN`** on `-extras`.
 `#vllm-rdna` reports `ROCM_ATTN` sitting in AMD Triton flash-attention compile for **hours** (RCCL and
 Triton also fight each other). `FA_RDNA2` may not show up on older `-extras` images or GPTQ models that
-still auto-select `ROCM_ATTN` — that is expected on hybrid GDN; see [fork](../fork.md#attention-backends).
+still auto-select `ROCM_ATTN` — that is expected on hybrid GDN; see [fork](fork.md#attention-backends).
 
 For **multi-GPU TP** on current `-extras` images, if AOT compile cache replay causes device-bound
 errors, add:
@@ -58,11 +58,11 @@ export VLLM_DISABLE_COMPILE_CACHE=1
 ```
 
 `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` steer vLLM away from the generic AMD Triton flash-attention path,
-which can be slower or crash on some Qwen head sizes. See [rdna_extras fork](../fork.md) for kernel
-details. Full env cheat-sheet: [Reference](../../reference/env-vars.md).
+which can be slower or crash on some Qwen head sizes. See [rdna_extras fork](fork.md) for kernel
+details. Full env cheat-sheet: [Reference](../reference/env-vars.md).
 
 **Don't force backends or quantization** unless you're A/B testing — or avoiding a
-[`ROCM_ATTN` Triton hang](../../troubleshooting/vllm.md#rocm_attn-hangs-for-hours-triton-compile).
+[`ROCM_ATTN` Triton hang](../troubleshooting/vllm.md#rocm_attn-hangs-for-hours-triton-compile).
 Let vLLM read the model's `config.json` unless that auto-selects the slow AMD Triton FA path.
 
 ## CUDA graphs (preferred over `--enforce-eager`)
@@ -107,13 +107,13 @@ To disable graphs entirely (debugging only):
 
 If graph capture still crashes, fall back to `--enforce-eager` — but try the updated image first
 (`docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0`). See
-[vLLM troubleshooting](../../troubleshooting/vllm.md#cuda-graph-capture-crashes).
+[vLLM troubleshooting](../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
 **Flash-Next on `rdna_extras` (Sep 16–24):** the **measured `#17` path** is
 `cudagraph_mode=FULL_DECODE_ONLY` (mode `0`, capture `[3,6,12]` with MTP-2) — prefill stays eager.
-See [4× `#17` recipe](../recipes.md#flash-next-4x-pr17). Older Sep 16–17 hosts that saw **FULL**
+See [4× `#17` recipe](flash-next-serve.md#flash-next-4x-pr17). Older Sep 16–17 hosts that saw **FULL**
 decode **corrupt** output stayed on **`PIECEWISE`** —
-[FULL-graph troubleshooting](../../troubleshooting/vllm.md#flash-next-full-graph-corruption).
+[FULL-graph troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption).
 Open [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE`
 boot correctly but **lost decode** (~63–70 → ~26–34 t/s). The table above is the **27B `-extras`**
 path, not Flash-Next.
@@ -151,7 +151,7 @@ workaround unless you have verified your image needs that disable path.
 
 On **Flash-Next** long-context serves, if prefill falls off a cliff around **128k** while decode
 stays flat, raise `--max-num-batched-tokens` to **4096** before blaming kernels — see
-[128k prefill cliff](../../troubleshooting/vllm.md#flash-next-128k-prefill-cliff).
+[128k prefill cliff](../troubleshooting/vllm-flash-next.md#flash-next-128k-prefill-cliff).
 On current `rdna_extras` Flash-Next **TP** serves, keep **2048** first if **FULL** graphs are
 corrupting — 4096 is the Intel AutoRound scheduler knob, not the graph-corruption fix.
 

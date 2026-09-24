@@ -1,7 +1,7 @@
 # vLLM forks (RDNA2 / gfx1030)
 
 > **WIP:** Kernel behavior below is traced to **fork source commits**; published `-extras` Docker images
-> may lag HEAD until rebuilt. See [Verification status](../../reference/verification.md#vllm-forkmd).
+> may lag HEAD until rebuilt. See [Verification status](../reference/verification.md#vllm-forkmd).
 
 ## Fork landscape {#fork-landscape}
 
@@ -24,7 +24,7 @@ exist yet.
 Companion (not an engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
 (mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe))
 collects compose/env recipes and open PRs (concurrent MTP, etc.). Wiki entry point:
-[Recipes](../recipes.md). `#vllm-rdna` (Sep 2026): the Flash-Next
+[Recipes](recipes.md). `#vllm-rdna` (Sep 2026): the Flash-Next
 author treats the **recipes** repo as a **parts pile** (less active new work); day-to-day Flash-Next
 optimization lives in `vllm-rdna2-qwen`. Concurrent-MTP PRs on the recipes repo are still worth
 cherry-picking into either stack.
@@ -37,22 +37,22 @@ cherry-picking into either stack.
 |---|---|
 | **0.28 rebase** on `opengfx1030/vllm-rdna` | In progress. Port of HIP kernels from the old 0.27.1 line; authors report **decode regressions** vs 0.27.1 while hunting CUDA-graph / kernel output bugs |
 | **Flash-Next → org cherry-picks** | `#vllm-rdna` Sep 14–15: leapdragon Flash-Next work is **in `rdna_extras`** (PLE load path + 27B AWQ notes landed on HEAD). The standalone [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is **not being updated**. Published Hub / GHCR Flash-Next images may still be the older leapdragon container until a new org bake. Earlier review-only PR [`#1`](https://github.com/opengfx1030/vllm-rdna/pull/1) was the first `rdna_ar` pass. |
-| **Intel AutoRound / FP16 Flash-Next** | Draft [`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5) — large, **dirty** vs `rdna_extras`. Validated short-run on 4× V620 (see [overview](../overview.md#intel-autoround-flash-next)). Not a Hub image. |
-| **QSA live-context prefill** | **Merged** [`opengfx1030/vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15) (20 Sep 2026) into `rdna_extras`. Bounds AMD QSA prefill scoring to the live prompt (decode / missing metadata stay capacity-wide). Folds superseded PR `#12` V620 startup fixes. Combined-stack benches: [overview](../overview.md#qwen38-flash-next-on-vllm). **INT8 shadows and fused MTP-3 draft decode are not in the merge.** Hub `-extras` still lags. `#vllm-rdna` (Sep 21–22): the `#15` **~2k** PP table did **not** reproduce on other 4× public-merge hosts (**~1.1–1.45k**). The unpublished recovery landed as **`#17`** (next row). |
+| **Intel AutoRound / FP16 Flash-Next** | Draft [`opengfx1030/vllm-rdna#5`](https://github.com/opengfx1030/vllm-rdna/pull/5) — large, **dirty** vs `rdna_extras`. Validated short-run on 4× V620 (see [overview](flash-next.md#intel-autoround-flash-next)). Not a Hub image. |
+| **QSA live-context prefill** | **Merged** [`opengfx1030/vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15) (20 Sep 2026) into `rdna_extras`. Bounds AMD QSA prefill scoring to the live prompt (decode / missing metadata stay capacity-wide). Folds superseded PR `#12` V620 startup fixes. Combined-stack benches: [overview](flash-next.md#qwen38-flash-next-on-vllm). **INT8 shadows and fused MTP-3 draft decode are not in the merge.** Hub `-extras` still lags. `#vllm-rdna` (Sep 21–22): the `#15` **~2k** PP table did **not** reproduce on other 4× public-merge hosts (**~1.1–1.45k**). The unpublished recovery landed as **`#17`** (next row). |
 | **Recipe ports + Hybrid W4A16 gfx10** | Draft [`opengfx1030/vllm-rdna#6`](https://github.com/opengfx1030/vllm-rdna/pull/6) — in-tree Apache ports from the recipe book (Triton LDS/softmax, skinny MoE GEMV, MTP `SupportsPP`). **RDNA2 HIP stays the auto default**; Hybrid is opt-in (`--linear-backend rdna_hybrid`). Needs gfx1030 A/B. |
 | **Kernel gap audit after `RDNA_ATTN` port** | Community audit list (fix only): missing/partial `layernorm` bindings, FA int8/fp8 variants, some W8A8 / MLA / int8 cache bindings, `VLLM_FORCE_CUSTOM_ALL_REDUCE` wiring, MXFP4 oracle backend, stricter custom-paged-attention gate. Already clean on that pass: W4A16 dense+MoE, MLA sparse file, dynamo `_SimpleCData` fix, EXL3, arch helpers |
-| **V620 fast stack (`#17`)** | **Merged** [`opengfx1030/vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep 2026) into `rdna_extras`. Ports the measured 4× TP4 serving stack: **resident W4A16 MoE** (pack INT4 into the RDNA2 layout once at load; skip per-chunk repack), Mamba **state retirement across null gaps** (backport [`vllm#55450`](https://github.com/vllm-project/vllm/pull/55450) — previously a long-prompt preemption loop that halved usable context), and **`FULL_DECODE_ONLY`** graphs. PR-head 16k: **~1958 / ~1983 tok/s** PP. `#vllm-rdna` (Sep 23): a second 4× host **confirmed** those 16k cells after regenerating TunableOp for its rocBLAS. Hub `-extras` still lags. Details: [overview](../overview.md#qwen38-flash-next-on-vllm), [TunableOp](../../troubleshooting/vllm.md#tunableop-rocblas-mismatch). |
-| **Flash-Next production** | **4× V620** still the vLLM path; prefer **latest `rdna_extras`** (now includes `#17`) over a stale leapdragon checkout. Published containers may lag. **3× PP3:** leapdragon image decoded correctly; `rdna_extras` still **garbage** on a Sep 16 fresh pull — [troubleshooting](../../troubleshooting/vllm.md#flash-next-pp3-output-corruption). Community Sep 17–18 overlay [`alanoo81/flashnext-v620-pp3`](https://github.com/alanoo81/flashnext-v620-pp3) (leapdragon + org MoE HIP) — [recipe](../recipes.md#flash-next-3x-moe-hip-overlay). `#general` (Sep 23): overlay author is **no longer working on it**; multi-agent can hit **infinite KV-pool dump loops** — cap concurrent agents. Measured `#17` graphs: **`FULL_DECODE_ONLY`**. Open [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled **PIECEWISE** boot and stay correct, but decode dropped **~63–70 → ~26–34 t/s**. Draft [`#21`](https://github.com/opengfx1030/vllm-rdna/pull/21) tries to keep FULL decode next to piecewise capture — **unbenched**. |
+| **V620 fast stack (`#17`)** | **Merged** [`opengfx1030/vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep 2026) into `rdna_extras`. Ports the measured 4× TP4 serving stack: **resident W4A16 MoE** (pack INT4 into the RDNA2 layout once at load; skip per-chunk repack), Mamba **state retirement across null gaps** (backport [`vllm#55450`](https://github.com/vllm-project/vllm/pull/55450) — previously a long-prompt preemption loop that halved usable context), and **`FULL_DECODE_ONLY`** graphs. PR-head 16k: **~1958 / ~1983 tok/s** PP. `#vllm-rdna` (Sep 23): a second 4× host **confirmed** those 16k cells after regenerating TunableOp for its rocBLAS. Hub `-extras` still lags. Details: [overview](flash-next.md#qwen38-flash-next-on-vllm), [TunableOp](../troubleshooting/vllm.md#tunableop-rocblas-mismatch). |
+| **Flash-Next production** | **4× V620** still the vLLM path; prefer **latest `rdna_extras`** (now includes `#17`) over a stale leapdragon checkout. Published containers may lag. **3× PP3:** leapdragon image decoded correctly; `rdna_extras` still **garbage** on a Sep 16 fresh pull — [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Community Sep 17–18 overlay [`alanoo81/flashnext-v620-pp3`](https://github.com/alanoo81/flashnext-v620-pp3) (leapdragon + org MoE HIP) — [recipe](flash-next-serve.md#flash-next-3x-moe-hip-overlay). `#general` (Sep 23): overlay author is **no longer working on it**; multi-agent can hit **infinite KV-pool dump loops** — cap concurrent agents. Measured `#17` graphs: **`FULL_DECODE_ONLY`**. Open [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled **PIECEWISE** boot and stay correct, but decode dropped **~63–70 → ~26–34 t/s**. Draft [`#21`](https://github.com/opengfx1030/vllm-rdna/pull/21) tries to keep FULL decode next to piecewise capture — **unbenched**. |
 | **vllm-rdna-qa** | [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa) (`#vllm-rdna` Sep 17): maintainer QA / landing playbook for `opengfx1030/vllm-rdna`. **Not** a second kernel wiki. |
 | **Docker bake** | Source moved to [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker). `#vllm-rdna` Sep 18: Hub **`blivioniag/vllm-rdna:v0.28.0-extras`** is up for community test; maintainer noted **CI is not fully tracked**. Day-to-day remains **`v0.27.1-extras*`** until you A/B. |
 | **0.28 MTP / 0.29 rebase** | `#vllm-rdna` Sep 18: **no MTP support on the 0.28.0 extras line** — rebase continues on [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0) to pick up upstream **Qwen4Exp**. Flash-Next long-prompt hosts that needed `VLLM_USE_V2_MODEL_RUNNER=0` should re-A/B before bumping (V2 becomes the default on 0.29). |
 | **Upstream vLLM 0.30** | `#general` (Sep 22): **v0.30** released; official images now cite **ROCm 10.0**. gfx1030 is still **not** in mainline (arch missing from some build parts). ROCm itself has listed Navi 21 since 7.x — that does **not** mean stock vLLM serves it. Keep extras. |
-| **MTP under pipeline parallel** | Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) merged (`#vllm-rdna` Sep 15). Needed for **PP3 + MTP** on 3× V620 — [recipes](../recipes.md#flash-next-3x-pp3-mtp). Not in Hub `-extras` 0.27.1. |
+| **MTP under pipeline parallel** | Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) merged (`#vllm-rdna` Sep 15). Needed for **PP3 + MTP** on 3× V620 — [recipes](flash-next-serve.md#flash-next-3x-pp3-mtp). Not in Hub `-extras` 0.27.1. |
 | **`rdna_ar`** | `#vllm-rdna` Sep 15: experimental `VLLM_RDNA_AR=1` path was generating more issues than it solved; the intended replacement was **unlocked custom all-reduce** when P2P works. `#vllm-rdna` (Sep 24): maintainer now prefers **keeping a simpler `RDNA_AR`** over chasing upstream custom AR; one host reported **force custom all-reduce crashed the whole server**. Still **not** a recommended default until A/B on your topology. |
 | **hippihx** | [`BlivionIaG/hippihx`](https://github.com/BlivionIaG/hippihx) (`#hippihx` Sep 16): HIP kernel op zoo meant to keep `rdna_extras` thin. **Not** wired into a published image yet. |
-| **Prefix cache on Flash-Next** | `#vllm-rdna` Sep 17: pre-fix `rdna_extras` reported **0%** hits. Fix: [`e45dd5cb`](https://github.com/opengfx1030/vllm-rdna/commit/e45dd5cb2de8218defe19878fd75e39528f0acbc) (QSA ring / hybrid min). Port of [`vllm#55506`](https://github.com/vllm-project/vllm/pull/55506) is [`741e5bc3`](https://github.com/opengfx1030/vllm-rdna/commit/741e5bc31ae5a14ab8926e2defaa616fdd87408a) (V2 mamba spec-decode tables) — did **not** replace the 0% fix. — [troubleshooting](../../troubleshooting/vllm.md#flash-next-prefix-cache-zero). |
-| **DeepSeek-V4 Flash** | Community INT4 + gfx1030 tree (`yiminyuan`, `#vllm-rdna` Sep 17) — [recipes](../recipes.md#deepseek-v4-flash). **Needs verify**. |
-| **LMCache** | Still **no published gfx1030 recipe**. Do **not** remake the standalone image — run official [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone) in **CPU** mode and add a **vLLM connector** (`LMCacheConnectorV1` / `LMCacheMPConnector`) to a **bare-metal / venv** `rdna_extras` serve. Official CUDA image `lmcache/vllm-openai` is **not** the RDNA path. `#lmcache` (Sep 23–24): a community **0.5.6.dev** wheel built against gfx1030; official kernels are **CDNA-only** (generic fallback + **Mamba align** issues). Hybrid Qwen (MambaSpec + QSA FullAttentionSpec) needs **HMA**; `LMCacheConnectorV1` is **not HMA-capable** and dies at startup (`Failed to promote local KV cache specs`). — [troubleshooting](../../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode). |
+| **Prefix cache on Flash-Next** | `#vllm-rdna` Sep 17: pre-fix `rdna_extras` reported **0%** hits. Fix: [`e45dd5cb`](https://github.com/opengfx1030/vllm-rdna/commit/e45dd5cb2de8218defe19878fd75e39528f0acbc) (QSA ring / hybrid min). Port of [`vllm#55506`](https://github.com/vllm-project/vllm/pull/55506) is [`741e5bc3`](https://github.com/opengfx1030/vllm-rdna/commit/741e5bc31ae5a14ab8926e2defaa616fdd87408a) (V2 mamba spec-decode tables) — did **not** replace the 0% fix. — [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-prefix-cache-zero). |
+| **DeepSeek-V4 Flash** | Community INT4 + gfx1030 tree (`yiminyuan`, `#vllm-rdna` Sep 17) — [recipes](flash-next-serve.md#deepseek-v4-flash). **Needs verify**. |
+| **LMCache** | Still **no published gfx1030 recipe**. Do **not** remake the standalone image — run official [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone) in **CPU** mode and add a **vLLM connector** (`LMCacheConnectorV1` / `LMCacheMPConnector`) to a **bare-metal / venv** `rdna_extras` serve. Official CUDA image `lmcache/vllm-openai` is **not** the RDNA path. `#lmcache` (Sep 23–24): a community **0.5.6.dev** wheel built against gfx1030; official kernels are **CDNA-only** (generic fallback + **Mamba align** issues). Hybrid Qwen (MambaSpec + QSA FullAttentionSpec) needs **HMA**; `LMCacheConnectorV1` is **not HMA-capable** and dies at startup (`Failed to promote local KV cache specs`). — [troubleshooting](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode). |
 | **Upstream CPU KV offload (ROCm)** | `#vllm-rdna` Sep 20: [`vllm#57160`](https://github.com/vllm-project/vllm/pull/57160) (mainline, not 0.29) uses private pinned tensors for CPU KV offload after `cudaHostRegister` failures on large TP. **Needs investigate** before cherry-pick — may depend on work not in current `rdna_extras`. Do not treat as a gfx1030 recipe. |
 
 Official-fork feature set called out in-channel (HIP): **MXFP4**, **AWQ INT4**, **GPTQ INT4**, GDN
@@ -126,7 +126,7 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 - **EXL3** (in-tree on `rdna_extras`, **not** in published v0.27.1 `-extras` images yet):
   `exl3_hadamard.cu`, `exl3_dot2_*.cu`, plus `vllm/.../quantization/exl3.py`. Experimental.
   `#vllm-rdna` (Sep 24): [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0)
-  now has **mul1** so existing EXL3 packs can load — [Quantization](../quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+  now has **mul1** so existing EXL3 packs can load — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
 ### MoE (mixture of experts)
 
@@ -172,7 +172,7 @@ docker run -it --rm \
   vllm serve <model> --dtype float16
 ```
 
-See [Running (Docker)](../running.md) for the full run recipe and [Building images](../images.md)
+See [Running (Docker)](running.md) for the full run recipe and [Building images](images.md)
 for how the `-extras` variant is produced (`VLLM_VARIANT=extras-fork`, currently `VLLM_REF=rdna2_extras`
 from the historical personal clone until bake is retargeted at `opengfx1030/vllm-rdna`).
 
@@ -202,8 +202,8 @@ Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLine
 On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1` for the
 attention layers — that's expected. The GDN linear-attention layers now use the native HIP kernels above
 (not Triton FLA). For graph capture issues, see
-[CUDA graphs](../configuration.md#cuda-graphs-preferred-over---enforce-eager) and
-[vLLM troubleshooting](../../troubleshooting/vllm.md#cuda-graph-capture-crashes).
+[CUDA graphs](configuration.md#cuda-graphs-preferred-over---enforce-eager) and
+[vLLM troubleshooting](../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
 ### CUDA graph capture (TP comm fix)
 
@@ -233,7 +233,7 @@ Omit `VLLM_DISABLED_KERNELS` when testing Exllama — it competes with the RDNA2
 ## Building from source (advanced)
 
 Create the venv and install torch first — the ROCm 7.2.0 and 7.14.0 commands are on
-[Host venv](../host-venv.md). `Dockerfile.vllm` then does an editable install (not
+[Host venv](host-venv.md). `Dockerfile.vllm` then does an editable install (not
 `requirements/dev.txt`):
 
 ```bash
@@ -246,7 +246,7 @@ VLLM_USE_PRECOMPILED=0 ENABLE_CK=0 FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE \
 ```
 
 On ROCm 7.2.0 only, add `--torch-backend=rocm7.2`. On 7.14.0, leave it off and install the
-multi-arch device wheels first. Details: [Host venv](../host-venv.md).
+multi-arch device wheels first. Details: [Host venv](host-venv.md).
 
 The kernels have their own tests, e.g.:
 

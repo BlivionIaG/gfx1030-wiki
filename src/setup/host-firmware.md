@@ -20,7 +20,7 @@ Community symptoms:
 - `lspci` never appears because firmware never hands off.
 
 If Linux already sees all cards, skip this page and go to [P2P](../tuning/p2p.md) / [Getting
-started](../getting-started.md).
+started](getting-started.md).
 
 ## Dell Precision T5820 / T7820 / T7920 (community)
 
@@ -92,7 +92,7 @@ flashback / recovery path if you have one. This wiki does not publish byte patch
 
 ## Related
 
-- [Supported hardware](../hardware.md) — card identity
+- [Supported hardware](hardware.md) — card identity
 - [Multi-GPU P2P](../tuning/p2p.md) — after the host POSTs
-- [Getting started](../getting-started.md)
+- [Getting started](getting-started.md)
 - [Useful resources](../meta/resources.md)

@@ -5,7 +5,7 @@
 Symptom: fatal error in `ggml-backend-meta.cpp` during warmup with tensor split.
 
 Fix: `--ctx-checkpoints 0`. Known on stock llama.cpp and the RDNA2 fork. See
-[RDNA2 serving limits](../../llama-cpp/rdna2-serving.md#notable-limits).
+[RDNA2 serving limits](../llama-cpp/rdna2-serving.md#notable-limits).
 
 ## FlashAttention abort: `max_blocks_per_sm > 0`
 
@@ -33,7 +33,7 @@ Mitigations to try (in order):
    fork's gfx1030 profile.
 2. Keep the **simplified** env stack — especially `GGML_HIP_SAFE_STATE_IO=1` (known ROCm FA crash
    workaround). Do **not** pile on every `GGML_HIP_GFX1030_*` flag; that set can clash with the RCCL
-   autotune path. See [Serving](../../llama-cpp/rdna2-serving.md#recommended-env-stack).
+   autotune path. See [Serving](../llama-cpp/rdna2-serving.md#recommended-env-stack).
 3. If FA still aborts on head-256 models under TP: fall back to **f16 KV + FA on** only after a
    fork update / local occupancy patch, or temporarily use **layer split** for that model until FA
    occupancy is fixed upstream/fork-side.
@@ -54,7 +54,7 @@ Symptom: `ggml_backend_cuda_comm_allreduce_nccl` crash, `NCCL WARN HIP failure`.
 
 Try in order:
 
-1. Confirm [PCIe P2P](../../tuning/p2p.md) is working.
+1. Confirm [PCIe P2P](../tuning/p2p.md) is working.
 2. Set `NCCL_P2P_LEVEL=PHB` or `NCCL_P2P_DISABLE=1`.
 3. On the RDNA2 fork: `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none`.
 4. Check ACS — CPU root-port ACS can block GPU-direct P2P.
@@ -62,7 +62,7 @@ Try in order:
 ## P2P enabled but slower inference
 
 Bandwidth tests can pass while inference regresses on gen3 x4 or ACS-blocked topologies. A/B with
-`NCCL_P2P_DISABLE=1`. See [When P2P hurts](../../tuning/p2p.md#when-p2p-is-enabled-but-inference-is-slower).
+`NCCL_P2P_DISABLE=1`. See [When P2P hurts](../tuning/p2p.md#when-p2p-is-enabled-but-inference-is-slower).
 
 ## PSU dies the moment tensor-split prefill starts
 
@@ -70,7 +70,7 @@ Symptom: layer split is stable; `--split-mode tensor` kills power (no HIP error 
 traced this to **PSU transients**, not the kernels — especially old miner PSUs and Lenovo P620
 proprietary GPU cables (that chassis PSU often only feeds **two** cards).
 
-1. Cap at **160 W** or **140 W** ([Power Tuning](../../tuning/power.md)).
+1. Cap at **160 W** or **140 W** ([Power Tuning](../tuning/power.md)).
 2. A/B card pairs — one slot pair can trip protection while others do not.
 3. Prefer **2 or 4** GPUs; TP3 has caused driver crashes after a "successful" run.
 4. Split GPU power off the motherboard PSU if the board only has two GPU power ports.
@@ -79,17 +79,17 @@ proprietary GPU cables (that chassis PSU often only feeds **two** cards).
 
 Pin llama.cpp to one socket (`numactl --cpunodebind=0 --membind=0`) and keep all TP GPUs on that
 socket. Crossing NUMA for tensor split is a known prefill killer — see
-[Host topology](../../tuning/p2p.md#host-topology).
+[Host topology](../tuning/p2p.md#host-topology).
 
 ## Vulkan RADV hard-crashes; AMDVLK is slow
 
 `#llamacpp`: Mesa **RADV** can hard-reboot or crash the host on V620 llama.cpp; switching the ICD to
 **AMDVLK** (`VK_ICD_FILENAMES=/etc/vulkan/icd.d/amd_icd64.json`) can get inference running but is
 **much slower**. For multi-GPU **`--split-mode tensor`**, the community path is **ROCm / HIP**, not
-Vulkan — tensor parallel needs RCCL. See [Building llama.cpp](../../llama-cpp/building.md#vulkan-alternative).
+Vulkan — tensor parallel needs RCCL. See [Building llama.cpp](../llama-cpp/building.md#vulkan-alternative).
 
 If a **new V620** hard-reboots a box that was stable with a 3080, read
-[Slot power and PSU transients](../../tuning/power.md#slot-power-and-psu-transients) before chasing
+[Slot power and PSU transients](../tuning/power.md#slot-power-and-psu-transients) before chasing
 Vulkan ICDs.
 
 ## DFlash2 / sidecar crashes {#dflash2--sidecar-crashes}
@@ -101,7 +101,7 @@ Symptoms (`#llamacpp` Sep 2026):
 - Sidecar probe: `qwen35-mtp target mismatch: target GGUF model identity differs` → falls back off
   sidecar.
 
-See [Sidecar / DFlash gotchas](../../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas): match
+See [Sidecar / DFlash gotchas](../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas): match
 publisher families for target/draft GGUFs, keep `--spec-draft-p-min 0`, pull latest fork, A/B MTP.
 
 ## MTP slot wedge: LCP / prompt-cache position desync {#mtp-lcp-position-desync}
@@ -143,7 +143,7 @@ Mitigations to try (in order):
 2. Avoid prefix-cache reuse: new session / `--parallel 1`, or force a fresh slot after a 200-with-no-tokens
    event.
 3. Prefer **Q6+ / Q8** long-session quants over Quark-AWQ-MXFP4 — see
-   [Sidecar / DFlash gotchas](../../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas).
+   [Sidecar / DFlash gotchas](../llama-cpp/rdna2-speculative.md#sidecar-dflash-gotchas).
 4. Pull latest `edwinbrowwn/llama.cpp-rdna2` and report the three-step fingerprint on `#llamacpp`
    if it still wedges.
 5. Community (`#llamacpp`, Sep 13 2026): the same config **stopped** throwing the M-RoPE
@@ -160,5 +160,5 @@ Symptom: single-stream is ~35–50 t/s; with two overlapping generations (or a s
 falls to single-digit t/s.
 
 Expected on V620 for many llama.cpp configs — see
-[Concurrent slots](../../llama-cpp/rdna2-serving.md#concurrent-slots). Prefer separate instances /
+[Concurrent slots](../llama-cpp/rdna2-serving.md#concurrent-slots). Prefer separate instances /
 GPUs over high `--parallel` for multi-agent.

@@ -77,49 +77,5 @@ Questions, live benches, and fork updates land first on **gfx1030 club**:
 [https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp) (`#vllm-rdna`, `#llamacpp`, `#general`,
 `#benchmarks`). See [Useful resources](../meta/resources.md#community-discord).
 
----
+Editors: local preview and page conventions are in [Contributing](../meta/contributing.md).
 
-## Previewing this wiki locally
-
-This site is built with [mdBook](https://rust-lang.github.io/mdBook/). You do **not** need a GPU or
-ROCm to work on the docs.
-
-### Prerequisites
-
-- **Git** — to clone the repository.
-- **mdBook** — a single static binary (no runtime dependencies).
-
-### Install mdBook
-
-The quickest way is to grab a prebuilt binary from the
-[mdBook releases page](https://github.com/rust-lang/mdBook/releases):
-
-```sh
-mkdir -p "$HOME/.local/bin"
-MDBOOK_VERSION=v0.5.4
-curl -sL "https://github.com/rust-lang/mdBook/releases/download/${MDBOOK_VERSION}/mdbook-${MDBOOK_VERSION}-x86_64-unknown-linux-gnu.tar.gz" \
-  | tar -xz -C "$HOME/.local/bin"
-export PATH="$HOME/.local/bin:$PATH"
-mdbook --version
-```
-
-If you have a Rust toolchain, `cargo install mdbook` also works.
-
-### Build and preview
-
-```sh
-git clone https://github.com/blivioniag/gfx1030-wiki.git
-cd gfx1030-wiki
-
-mdbook build      # outputs static HTML to ./book
-mdbook serve      # live-reloading preview at http://localhost:3000
-```
-
-### Add content
-
-1. Create a new markdown file in `src/`, e.g. `src/my_page.md`.
-2. Add an entry for it in `src/SUMMARY.md`.
-3. Re-run `mdbook serve` to preview.
-4. Open a pull request against `master`.
-
-See [Contributing](../meta/contributing.md) for the full guidelines.

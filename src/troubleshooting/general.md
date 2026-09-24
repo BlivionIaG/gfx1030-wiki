@@ -15,7 +15,7 @@ Set the override:
 export HSA_OVERRIDE_GFX_VERSION=10.3.0
 ```
 
-See [HSA_OVERRIDE](../../setup/hsa-override.md). If building from source, use `PYTORCH_ROCM_ARCH` /
+See [HSA_OVERRIDE](../setup/hsa-override.md). If building from source, use `PYTORCH_ROCM_ARCH` /
 `AMDGPU_TARGETS` for your real target.
 
 ## `hipErrorNoBinaryForGpu` / `Memory access fault`
@@ -32,7 +32,7 @@ export TORCH_BLAS_PREFER_HIPBLASLT=0
 ## BF16 is extremely slow
 
 Force **FP16** everywhere (`--dtype float16` in vLLM, `dtype=torch.float16` in PyTorch). See
-[Environment variables](../../reference/env-vars.md).
+[Environment variables](../reference/env-vars.md).
 
 ## The iGPU is being selected instead of my discrete card
 

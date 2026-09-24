@@ -27,6 +27,12 @@
 
 ## vLLM (`vllm/`)
 
+Flash-Next narrative lives in `flash-next.md`, serve commands in `flash-next-serve.md`, and
+Flash-Next failure modes in `troubleshooting/vllm-flash-next.md`. Rows below still name the page
+they were written against (`recipes.md`, `overview.md`, `configuration.md`).
+
+
+
 ### `running.md`
 
 | Statement | Status | Verify how |

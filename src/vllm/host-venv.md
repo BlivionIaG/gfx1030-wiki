@@ -4,12 +4,12 @@
 > [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker)
 > (`Dockerfile.base`, `Dockerfile.vllm`, `docker-bake.hcl`) and the
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` tree.
-> See [Verification status](../../reference/verification.md#host-venvmd).
+> See [Verification status](../reference/verification.md#host-venvmd).
 
-Day-to-day serving should stay on the prebuilt images — [Running (Docker)](../running.md).
+Day-to-day serving should stay on the prebuilt images — [Running (Docker)](running.md).
 Use this page when you want the same stack in a host Python 3.12 `uv` venv (kernel work,
 no image rebuild). You need a ROCm toolchain with `hipcc`. For more than one GPU, pin
-**ROCm 7.2.0 or 7.14.0** — [Installing ROCm](../../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+**ROCm 7.2.0 or 7.14.0** — [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.
 
@@ -44,7 +44,7 @@ source build. gfx103X still has no aotriton, so PyTorch's SDPA flash path stays 
 separate from the Triton package.
 
 `docker-bake.hcl` currently pins torch `2.12.0+rocm7.14.0`. The repo README and the
-[image matrix](../running.md#image-matrix) still describe the published `7.14.0` tag as PyTorch
+[image matrix](running.md#image-matrix) still describe the published `7.14.0` tag as PyTorch
 2.13.0. Recreate the bake with the pins below; if you are matching an image you already pulled,
 use whatever `torch.__version__` that container prints (2.13 pairs with `torchvision==0.28.0+rocm7.14.0`
 and `amd-torch-device-gfx1030==2.13.0+rocm7.14.0` on the same index).
@@ -168,7 +168,7 @@ PYTORCH_ROCM_ARCH=gfx1030 \
   uv pip install -e . --no-build-isolation
 ```
 
-Smoke test, from [Getting started](../../setup/getting-started.md#5-smoke-test):
+Smoke test, from [Getting started](../setup/getting-started.md#5-smoke-test):
 
 ```sh
 python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
@@ -177,6 +177,6 @@ python -c "import vllm, vllm._rocm_C; print('vllm', vllm.__version__)"
 
 ## Related
 
-- [Running (Docker)](../running.md) — prefer this unless you need a host venv.
-- [Building images](../images.md) — the bake graph this page mirrors.
-- [vLLM forks](../fork.md) — kernel behavior after the install.
+- [Running (Docker)](running.md) — prefer this unless you need a host venv.
+- [Building images](images.md) — the bake graph this page mirrors.
+- [vLLM forks](fork.md) — kernel behavior after the install.
