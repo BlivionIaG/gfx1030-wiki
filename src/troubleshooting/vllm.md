@@ -43,6 +43,28 @@ export VLLM_DISABLED_KERNELS=ExllamaLinearKernel,TritonW4A16LinearKernel
 
 Confirm `-extras` image from current extras. See [Fork kernel dispatch](../../vllm/fork.md#kernel-dispatch-on-gfx1030).
 
+## TunableOp aborts or is ~20% slow after a ROCm / rocBLAS bump {#tunableop-rocblas-mismatch}
+
+`#vllm-rdna` (Sep 23–24) + in-tree
+[`tunableop/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop): the committed
+FP16 rows are **locked to one rocBLAS library hash** (qualified example: `rocblas-c27e2252cc7a`).
+Solution IDs must **not** be reused across a different rocBLAS build, even when the version string
+matches.
+
+Symptoms:
+
+- First GEMM **aborts** / TunableOp turns itself off.
+- Prefill sits **~25% below** the `#17` published table (community: **~1496 vs ~1958** tok/s at 16k)
+  until a matching table is loaded. **ROCm 10 vs 7.14** was **not** the gap on that host.
+
+Fix: stop the serve, then regenerate and qualify for **this** library — see
+[Regenerate for another rocBLAS build](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop#regenerate-for-another-rocblas-build).
+Serve with `PYTORCH_TUNABLEOP_ENABLED=1`, `PYTORCH_TUNABLEOP_TUNING=0`, and
+`PYTORCH_TUNABLEOP_FILENAME` pointing at `tunableop/rocblas-<your-hash>/…`. The `#17` launcher
+refuses incompatible solver IDs rather than loading them.
+
+Do not commit a host-specific CSV into the wiki. Do not copy another machine’s library hash.
+
 ## vLLM picks the wrong platform / doesn't see my Radeon
 
 Use published [`blivioniag/vllm-rdna`](../../vllm/images.md) images with `patches/*rocm-platform*` fixes rather
@@ -259,6 +281,18 @@ This does **not** replace [PP3 corruption](#flash-next-pp3-output-corruption). H
 can still use `FULL_AND_PIECEWISE` — see [Configuration](../../vllm/configuration.md#cuda-graphs-preferred-over---enforce-eager).
 Sanitized serve line: [Flash-Next PIECEWISE recipe](../../vllm/recipes.md#flash-next-4x-piecewise).
 
+The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) uses
+`FULL_AND_PIECEWISE` and states that mode **executes as PIECEWISE on ROCm**
+(`rocm_full_executes_as_piecewise`). It also attributes an earlier “corrupts at c=8” report to
+**probe artifacts** (reasoning-parser field / reasoning-budget), not the graphs.
+
+`#vllm-rdna` (Sep 23–24): merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17)
+**measures `FULL_DECODE_ONLY`** (mode `0`, capture `[3,6,12]` with MTP-2). That is **not** the
+same as **FULL-only** (which still corrupted earlier). Open
+[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE` **boot
+and stay correct**, but decode dropped **~63–70 → ~26–34 t/s** (prefill held). Prefer `#17`’s
+`FULL_DECODE_ONLY` until a graph-launch follow-up lands. See [4× `#17` recipe](../../vllm/recipes.md#flash-next-4x-pr17).
+
 `#vllm-rdna` (Sep 17): `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (in that recipe) **turns torch.compile off**.
 Community A/B on a 4× TP Flash-Next tree: **~39 t/s** with breakable/eager vs **~55 t/s** after compile
 stayed on (`VLLM_USE_BREAKABLE_CUDAGRAPH=0`) plus a `.contiguous()` on a hyper-connection injection
@@ -273,6 +307,18 @@ It does **not** fix [PP3 corruption](#flash-next-pp3-output-corruption).
 
 The GPU core dumps written on that path are **several GB each** and land in the **process working
 directory** — start the server from a scratch dir (the 4× recipe already `cd`s to `/tmp`).
+
+## Flash-Next vision startup / runtime OOM {#flash-next-vision-oom}
+
+Two different OOM modes (`#vllm-rdna` Sep 17–21 + the in-tree launcher):
+
+| When | Cause | What to do |
+|---|---|---|
+| **Startup** | mm-profiling dummy image (~24.8M px) → vision SDPA math backend builds a **~64 GiB** L×L fp32 score matrix | Set `--mm-processor-kwargs '{"max_pixels":1605632}'`. `--limit-mm-per-prompt '{"image":1}'` alone is **not** enough (count was already 1). |
+| **Runtime** | vLLM may **not reserve** vision memory; a **tight KV** plus an image OOMs after a clean start | Leave more free VRAM / lower `--max-model-len`; community **~15–20 s per image**. `#general` (Sep 21): vision + **PP3** is especially tight. |
+
+Leave `--language-model-only --skip-mm-profiling` if you do not need images. See
+[4× recipe vision notes](../../vllm/recipes.md#flash-next-4x-piecewise).
 
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 
@@ -348,6 +394,35 @@ compile an LMCache connector (missing HIP / developer packages). Intended shape:
 
 NVMe-as-KV is the usual motive (low host RAM). Until someone posts a working gfx1030 compose, treat
 this as **Needs verify**.
+
+`#vllm-rdna` (Sep 22) + `#lmcache` (Sep 23–24): still **no working gfx1030 compose**. Extra facts:
+
+- Do **not** remake standalone — use [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone).
+- A community **0.5.6.dev** wheel built against gfx1030; that is the **library**, not a proven
+  connector. Official LMCache kernels are **CDNA-only**; generic fallback still has **Mamba align**
+  problems (last known real blocker on `0.5.4`).
+- Hybrid Qwen (MambaSpec + QSA FullAttentionSpec) creates **multiple KV groups** and needs **HMA**.
+  `LMCacheConnectorV1` is **not HMA-capable** (`SupportsHMA` missing; vendored copy still asserts
+  a single group) → startup `ValueError: Failed to promote local KV cache specs to one unified type`.
+- A community LDS **~143 KB vs 64 KB** claim is still **Needs verify** (LLM-sourced, no compile log).
+
+Keep the standalone-CPU + connector shape; expect **fork patches** before this is a recipe.
+
+## FP8 KV rejected on QSA / Flash-Next {#fp8-kv-rejected-on-qsa}
+
+`#vllm-rdna` (Sep 22): `--kv-cache-dtype fp8` **fails at startup** on current QSA Flash-Next rather
+than falling back. Two independent gates:
+
+1. **QSA backends are unquantized-only.** Community traceback: `QSAStateBackend` /
+   the AMD QSA owner declare `supported_kv_cache_dtypes = ["auto", "bfloat16", "float16"]`.
+   Backend selection records `kv_cache_dtype not supported` and never picks those layers — so
+   there is **no** backend that can serve `--kv-cache-dtype fp8` (or `int8_per_token_head`) on
+   this model.
+2. **ROCm FP8 KV path is AITER / CDNA.** Separate hosts got an **AITER and CDNA only** refusal
+   even off the QSA stack. Maintainer: fp8 KV **used to work** on older dense 27B and may be
+   re-enableable; it is **not** unlocked on current extras.
+
+Stay on **fp16 KV**. See [Quantization — KV-cache dtype](../../vllm/quantization.md#kv-cache-dtype).
 
 ## Leftover vLLM / PLE workers after a restart {#leftover-vllm-workers}
 

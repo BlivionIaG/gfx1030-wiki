@@ -18,6 +18,11 @@ and already show the full 16 GB.
 `#vllm-rdna` (pinned): extra **~2 GB per GPU** if you disable it. Some members keep ECC on for bit-flip
 protection; others disable it for long-context KV cache.
 
+`#general` (Sep 23): **stress-test VRAM before turning ECC off.** One returned V620 only showed a
+**single correctable ECC error** in `dmesg`; a Vulkan memtest-class load produced **many** errors in
+minutes. Community: the extra **~2 GB is not worth it** if the card is already throwing ECC errors
+— leave ECC **on** and RMA / replace. Do not treat a quiet `dmesg` as a clean card.
+
 ## Check whether ECC is on
 
 ```bash
