@@ -15,6 +15,15 @@ Radeon **RX 6800 / 6800 XT / 6900 XT / 6950 XT** and the workstation/data-center
 platform for modern LLMs — but getting the most out of them (power tuning, multi-GPU P2P, and RDNA-tuned
 kernels) takes a bit of extra work. That's what this wiki documents.
 
+## Read it in this order
+
+1. [Getting started](./setup/getting-started.md) — hardware check, ROCm, optional V620 tuning, first container.
+2. [llama.cpp or vLLM](./choose-a-stack.md) — which stack matches the model and card count.
+3. The matching section: [vLLM](./vllm/overview.md) or [llama.cpp](./llama-cpp/overview.md).
+4. [Troubleshooting](./troubleshooting/index.md) when a command fails. [Verification status](./reference/verification.md) says which numbers are solid.
+
+Host firmware (the machine never POSTs) and Flash-Next serve lines are specialist pages. Skip them until you need them.
+
 ## What this wiki focuses on
 
 - **[Tuning](./tuning/power.md)** — the [`v620_toolbox`](https://github.com/blivioniag/v620_toolbox)
@@ -25,14 +34,15 @@ kernels) takes a bit of extra work. That's what this wiki documents.
 - **[llama.cpp](./llama-cpp/overview.md)** — stock builds plus the RDNA2 fork (tensor parallel, MTP /
   DFlash). Usually the easiest first stack on V620.
 - **[vLLM on RDNA](./vllm/overview.md)** — ready-to-run Docker images;
-  [recipes](./vllm/recipes.md) for Hub vs recipe container vs Flash-Next
+  [recipes](./vllm/recipes.md) for Hub vs recipe container, and a separate
+  [Flash-Next](./vllm/flash-next.md) page
   ([`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna) on a
   [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base), how they are
   built with [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker), and
   the **official** vLLM extras fork [`opengfx1030/vllm-rdna`](./vllm/fork.md) (`rdna_extras`, now
   including Flash-Next cherry-picks). Published Hub `-extras` tags still lag HEAD.
 
-New here? Start with [Supported Hardware](./setup/hardware.md) and [Getting Started](./setup/getting-started.md).
+New here? Start with [Getting Started](./setup/getting-started.md). Card identity is on [Supported Hardware](./setup/hardware.md).
 
 ## Community Discord
 

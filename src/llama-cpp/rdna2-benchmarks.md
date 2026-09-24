@@ -1,7 +1,7 @@
 # RDNA2 fork — Benchmarks
 
 > **WIP:** All numbers below are **author- or Discord-reported**. Run matched before/after on your
-> hardware. See [Verification status](../../reference/verification.md#llama-cpp-rdna2-benchmarksmd).
+> hardware. See [Verification status](../reference/verification.md#llama-cpp-rdna2-benchmarksmd).
 
 Point-in-time numbers using [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2),
 ROCm/RCCL, Flash Attention on, **F16 KV**, batch/ubatch **2048/256**, with the env prefix
@@ -76,7 +76,7 @@ Q8_0 reported ~667 PP / ~23 tg with ~45% MTP accept.
 ### ROCm 7.1 vs 10.0 (Ice Lake 4× V620, Q6_K_XL + MTP)
 
 Same fork commit / command shape; community numbers are close across ROCm **7.1** and **10.0** on that
-host (regular 16k ~963–965 PP / ~46 tg). Prefer [ROCm 7.2.0 or 7.14.0](../../setup/installing-rocm.md)
+host (regular 16k ~963–965 PP / ~46 tg). Prefer [ROCm 7.2.0 or 7.14.0](../setup/installing-rocm.md)
 for multi-GPU RCCL unless you are deliberately lab-testing TheRock/10.x.
 
 Reproduce long-context benches with fixed non-repeating prompts (16/32/64/128k) and full command +
@@ -98,7 +98,7 @@ DeltaNet sibling fusion. MTP works up to 6 with minimal hit on low acceptance.
 | Qwen3.6-35B-A3B | Q4 | 180+ | ~3800 |
 | Qwen3.6-27B | Q8 | 75 | ~880 |
 
-See [Power Tuning](../../tuning/power.md) for the 140 W cap. Long-context PP HIP crash fix tracks
+See [Power Tuning](../tuning/power.md) for the 140 W cap. Long-context PP HIP crash fix tracks
 [ROCm/rocm-systems#4817](https://github.com/ROCm/rocm-systems/issues/4817).
 
 ### Environment used for PR #10 results

@@ -7,12 +7,12 @@ gfx1030. This section covers stock builds and the community RDNA2-optimized fork
 
 | Goal | Page |
 |---|---|
-| Build stock llama.cpp (ROCm or Vulkan) | [Building & running](../building.md) |
-| Multi-GPU tensor parallel, MMQ tuning, DFlash2 | [RDNA2 fork overview](../rdna2-overview.md) |
-| Fork benchmarks and PR status | [RDNA2 benchmarks](../rdna2-benchmarks.md) |
-| DFlash2, MTP, ngram speculative decoding | [RDNA2 speculative decoding](../rdna2-speculative.md) |
-| Launch commands, Docker, limits | [RDNA2 serving](../rdna2-serving.md) |
-| Something broke | [llama.cpp troubleshooting](../../troubleshooting/llama-cpp.md) |
+| Build stock llama.cpp (ROCm or Vulkan) | [Building & running](building.md) |
+| Multi-GPU tensor parallel, MMQ tuning, DFlash2 | [RDNA2 fork overview](rdna2-overview.md) |
+| Fork benchmarks and PR status | [RDNA2 benchmarks](rdna2-benchmarks.md) |
+| DFlash2, MTP, ngram speculative decoding | [RDNA2 speculative decoding](rdna2-speculative.md) |
+| Launch commands, Docker, limits | [RDNA2 serving](rdna2-serving.md) |
+| Something broke | [llama.cpp troubleshooting](../troubleshooting/llama-cpp.md) |
 
 ## Which path?
 
@@ -20,21 +20,12 @@ gfx1030. This section covers stock builds and the community RDNA2-optimized fork
   `#llamacpp` prefers HIP for `--split-mode tensor` (RADV has crashed V620 hosts).
 - **`edwinbrowwn/llama.cpp-rdna2`** — multi-GPU V620 rigs, tensor parallel, RCCL all-reduce, DFlash2.
   Most `#llamacpp` performance work happens here. A matched A/B on Qwen3.8-27B Q6_K + MTP reported
-  **+57%** vs stock with identical outputs — see [Benchmarks](../rdna2-benchmarks.md#stock-llamacpp-vs-this-fork-community-ab).
+  **+57%** vs stock with identical outputs — see [Benchmarks](rdna2-benchmarks.md#stock-llamacpp-vs-this-fork-community-ab).
 
-## llama.cpp vs vLLM on V620 (`#llamacpp` / `#vllm-rdna`)
+## llama.cpp vs vLLM
 
-Community rule of thumb (Aug 2026):
+The comparison table and the "what fits on a V620" notes live on
+[llama.cpp or vLLM](../choose-a-stack.md). Short version: GGUF and single-stream start here;
+concurrency and 4× Flash-Next go to vLLM.
 
-| Workload | Prefer |
-|---|---|
-| Getting ROCm + multi-GPU working; GGUF; single-stream / low concurrency | **llama.cpp** (RDNA2 fork) — more battle-tested on V620 |
-| Multi-stream / agentic loads with prefix caching | **vLLM `-extras`** — caching + concurrency usually win |
-| Qwen3.8 **Flash-Next** on 4× V620 (weights in VRAM) | Prefer **vLLM** Flash-Next / `rdna_extras` (**~60–100+ t/s** decode class after Sep 2026 prefill work) over llama.cpp (~15–35 t/s typical) — see [vLLM overview](../../vllm/overview.md#qwen38-flash-next-on-vllm) |
-| Flash-Next on **2×** V620, or any host that **must RAM/CPU-offload** | Prefer **llama.cpp** (`--n-cpu-moe`, `-ot …=CPU`) — `#vllm-rdna` Sep 14. Community 2-card IQ4_XS ~**25 t/s** / **150–200** PP — [recipe](../rdna2-speculative.md#flash-next-2x-iq4). MTP often needs an [MTP PR / Unsloth desktop](../rdna2-speculative.md#qwen38-flash-next-experimental) |
-| MoE / lighter agentic | **Either** — community sweet spot for these cards; see [What fits well](../../vllm/overview.md#what-fits-well-on-v620) |
-
-Neither stack is "finished" for every model. New to the cards? Start with
-[RDNA2 serving](../rdna2-serving.md), then try [vLLM](../../vllm/overview.md) when you need concurrency.
-
-Multi-GPU tensor parallel benefits greatly from [PCIe P2P](../../tuning/p2p.md).
+Multi-GPU tensor parallel benefits greatly from [PCIe P2P](../tuning/p2p.md).

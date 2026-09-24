@@ -1,6 +1,6 @@
 # RDNA2 fork — Overview
 
-> **WIP:** See [Verification status](../../reference/verification.md#llama-cpp-rdna2).
+> **WIP:** See [Verification status](../reference/verification.md#llama-cpp-rdna2).
 
 [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) is a community fork of
 [llama.cpp](https://github.com/ggml-org/llama.cpp) with RDNA2-specific optimization work, developed on
@@ -8,7 +8,7 @@
 The focus is **tensor parallel (TP)** and **MMQ/MMVQ** (quantized matmul) kernels.
 
 > Actively evolving and experimental. Treat throughput claims as needing your own matched before/after
-> runs. See [Benchmarks](../rdna2-benchmarks.md). `#llamacpp` (Sep 2026): **RDNA3 (`gfx11xx`) support**
+> runs. See [Benchmarks](rdna2-benchmarks.md). `#llamacpp` (Sep 2026): **RDNA3 (`gfx11xx`) support**
 > is landing on the fork soon — this wiki still focuses on `gfx1030` / V620 until that path is documented.
 
 ## What it does
@@ -25,7 +25,7 @@ topologies fall back to stock llama.cpp. Headline areas:
 
 - **RCCL tensor-parallel all-reduce** — `GGML_CUDA_ALLREDUCE=nccl`; reported **+10% tgen / +20% prefill**
   on Qwen 122B.
-- **DFlash2** speculative decoding with ngram helpers — see [Speculative decoding](../rdna2-speculative.md).
+- **DFlash2** speculative decoding with ngram helpers — see [Speculative decoding](rdna2-speculative.md).
 - **RCCL autotuner**, parallel multi-GPU weight uploads, AMD checkpoint backports for Qwen.
 
 See the fork's `README.md` and `docs/gfx1030-*` / `docs/rdna2-*` for the authoritative list.
@@ -60,6 +60,6 @@ Maintainer helper for gfx1030 / ROCm 7.14: `scripts/build-rdna2-rocm.sh` (defaul
 
 ## Next steps
 
-- [Benchmarks](../rdna2-benchmarks.md) — author-reported numbers and PR #10 status.
-- [Serving](../rdna2-serving.md) — launch commands and Docker.
-- [Speculative decoding](../rdna2-speculative.md) — DFlash2, MTP, ngram configs.
+- [Benchmarks](rdna2-benchmarks.md) — author-reported numbers and PR #10 status.
+- [Serving](rdna2-serving.md) — launch commands and Docker.
+- [Speculative decoding](rdna2-speculative.md) — DFlash2, MTP, ngram configs.

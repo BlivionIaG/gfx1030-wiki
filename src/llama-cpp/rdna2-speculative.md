@@ -1,6 +1,6 @@
 # RDNA2 fork — Speculative decoding
 
-> **WIP:** Community-tested configs. See [Verification status](../../reference/verification.md#llama-cpp-rdna2).
+> **WIP:** Community-tested configs. See [Verification status](../reference/verification.md#llama-cpp-rdna2).
 
 ## DFlash / MTP basics
 
@@ -61,7 +61,7 @@ upstream merges only, not a polished gfx1030 profile.
 
 `#llamacpp` / forum (Sep 2026): Flash-Next on llama.cpp often lands around **~15–30 t/s** on multi-V620
 hosts and is widely called out as weaker than the
-[vLLM Flash-Next recipe](../../vllm/overview.md#qwen38-flash-next-on-vllm) (**~60–100+ t/s** decode class
+[vLLM Flash-Next recipe](../vllm/flash-next.md#qwen38-flash-next-on-vllm) (**~60–100+ t/s** decode class
 after the Sep prefill campaign). Prefer stable Qwen3.8-27B / MoE recipes for production TP on llama.cpp;
 use vLLM for Flash-Next until upstream/fork gaps close.
 
@@ -129,8 +129,8 @@ ROCBLAS_USE_HIPBLASLT=1 ./build/bin/llama-server \
 ```
 
 Community snapshot on that host: **~25 t/s** decode, **~150–200 t/s** prefill. Prefer the
-[RDNA2 fork](../rdna2-overview.md) over a random ROCm build. `--load-mode none` avoids
-[DAX mmap](../../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm) issues if the GGUF
+[RDNA2 fork](rdna2-overview.md) over a random ROCm build. `--load-mode none` avoids
+[DAX mmap](../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm) issues if the GGUF
 sits on a special mount.
 
 ### Full DFlash2 serve example (TP4, Qwen3.8-27B)
@@ -166,7 +166,7 @@ Community tuning tip (Qwen3.8-27B Q8, TP4, real prompts): **`--spec-draft-n-max 
 acceptance in synthetic benches (usually a bad prompt).
 
 **MXFP4** quants (e.g. `quark75/Qwen3.8-27B-MXFP4-GGUF`) pair well with MTP on TP2 — see
-[Serving](../rdna2-serving.md#docker-example).
+[Serving](rdna2-serving.md#docker-example).
 
 HIP **sidecar** speculative decoding is now an opt-in fork path (`#llamacpp`, Sep 2026):
 
@@ -189,4 +189,4 @@ above.
 | **DFlash2 `MEMORY_APERTURE_VIOLATION`** | Crash in `gemv_mmvq2_*` / `[dflash-sidecar] illegal memory access`; server may enter target-only then abort | Reboot / clean env, pull latest DFlash sidecar fixes, A/B MTP instead of DFlash2; report host + quant on `#llamacpp` |
 | **`--spec-draft-p-min` ≠ 0** | Community: non-zero `p-min` can effectively **disarm MTP** acceptance | Keep `--spec-draft-p-min 0` (or `0.0`) unless you have measured otherwise |
 | **Quark / MXFP4 lockups** | Quark-AWQ-MXFP4 GGUFs can look great then wedge after long ctx | Prefer **Q6+** / **Q8** for long sessions; community: sub-Q6 feels unusable over long context |
-| **MTP + LCP slot reuse** | HTTP **200**, no tokens; `inconsistent sequence positions` / `llama_decode(ctx_dft)` after `find_slot: non-consecutive` | Disable MTP, force a fresh slot, or see [MTP LCP position desync](../../troubleshooting/llama-cpp.md#mtp-lcp-position-desync). `--ctx-checkpoints 0` does **not** prevent this |
+| **MTP + LCP slot reuse** | HTTP **200**, no tokens; `inconsistent sequence positions` / `llama_decode(ctx_dft)` after `find_slot: non-consecutive` | Disable MTP, force a fresh slot, or see [MTP LCP position desync](../troubleshooting/llama-cpp.md#mtp-lcp-position-desync). `--ctx-checkpoints 0` does **not** prevent this |

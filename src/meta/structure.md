@@ -9,12 +9,14 @@ src/
   intro.md                 # Landing page (WIP banner)
   SUMMARY.md               # Sidebar navigation — edit this when adding pages
 
-  setup/                   # Hardware and ROCm install
-    hardware.md
-    host-firmware.md       # MMIO High / SR-IOV / large-BAR POST
+  choose-a-stack.md        # llama.cpp vs vLLM, what fits on a V620
+
+  setup/                   # Hardware and ROCm install (getting-started first)
     getting-started.md
+    hardware.md
     installing-rocm.md
     hsa-override.md
+    host-firmware.md       # MMIO High / SR-IOV / large-BAR POST (only if the host will not POST)
 
   tuning/                  # V620-specific host tuning
     power.md
@@ -24,7 +26,9 @@ src/
   vllm/                    # vLLM serving on RDNA
     overview.md            # Section hub — start here
     running.md             # Images, docker run, quick start
-    recipes.md             # Which stack / model / card count
+    recipes.md             # Hub -extras and recipe-container presets
+    flash-next.md          # Flash-Next status, card counts, AutoRound
+    flash-next-serve.md    # Flash-Next serve lines (PIECEWISE, #17, PP3)
     configuration.md       # Env vars, CUDA graphs, compose
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
     fork.md                # rdna_extras kernels
@@ -32,12 +36,12 @@ src/
     images.md              # Building Docker images
 
   llama-cpp/               # llama.cpp and RDNA2 fork
-    overview.md            # Section hub
+    overview.md            # Section hub (points at choose-a-stack.md)
     building.md            # Stock llama.cpp build
     rdna2-overview.md      # Fork intro, build, requirements
     rdna2-benchmarks.md    # Author-reported numbers
     rdna2-speculative.md   # DFlash2, MTP, ngram
-    rdna2-serving.md         # Launch, Docker, limits
+    rdna2-serving.md       # Launch, Docker, limits
 
   reference/               # Lookup tables
     env-vars.md            # Environment variable cheat-sheet
@@ -47,6 +51,7 @@ src/
     index.md               # Hub
     general.md
     vllm.md
+    vllm-flash-next.md
     llama-cpp.md
 
   meta/                    # Wiki maintenance
@@ -91,12 +96,13 @@ src/
 | BIOS / MMIO High / SR-IOV so 4× V620 POSTs | `setup/host-firmware.md` |
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
-| Which image / model / card-count recipe | `vllm/recipes.md` |
+| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`) |
+| llama.cpp vs vLLM | `choose-a-stack.md` |
 | Kernel source, fork branches | `vllm/fork.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |
 | Stock llama.cpp cmake build | `llama-cpp/building.md` |
 | Fork benchmarks, DFlash2, TP serve | `llama-cpp/rdna2-*.md` |
 | Env var tables | `reference/env-vars.md` |
 | Claim audit / WIP status | `reference/verification.md` |
-| Error messages and fixes | `troubleshooting/` |
+| Error messages and fixes | `troubleshooting/` (Flash-Next symptoms: `troubleshooting/vllm-flash-next.md`) |
 | External links (official / Docker / upstream / community) | `meta/resources.md` |

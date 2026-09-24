@@ -1,7 +1,7 @@
 # vLLM Quantization on gfx1030
 
 > **WIP:** Throughput numbers are **community-reported**. See
-> [Verification status](../../reference/verification.md#vllm-quantizationmd).
+> [Verification status](../reference/verification.md#vllm-quantizationmd).
 
 ## GPTQ vs AWQ
 
@@ -17,7 +17,7 @@ stall at ~4–5 t/s on a 27B. Pull the latest `-extras` image and confirm
 `Using RDNA2W4A16LinearKernel` in startup logs. Qwen3.8-27B AWQ also needs the fork's
 **`head_size=256`** FlashAttention path — without it, FA falls back or never lists `RDNA_ATTN`.
 
-Kernel dispatch details: [rdna_extras fork](../fork.md#kernel-dispatch-on-gfx1030).
+Kernel dispatch details: [rdna_extras fork](fork.md#kernel-dispatch-on-gfx1030).
 
 ## KV-cache dtype
 
@@ -25,7 +25,7 @@ Kernel dispatch details: [rdna_extras fork](../fork.md#kernel-dispatch-on-gfx103
 |---|---|---|
 | **`float16`** | Long-context / agents / tool calling | Default recommendation. `VLLM_USE_FA_RDNA2=1` currently needs fp16 KV. **Required** on current QSA / Flash-Next backends (see below). |
 | **`int8_per_token_head`** | Throughput on older GPTQ / Triton FA | Reported **5–10 t/s above fp8** in TG (and higher PP) in limited testing. One report that it misbehaves with chunked prefill. **Not selected** on QSA Flash-Next — those backends do not list int8 KV. |
-| **`fp8`** | VRAM savings (older dense 27B) | `#vllm-rdna` Sep 22: **blocked** on current QSA / Flash-Next. Two independent gates — [troubleshooting](../../troubleshooting/vllm.md#fp8-kv-rejected-on-qsa). Older dense-27B reports that fp8 was slower than `int8_per_token_head` and dropped quality on long sessions. |
+| **`fp8`** | VRAM savings (older dense 27B) | `#vllm-rdna` Sep 22: **blocked** on current QSA / Flash-Next. Two independent gates — [troubleshooting](../troubleshooting/vllm-flash-next.md#fp8-kv-rejected-on-qsa). Older dense-27B reports that fp8 was slower than `int8_per_token_head` and dropped quality on long sessions. |
 | **KVarN** | Third-party KV compression | Raised concurrency on Qwen, **broke tool calling**, failed on Gemma 4. Community verdict: skip for agents. |
 
 Prefer **`float16`**. Do not plan on `--kv-cache-dtype fp8` for QSA / Flash-Next until the extras fork
@@ -40,7 +40,7 @@ same as INT8 **decode shadows**, and QSA backends still **do not list** int8 KV 
 MTP (`--speculative-config '{"method":"mtp","num_speculative_tokens":N}'`) can boost throughput on GPTQ
 models with CUDA graphs enabled. Acceptance rates dropped after a v0.27.1 speculator update (~0.25), but
 base decode speed remains good — worth testing on your model. Example in
-[Configuration](../configuration.md#docker-compose-example-gptq--mtp--cuda-graphs).
+[Configuration](configuration.md#docker-compose-example-gptq--mtp--cuda-graphs).
 
 MTP is **not free at high concurrency**. A `#vllm-rdna` TP4 matrix on **Qwen3.6-35B-A3B-FP16**
 (4× V620, `--enforce-eager`, 16k/1k-style bench) reported MTP-2 **+17%** output tok/s at `c=1`, but
@@ -49,13 +49,13 @@ MTP is **not free at high concurrency**. A `#vllm-rdna` TP4 matrix on **Qwen3.6-
 `#vllm-rdna` (Sep 15): `RDNA2W4A16MoEExperts` was reported to raise **usable concurrency** on MoE
 W4A16 — confirm the kernel in logs. **Pipeline-parallel MTP** needs upstream
 [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (merged; next vLLM release). A 3×
-V620 Flash-Next + MTP squeeze is [community / Needs verify](../recipes.md#flash-next-3x-pp3-mtp).
+V620 Flash-Next + MTP squeeze is [community / Needs verify](flash-next-serve.md#flash-next-3x-pp3-mtp).
 
 `#vllm-rdna` (Sep 18): on Flash-Next, **MTP can block the int4 PLE fused decode path**. If logs show
 Triton GDN / PLE fallback and decode is stuck in the teens of t/s, A/B **MTP off** before blaming
 P2P. Separately, the MTP **draft head** may still be **bf16 MoE** even when the main experts are
 W4A16 — quantize those draft experts offline if you stay on MTP
-([3× overlay](../recipes.md#flash-next-3x-moe-hip-overlay)). `#vllm-rdna` Sep 18: **no MTP on the
+([3× overlay](flash-next-serve.md#flash-next-3x-moe-hip-overlay)). `#vllm-rdna` Sep 18: **no MTP on the
 Hub `v0.28.0-extras` line**; that work is aimed at the `rdna_extra/v0.29.0` rebase.
 
 ## INT4 on gfx1030 (no native int4 ALUs)
@@ -76,7 +76,7 @@ graphs (1024/512), **~331 total tok/s** at 8 concurrent requests (16k/512), and 
 - On older images, AWQ could fall through to Triton (~4–5 t/s on a 27B). Pull latest `-extras` and confirm
   the native kernel is active before blaming the quant format.
 - Don't force `--attention-backend` or `--quantization` — let vLLM auto-select unless A/B testing.
-- Mount Triton and torch-compile caches (see [Configuration](../configuration.md#cache-volumes-first-boot-is-slow)).
+- Mount Triton and torch-compile caches (see [Configuration](configuration.md#cache-volumes-first-boot-is-slow)).
 
 ## Experimental: EXL3 and Quark (`#vllm-rdna`, Sep 2026)
 
@@ -127,7 +127,7 @@ weight pack is tens of GB smaller (~**75 GB**). That still wants **four 32 GB** 
 large **CPU PLE / n-gram** table (embedded BF16 table is ~**95 GiB** — offload to RAM).
 
 Do **not** assume group-16 INT4 PLE sidecars match the published benches. See
-[overview](../overview.md#intel-autoround-flash-next).
+[overview](flash-next.md#intel-autoround-flash-next).
 
 `#vllm-rdna` (Sep 20): merged [`opengfx1030/vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15)
 used this Intel AutoRound pack with the **unquantized / original BF16** PLE table (~**100 GB** class
