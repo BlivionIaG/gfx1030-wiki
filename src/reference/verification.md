@@ -175,6 +175,24 @@
 | QSA live-context prefill bound | **Fork-source** | Merged `opengfx1030/vllm-rdna#15`; Python-only scoring width change |
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; may not apply to current `rdna_extras` |
 
+### `host-venv.md`
+
+| Statement | Status | Verify how |
+|---|---|---|
+| 7.2.0 index `download.pytorch.org/whl/rocm7.2`, torch 2.12.0, triton 3.5.1 | **Solid** | `vllm-rdna-docker` `base-rocm720` |
+| 7.2.0 host paste also had `triton-rocm==3.7.1` | **Community** | `#general` 1 Aug 2026 |
+| 7.14.0 index `repo.amd.com/rocm/whl-multi-arch/`, torch `2.12.0+rocm7.14.0`, triton 3.7.1 | **Solid** | `docker-bake.hcl` `base-rocm714` |
+| Published `7.14.0` tag described as PyTorch 2.13.0 | **Needs verify** | README + [Running](../vllm/running.md) vs current bake pin 2.12.0 |
+| `pytorch.org/whl/rocm7.14` has no cp312 x86_64 torchaudio | **Community** | `#vllm-rdna` 21 Sep 2026 |
+| Device wheels `rocm-sdk-device-gfx1030` + `amd-torch-device-gfx1030` | **Solid** | `Dockerfile.base` `INSTALL_ROCM_SDK_DEVICE=1` |
+| Missing device wheels → `hipErrorInvalidImage` on index torch | **Fork-source** | `Dockerfile.base` comment |
+| `[device-gfx1030]` is only an extra on multi-arch index wheels | **Solid** | TheRock device extras; source wheels have no such extra |
+| From-source gfx1030 wheels: install the `.whl`, no device extra | **Community** | `uv` warning on `~/wheels/rdna2/` (`torch==2.12.0+git6bbd260`) |
+| FA allowlist drops gfx1030; Triton FA at runtime | **Solid** | `Dockerfile.base` |
+| causal-conv1d pin `4f6ae4e` + `HIP_ARCHITECTURES` | **Solid** | `Dockerfile.vllm` |
+| Do not pass `--torch-backend=rocm7.14` | **Community** | That flag selects the PyTorch index that failed on 21 Sep |
+| `_rocm_sdk_*` `LD_LIBRARY_PATH` | **Community** | `#vllm-rdna` serve blocks; same dirs as the image `ldconfig` |
+
 ---
 
 ## llama.cpp (`llama-cpp/`)

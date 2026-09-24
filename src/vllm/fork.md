@@ -232,13 +232,21 @@ Omit `VLLM_DISABLED_KERNELS` when testing Exllama — it competes with the RDNA2
 
 ## Building from source (advanced)
 
+Create the venv and install torch first — the ROCm 7.2.0 and 7.14.0 commands are on
+[Host venv](../host-venv.md). `Dockerfile.vllm` then does an editable install (not
+`requirements/dev.txt`):
+
 ```bash
 git clone -b rdna_extras https://github.com/opengfx1030/vllm-rdna.git
 cd vllm-rdna
 export PYTORCH_ROCM_ARCH=gfx1030
-pip install -r requirements/rocm.txt
-pip install --no-build-isolation -e .
+export ROCM_HOME="${ROCM_HOME:-/opt/rocm}"
+VLLM_USE_PRECOMPILED=0 ENABLE_CK=0 FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE \
+  uv pip install -e . --no-build-isolation
 ```
+
+On ROCm 7.2.0 only, add `--torch-backend=rocm7.2`. On 7.14.0, leave it off and install the
+multi-arch device wheels first. Details: [Host venv](../host-venv.md).
 
 The kernels have their own tests, e.g.:
 

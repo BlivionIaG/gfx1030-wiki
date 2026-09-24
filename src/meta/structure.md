@@ -28,6 +28,7 @@ src/
     configuration.md       # Env vars, CUDA graphs, compose
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
     fork.md                # rdna_extras kernels
+    host-venv.md           # Host uv venv (ROCm 7.2.0 / 7.14.0)
     images.md              # Building Docker images
 
   llama-cpp/               # llama.cpp and RDNA2 fork

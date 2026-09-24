@@ -24,6 +24,7 @@
 - [Configuration](./vllm/configuration.md)
 - [Quantization](./vllm/quantization.md)
 - [vLLM forks (rdna_extras + landscape)](./vllm/fork.md)
+- [Host venv (no Docker)](./vllm/host-venv.md)
 - [Building images](./vllm/images.md)
 
 # llama.cpp
