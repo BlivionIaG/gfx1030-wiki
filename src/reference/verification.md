@@ -123,7 +123,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | V620 fast stack `#17` merged | **Fork-source** | `opengfx1030/vllm-rdna#17` merged 23 Sep 2026; resident W4A16 + Mamba `#55450` + `FULL_DECODE_ONLY` |
 | `#17` 16k PP ~1958 / ~1983; second host ~1984 / ~1985 | **Community** | PR-head table + `#vllm-rdna` Sep 23 confirm after TunableOp regen |
 | TunableOp rows locked to rocBLAS hash | **Fork-source** | `rdna_extras/tunableop` README; mismatch ~25% PP drop / first GEMM abort |
-| `#20` PIECEWISE correct but decode ~26–34 t/s | **Community** | **Merged** `opengfx1030/vllm-rdna#20` (24 Sep); still prefer `#17` `FULL_DECODE_ONLY`. `#21` closed without merge |
+| `#20` PIECEWISE capture (FULL→piecewise redirect) | **Fork-source / Community** | Merged `opengfx1030/vllm-rdna#20` (24 Sep); decode ~26–34 t/s **while redirect was on** |
+| Keep-FULL `FULL_AND_PIECEWISE` (`6c26c78d`) | **Fork-source** | `rocm_full_executes_as_piecewise → False` on `rdna_extras` HEAD; `#vllm-rdna` Sep 24; docs `V620-FULL-AND-PIECEWISE.md` |
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
 | `#18` GPTQ `BLOCK_KN_SIZE` 128→256 | **Needs verify** | Open PR; hold for M>32…2048 sweep (`#vllm-rdna` Sep 24) |
 | `#22` two-shot `rdna_ar` vs force custom AR | **Needs verify** | Open PR; force custom AR crashed one host |
@@ -132,7 +133,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Qwen3.8-27B fp16 stock 0.29.0 TP4 W6800X Duo | **Community** | `#benchmarks` Sep 24 — 1k–255k ctx, no MTP; ~1394→560 PP / ~29→19 TG |
 | Flash-Next vision pixel cap (`max_pixels=1605632`) | **Fork-source** | `rdna_extras` `scripts/serve_gfx1030_flashnext.sh`; `--limit-mm-per-prompt` alone is not enough |
 | Flash-Next vision ~15–20 s/image + runtime OOM | **Community** | `#vllm-rdna` / `#general` Sep 21 — works with launcher flags; no reserved vision pool; PP3 especially tight |
-| Flash-Next `FULL_AND_PIECEWISE` executes as PIECEWISE on ROCm | **Fork-source** | Launcher comment 18 Sep 2026 (`rocm_full_executes_as_piecewise`). `#17` measured path is **`FULL_DECODE_ONLY`**, not FULL-only |
+| Flash-Next `FULL_AND_PIECEWISE` executes as PIECEWISE on ROCm | **Fork-source (historical)** | Launcher comment 18 Sep 2026 + `#20`-era redirect. **Superseded** on HEAD by `6c26c78d` (`rocm_full_executes_as_piecewise → False`) — prefer `FULL_AND_PIECEWISE` again |
 | QSA fused MTP-3 draft decode no gain | **Needs verify** | `#vllm-rdna` Sep 20 — one host; prefill held ~2k |
 | INT8 decode shadows excluded from `#15` | **Fork-source** | PR body; Discord ~42 → ~55 t/s without MTP is **Needs verify** / quality risk |
 | vllm-rdna-qa playbook | **Needs verify** | `#vllm-rdna` Sep 17 — public repo; maintainer QA only |

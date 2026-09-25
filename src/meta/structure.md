@@ -28,7 +28,7 @@ src/
     running.md             # Images, docker run, quick start
     recipes.md             # Hub -extras and recipe-container presets
     flash-next.md          # Flash-Next status, card counts, AutoRound
-    flash-next-serve.md    # Flash-Next serve lines (PIECEWISE, #17, PP3)
+    flash-next-serve.md    # Flash-Next serve lines (FULL_AND_PIECEWISE, #17, PP3)
     configuration.md       # Env vars, CUDA graphs, compose
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
     fork.md                # rdna_extras kernels
