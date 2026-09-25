@@ -114,9 +114,9 @@ If graph capture still crashes, fall back to `--enforce-eager` — but try the u
 See [4× `#17` recipe](flash-next-serve.md#flash-next-4x-pr17). Older Sep 16–17 hosts that saw **FULL**
 decode **corrupt** output stayed on **`PIECEWISE`** —
 [FULL-graph troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption).
-Open [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE`
-boot correctly but **lost decode** (~63–70 → ~26–34 t/s). The table above is the **27B `-extras`**
-path, not Flash-Next.
+**Merged** [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) (24 Sep) makes compiled
+`FULL_AND_PIECEWISE` boot correctly but **lost decode** (~63–70 → ~26–34 t/s). Prefer
+`FULL_DECODE_ONLY`. The table above is the **27B `-extras`** path, not Flash-Next.
 
 `VLLM_USE_BREAKABLE_CUDAGRAPH=1` in that recipe **disables torch.compile** (`mode=NONE`). Community
 Sep 17 A/B: keep it for the no-corruption path, then try `0` if you want compile speed back.

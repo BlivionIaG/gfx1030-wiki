@@ -53,9 +53,10 @@ PR-head 16k (author) vs second-host confirm (`#vllm-rdna` Sep 23):
 | Regular / coding TTFT | 8.56 / 9.11 s | 8.44 / 9.10 s |
 | Decode | 69.7 / 68.5 t/s | 63.1 / 70.1 t/s |
 
-Open follow-ups (not the default): [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes
-compiled `FULL_AND_PIECEWISE` **correct** but **slower decode** (~26–34 t/s). Draft
-[`#21`](https://github.com/opengfx1030/vllm-rdna/pull/21) tries to keep FULL decode graphs — **unbenched**.
+Follow-ups (not the default): **merged** [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20)
+(24 Sep) makes compiled `FULL_AND_PIECEWISE` **correct** but **slower decode** (~26–34 t/s;
+community ~2.5× vs `#17`). [`#21`](https://github.com/opengfx1030/vllm-rdna/pull/21) (FULL decode +
+piecewise) was **closed without merge**. Stay on `FULL_DECODE_ONLY` until a graph-launch follow-up.
 
 The older Sep 17 PIECEWISE host-venv block below is still useful if you are **not** on `#17` yet.
 

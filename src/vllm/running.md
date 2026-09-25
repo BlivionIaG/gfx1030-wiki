@@ -19,7 +19,7 @@ working `torch` on a Radeon card.
 | Tag | vLLM | Base | Variant |
 |---|---|---|---|
 | `v0.27.1` | v0.27.1 | rocm-rdna:7.2.0 | upstream |
-| `v0.27.1-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | upstream |
+| `v0.27.1-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | upstream — `#vllm-rdna` Sep 24: **can remove**; prefer `-extras` or host build |
 | `v0.27.1-extras` | v0.27.1 | rocm-rdna:7.2.0 | [`rdna_extras` fork](fork.md) |
 | `v0.27.1-extras-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | [`rdna_extras` fork](fork.md) |
 | `v0.28.0-extras` | v0.28.0 | **Needs verify** | [`rdna_extras` fork](fork.md) — `#vllm-rdna` Sep 18 **test** tag; CI not fully tracked. Prefer `v0.27.1-extras*` until you A/B. |
@@ -31,6 +31,11 @@ The **`-extras`** tags use the [`rdna_extras` fork](fork.md) lineage (historical
 kernels (FlashAttention, quantized GEMM, MoE, GDN, …). Check
 [Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list. Tags are
 refreshed in place — `docker pull` before debugging.
+
+`#vllm-rdna` (Sep 24): published **`vllm-rdna` Hub tags are not tracking** current `rdna_extras`
+HEAD (`#17`, `#19`, `#20`, …). For Flash-Next / latest kernels, **clone the org repo and follow
+[Host venv](host-venv.md)** (or rebuild an image yourself). Use Hub `-extras` for a known-good
+day-to-day 27B path; use `rocm-rdna:7.14.0` if you only need a ROCm packaging base.
 
 **Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
 those in-between releases is reported broken with more than one card — see

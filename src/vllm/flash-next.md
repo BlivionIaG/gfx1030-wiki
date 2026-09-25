@@ -37,12 +37,20 @@ Sep 17–18: a public overlay that ports org **MoE HIP** onto leapdragon reports
 **~57–63** TG with MTP k=2 — [overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
 
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–24):** the **measured `#17` path** is
-**`FULL_DECODE_ONLY`** — [Sep 23 serve notes](./flash-next-serve.md#flash-next-4x-pr17). Older hosts that
-saw **FULL** decode **corrupt** stayed on **`PIECEWISE`** —
+**`FULL_DECODE_ONLY`** — [Sep 23 serve notes](./flash-next-serve.md#flash-next-4x-pr17). **Merged**
+[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) (24 Sep) makes compiled **PIECEWISE** /
+`FULL_AND_PIECEWISE` boot and stay correct, but decode dropped **~63–70 → ~26–34 t/s** — keep
+`FULL_DECODE_ONLY` until graph launches improve. Older hosts that saw **FULL** decode **corrupt**
+stayed on **`PIECEWISE`** —
 [FULL-graph corruption](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption) and the
 [Sep 17 serve line](./flash-next-serve.md#flash-next-4x-piecewise). Community snapshot on that older recipe:
 **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3** path on
 vLLM.
+
+**6× V620 Flash-Next (`#vllm-rdna` Sep 24):** **minimum 3** cards. Maintainer starting points:
+**`PP=3` + `TP=2`** (six GPUs) or **`PP=6`**. Prefer **power-of-2 tensor parallel** over `PP=2` +
+`TP=3`. Disaggregated prefill/decode (two model loads) is a separate WIP — open
+[`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23). **Needs verify** — no published 6× table.
 
 `#vllm-rdna` (Sep 19): **pipeline parallel 4** on Flash-Next was reported to hit **~1950 tok/s**
 prefill at 32k while **decode collapsed**. The same host dropped PP4 and continued on **TP=4**

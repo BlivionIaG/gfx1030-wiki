@@ -144,10 +144,11 @@ The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 1
 
 `#vllm-rdna` (Sep 23–24): merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17)
 **measures `FULL_DECODE_ONLY`** (mode `0`, capture `[3,6,12]` with MTP-2). That is **not** the
-same as **FULL-only** (which still corrupted earlier). Open
-[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE` **boot
-and stay correct**, but decode dropped **~63–70 → ~26–34 t/s** (prefill held). Prefer `#17`’s
-`FULL_DECODE_ONLY` until a graph-launch follow-up lands. See [4× `#17` recipe](../vllm/flash-next-serve.md#flash-next-4x-pr17).
+same as **FULL-only** (which still corrupted earlier). **Merged**
+[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) (24 Sep) makes compiled `FULL_AND_PIECEWISE`
+**boot and stay correct**, but decode dropped **~63–70 → ~26–34 t/s** (prefill held; community
+~2.5× slower). Prefer `#17`’s `FULL_DECODE_ONLY` until a graph-launch follow-up lands. See
+[4× `#17` recipe](../vllm/flash-next-serve.md#flash-next-4x-pr17).
 
 `#vllm-rdna` (Sep 17): `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (in that recipe) **turns torch.compile off**.
 Community A/B on a 4× TP Flash-Next tree: **~39 t/s** with breakable/eager vs **~55 t/s** after compile
