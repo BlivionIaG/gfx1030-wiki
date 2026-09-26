@@ -29,8 +29,8 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 
 | Variant | When to use |
 |---|---|
-| `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. |
-| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Official extras kernels — [`rdna_extras`](./fork.md#the-rdna_extras-fork) lineage; **recommended** day-to-day on gfx1030. |
+| `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. `#vllm-rdna` Sep 24: plain **`v0.27.1-rocm7.14.0`** is **stale / removable**; prefer `-extras` or [host venv](./host-venv.md). |
+| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Official extras kernels — [`rdna_extras`](./fork.md#the-rdna_extras-fork) lineage; **recommended** day-to-day Docker path on gfx1030. **Lags HEAD** (`#17` / `#20`) — clone + [host venv](./host-venv.md) for Flash-Next fast stack. |
 | `v0.28.0-extras` | `#vllm-rdna` Sep 18 **test** bake of the 0.28 extras line. **Needs verify** — Hub CI is not fully tracked; A/B against `v0.27.1-extras` before treating as default. |
 
 Image tags are **refreshed in place** when fixes land — always `docker pull` before debugging. Confirm your

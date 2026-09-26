@@ -30,7 +30,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_GDN_HIP_PREFILL` | `0` | Disable HIP GDN prefill (falls back to Triton/FLA). Used while chasing Flash-Next PP3 corruption — did **not** fix it. |
 | `VLLM_PP_LAYER_PARTITION` | `17,18,13` | Uneven pipeline-parallel layer split. Community 3× Flash-Next + MTP (48 layers) left the last stage light for the drafter. **Unset** this in the PLE worker or it refuses (`pp_size=1`). |
 | `VLLM_ROCM_MOE_PADDING` | `0` | Do not pad routed-expert weights (3× MTP VRAM squeeze). |
-| `VLLM_RDNA_AR` | `1` | Experimental RDNA all-reduce. `#vllm-rdna` Sep 15: more issues than gain; prefer custom AR when P2P works. Optional knobs seen in-channel: `VLLM_RDNA_AR_MAX_KB`, `VLLM_RDNA_AR_BLOCKS`, `VLLM_RDNA_AR_PACE`. |
+| `VLLM_RDNA_AR` | `1` | Experimental RDNA all-reduce. `#vllm-rdna` Sep 15: more issues than gain. Sep 24: prefer this over **`VLLM_FORCE_CUSTOM_ALL_REDUCE`** (one host crash); open [`#22`](https://github.com/opengfx1030/vllm-rdna/pull/22) widens to two-shot. Optional knobs: `VLLM_RDNA_AR_MAX_KB`, `VLLM_RDNA_AR_ONESHOT_KB`, `VLLM_RDNA_AR_BLOCKS`, `VLLM_RDNA_AR_PACE`. |
 | `VLLM_RDNA_DENSE_GEMV` | `1` | Skip skinny `wvSplitK` GEMM. `#vllm-rdna` Sep 17: **mandatory** on hosts that fault `wvSplitK_hf_sml_*` right after the profile run (`HSA_STATUS_ERROR_EXCEPTION`). GPU core dumps can be **several GB** in the process CWD — [troubleshooting](../troubleshooting/vllm-flash-next.md#wvsplitk-gpu-fault). |
 | `VLLM_USE_BREAKABLE_CUDAGRAPH` | `1` | Sets compilation `mode=NONE` (no torch.compile); GDN/FA/all-reduce run eagerly between graph segments. `#vllm-rdna` Sep 17: community **~39 t/s** vs **~55 t/s** with `0` + compile. The [4× PIECEWISE recipe](../vllm/flash-next-serve.md#flash-next-4x-piecewise) still sets `1` for the stable path — A/B `0` only after graphs are clean. |
 | `VLLM_PLE_QUANT_DIR` | path/`ples_int4` | Flash-Next int4 PLE sidecar directory (`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`). Required with `VLLM_PLE_CPU_OFFLOAD=1` — OOM without it. |
@@ -38,7 +38,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_USE_V2_MODEL_RUNNER` | `1` / `0` | V2 runner; `#vllm-rdna` reported **+17%** vs V1 on gfx1030 `-extras`. On **Flash-Next**, try `0` if long prompts stall — [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls). |
 | `VLLM_DISABLED_KERNELS` | `ExllamaLinearKernel,TritonW4A16LinearKernel` | Force GPTQ onto `RDNA2W4A16LinearKernel`. |
 | `VLLM_DISABLE_CUSTOM_ALL_REDUCE` | `1` | Disable custom all-reduce (safer when P2P is broken / Ice Lake). |
-| `VLLM_FORCE_CUSTOM_ALL_REDUCE` | `1` | Force custom all-reduce when P2P works (`#vllm-rdna` PIX stack). Mutually exclusive intent with disable. |
+| `VLLM_FORCE_CUSTOM_ALL_REDUCE` | `1` | Force custom all-reduce when P2P works (`#vllm-rdna` PIX stack). `#vllm-rdna` Sep 24: **crashed one whole server** — avoid as default; open [`#22`](https://github.com/opengfx1030/vllm-rdna/pull/22) aims to replace this with two-shot `rdna_ar`. Mutually exclusive intent with disable. |
 | `NCCL_P2P_LEVEL` | `pix` / `PXB` / `PHB` | RCCL P2P topology level — `pix` used with the force-custom stack. |
 | `RCCL_P2P_NET_DISABLE` | `1` | Pair with PIX custom all-reduce benches. |
 | `RCCL_P2P_BATCH_ENABLE` | `1` | Pair with PIX custom all-reduce benches. |

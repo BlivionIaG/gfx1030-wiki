@@ -149,6 +149,9 @@ Community notes (`#vllm-rdna`):
 - Slow or broken P2P + custom all-reduce can look like MTP latency bugs — A/B the
   [disable vs PIX custom AR](../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks)
   stacks.
+- If MTP **never starts** (drafter dies on ranks 1–3 / 60 s NCCL watchdog during `profile_run`),
+  pull `rdna_extras` **`700753d9`** or later (amdsmi shutdown masking + local-argmax draft).
+  `#vllm-rdna` (Sep 25): MTP-2 then **boots** but stays **slower than MTP-0** on the author host.
 
 ## Upstream KV offload tanks decode {#upstream-kv-offload-tanks-decode}
 
