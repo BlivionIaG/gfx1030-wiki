@@ -10,7 +10,8 @@
 |---|---|
 | [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
-| [Serve lines](./flash-next-serve.md) | PIECEWISE, PP3, overlays, DeepSeek |
+| [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3 |
 
 When something fails, use [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md) rather than the general vLLM list.
 
@@ -183,10 +184,32 @@ on ROCm 7.14 hosts.
 
 Serve commands (4× PIECEWISE, `#17`, PP3, overlays) are on [Flash-Next serve lines](./flash-next-serve.md).
 
+## Swift 1.5 Flash-Next (`#vllm-rdna` Sep 25–26) {#swift-15-flash-next}
+
+Public **shorter-reasoning** derivative of Qwen3.8 Flash-Next
+([`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ);
+AutoRound sibling
+[`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound)).
+Publisher card (BF16 vs base, not a wiki bench): **~63%** fewer median thinking tokens at `xhigh`
+with under **1%** claimed accuracy loss. AWQ is `compressed-tensors` W4A16 — same runtime class as
+other Flash-Next INT4 packs, **not** Hub `-extras`.
+
+`#vllm-rdna` (Sep 25–26) community first-look on **3× V620**: the **AWQ** pack ran at about the
+same speed as the host’s usual AutoRound Flash-Next line (**~1300 tok/s** prefill / **~45 t/s**
+decode) and was called **more verbose**. Treat tok/s as **Needs verify**. Two-card fit is
+unconfirmed (community: “won’t fit”).
+
+**AutoRound caveat:** the Swift AutoRound config is **50 iterations / light tuning** (512-token
+calibration). Community compared that to Intel AutoRound’s **200** iterations and noted Intel’s
+attention projections stay **bf16** while the Swift AutoRound pack quantized them to **int4**.
+Do **not** treat “AutoRound vs AWQ quality” as settled from Discord — read the quant config, and
+prefer the **AWQ** sibling if you want a first try. **Community / Needs verify.**
+
 ## Related
 
 - [Serve lines](./flash-next-serve.md)
-- [Recipes](./recipes.md) — Hub `-extras` and the recipe container
+- [Recipes](./recipes.md) — Hub `-extras`, Swift, and the TP=2 27B snapshot
+- [Quantization](./quantization.md) — MTP unbreak, AutoRound vs Swift
 - [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md)
 - [Choose a stack](../choose-a-stack.md)
 

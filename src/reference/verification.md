@@ -90,6 +90,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | vLLM 0.29 defaults V2 runner | **Community** | `#vllm-rdna` Sep 11; Hub day-to-day still 0.27.1; Sep 18 `rdna_extra/v0.29.0` rebase |
 | No MTP on Hub `v0.28.0-extras` | **Community** | `#vllm-rdna` Sep 18 — MTP aimed at 0.29 / Qwen4Exp |
 | MTP can block int4 PLE fused decode | **Community** | `#vllm-rdna` Sep 18 — A/B MTP off on no-P2P hosts |
+| MTP-2 ~0.73–0.85× vs MTP-0 after `700753d9` | **Community** | Author-host 4× W4A16 Flash-Next; `#vllm-rdna` Sep 25 “boots, still a loss” |
 | ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in Flash-Next fork `ROCR-CPU-FIX.md` |
 | EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
 | Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 — draft PR #5; not in Hub `-extras` |
@@ -126,6 +127,10 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#20` PIECEWISE capture (FULL→piecewise redirect) | **Fork-source / Community** | Merged `opengfx1030/vllm-rdna#20` (24 Sep); decode ~26–34 t/s **while redirect was on** |
 | Keep-FULL `FULL_AND_PIECEWISE` (`6c26c78d`) | **Fork-source** | `rocm_full_executes_as_piecewise → False` on `rdna_extras` HEAD; `#vllm-rdna` Sep 24; docs `V620-FULL-AND-PIECEWISE.md` |
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
+| MTP draft unbreak `700753d9` (amdsmi + local-argmax) | **Fork-source** | `rdna_extras` HEAD 25 Sep; MTP-2 boots, **~0.73–0.85×** vs MTP-0 on author 4× host |
+| `rdna_extra/v0.30.0` Qwen4 rebase | **Needs verify** | Branch exists (`#vllm-rdna` Sep 25); tip `f87be4dc` MoE capture-buffer fix. Not the day-to-day Flash-Next line |
+| Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–26 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light |
+| Host-venv TP=2 cyankiwi 27B AWQ | **Needs verify** | `#vllm-rdna` Sep 26 — one source-build host; 29.5 t/s single / 46.9 t/s ×4 |
 | `#18` GPTQ `BLOCK_KN_SIZE` 128→256 | **Needs verify** | Open PR; hold for M>32…2048 sweep (`#vllm-rdna` Sep 24) |
 | `#22` two-shot `rdna_ar` vs force custom AR | **Needs verify** | Open PR; force custom AR crashed one host |
 | `#23` PCIe P2P KV disagg prefill/decode | **Needs verify** | Open PR; local PLX-switch split — not a recipe |
@@ -168,6 +173,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | INT8 KV (not decode shadows) | **Needs verify** | `#vllm-rdna` Sep 23–24 — community testing; QSA backends still unquantized-only |
 | HIP MoE non-deterministic vs Triton | **Needs verify** | `#vllm-rdna` Sep 19 — ~3.5% top-token drift; `global_atomic_add_f32` not landed (blocked on 0.29.0) |
 | Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5`; Sep 20 QSA `#15` used this pack + BF16 PLE (not `wtdcode` + PLE-quant) |
+| Swift 1.5 Flash-Next AWQ first-look ~1300/45 on 3× | **Needs verify** | `#vllm-rdna` Sep 25–26 — public `ukisai` packs; AutoRound 50-iter vs Intel 200 |
 | INT8 decode shadows not in QSA `#15` | **Fork-source** | `#vllm-rdna` Sep 20 — excluded from merge; quality loss already noted Sep 16 |
 
 ### `fork.md`
@@ -300,6 +306,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/hardware.md` prefer soft unlock over W6800 flash | **Community** | Soft unlock keeps 72 CUs; W6800 flash → 54 CU |
 | `tuning/ecc.md` two-reboot `ras_enable=0` | **Community** | lunnova on W6800; Discord reports V620 ECC-on (~30 GB). Confirm `rocm-smi` after two reboots |
 | `tuning/ecc.md` Vulkan memtest before ECC-off | **Community** | `#general` Sep 23 — quiet dmesg ≠ clean card; leave ECC on if errors |
+| `tuning/ecc.md` Flash-Next can trip ECC that 27B misses | **Community** | `#general` Sep 26 — dmesg only on Flash-Next; 5–8 min Vulkan memtest; replacement OK |
 | `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` Ubuntu 26 / 7.0 kernel gap | **Community** | `#vllm-rdna` Sep 24 — validated Pre-7 ≤6.19 or Post-7 ≥7.1; 7.0 not the Fedora recipe |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |

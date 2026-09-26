@@ -87,6 +87,10 @@ Without compilation / without `VLLM_USE_BREAKABLE_CUDAGRAPH=1`, a `FULL_AND_PIEC
 **downgrades to `FULL_DECODE_ONLY`** (keeps FULL decode) instead of dropping every graph; a bare
 `PIECEWISE` request still becomes `NONE`.
 
+`rdna_extras` HEAD (25 Sep, `700753d9`): **MTP-2 boots** after the amdsmi / local-argmax draft
+fix, but author-host decode stays **below MTP-0** (~46–49 vs ~61 t/s). Do not expect MTP to beat
+the no-draft line yet — [MTP](quantization.md#mtp-speculative-decoding).
+
 The older Sep 17 PIECEWISE host-venv block below is only for checkouts **before** `#17` / the
 keep-FULL fix.
 

@@ -30,7 +30,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | Cards | Community starting point (`#vllm-rdna`) |
 |---|---|
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
-| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` with `--tensor-parallel-size 2`. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
+| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` / a [host-venv](host-venv.md) clone with `--tensor-parallel-size 2`. `#vllm-rdna` (Sep 26): one host built `vllm-rdna` from source and served **cyankiwi 27B AWQ-INT4** TP=2 — [community table](#host-venv-tp2-qwen38-27b-awq). **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
 | **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](./flash-next-serve.md#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub `-extras` still lags. **Needs verify.** |
 | **6× V620** | Flash-Next **minimum is 3** cards. `#vllm-rdna` (Sep 24): start with **`PP=3` + `TP=2`** or **`PP=6`**; keep **TP power-of-2** (avoid `PP=2` + `TP=3` as the first try). Clone HEAD + [host venv](host-venv.md) — Hub tags lag. Disagg prefill/decode across switches is open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) (**Needs verify**). |
@@ -54,6 +54,7 @@ Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx10
 | [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16) + [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant) | **4×** | Flash-Next fork | Production Flash-Next weights + PLE sidecar in `#vllm-rdna`. |
 | [`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound) | **4×** | `rdna_extras` HEAD (QSA `#15`) / draft `#5` | W4A16 + original BF16 CPU PLE. QSA live-context merge: [overview](flash-next.md#intel-autoround-flash-next). Not Hub `-extras`. |
 | [`cyankiwi/Qwen3.8-Flash-Next-AWQ-INT4`](https://huggingface.co/cyankiwi/Qwen3.8-Flash-Next-AWQ-INT4) | **4×** | Experimental | Mentioned as a possible switch (`#vllm-rdna`); not a drop-in Hub `-extras` path yet. |
+| [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ) | **3–4×** | `rdna_extras` HEAD / host venv | `#vllm-rdna` Sep 25–26 — shorter-reasoning AWQ. 3× community **~1300 PP / ~45 TG**. Two-card fit unconfirmed. [Swift](flash-next.md#swift-15-flash-next). |
 
 Small-VRAM experiment: Ornith **9B** EXL3 (~6.8 GB) vs AWQ (~9 GB) — **experimental**, not in published
 `-extras` tags yet. See [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
@@ -128,6 +129,23 @@ vllm serve cyankiwi/Qwen3.8-27B-AWQ-INT4 \
   --enable-prefix-caching --enable-chunked-prefill \
   --compilation-config '{"cudagraph_mode": "FULL_AND_PIECEWISE", "compile_ranges_endpoints": []}'
 ```
+
+### Host-venv TP=2 Qwen3.8-27B AWQ (community, Sep 26) {#host-venv-tp2-qwen38-27b-awq}
+
+`#vllm-rdna` (Sep 26): one host **cloned `opengfx1030/vllm-rdna` and built from source** (not a Hub
+tag), then served **cyankiwi** AWQ-INT4 at **TP=2**. Same short test on both models; answers
+coherent, no NaNs. **Community / Needs verify.**
+
+| | Qwen3-14B, TP=2 | Qwen3.8-27B, TP=2 |
+|---|---|---|
+| Weights per GPU | 4.69 GiB | 9.73 GiB |
+| KV cache (logged) | 266k tokens (4k context) | 159k tokens (32k context) |
+| Engine start | 39 s | 425 s (**first run only**) |
+| 4 prompts at once | 88.3 tok/s | 46.9 tok/s |
+| One prompt, decode | 59.5 tok/s | 29.5 tok/s |
+
+Day-to-day 27B on **4 cards** still uses the [TP4 block](#hub--extras-tp4-qwen38-27b-awq) or a
+recipe preset. This table is only the **two-card / source-build** snapshot.
 
 ---
 

@@ -58,6 +58,17 @@ W4A16 — quantize those draft experts offline if you stay on MTP
 ([3× overlay](flash-next-serve.md#flash-next-3x-moe-hip-overlay)). `#vllm-rdna` Sep 18: **no MTP on the
 Hub `v0.28.0-extras` line**; that work is aimed at the `rdna_extra/v0.29.0` rebase.
 
+`rdna_extras` HEAD
+[`700753d9`](https://github.com/opengfx1030/vllm-rdna/commit/700753d9add5c4a5586126d561f23c6099e71609)
+(25 Sep) **unbreaks MTP draft inference** on gfx1030: `amdsmi_shut_down()` exceptions no longer
+mask a successful MoE config lookup (that used to kill the drafter on ranks 1–3 and deadlock
+NCCL), and Qwen4Exp MTP uses **local-argmax** draft sampling when
+`speculative_config.use_local_argmax_reduction=true`. Author-host 4× V620 W4A16 Flash-Next
+**MTP-2** then **boots** (FA + `FULL_DECODE_ONLY` **~46 t/s**; Triton + `FULL_AND_PIECEWISE`
+**~49 t/s**) but stays **below MTP-0 (~61 t/s)** — documented **~0.73–0.85×** penalty. `#vllm-rdna`
+(Sep 25): community still reports the same “boots, not faster than MTP-0” class. Hub `-extras`
+lags — clone + [host venv](host-venv.md).
+
 ## INT4 on gfx1030 (no native int4 ALUs)
 
 RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly
@@ -121,6 +132,8 @@ Not in published `-extras` tags. Community + draft
 |---|---|
 | [`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound) | PR-validation checkpoint (W4A16 weights, FP16 serve path) |
 | [`Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound) | RTN sibling cited in `#vllm-rdna` (high publisher recovery %) |
+| [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ) | `#vllm-rdna` Sep 25 — shorter-reasoning AWQ (`compressed-tensors`). [Swift notes](flash-next.md#swift-15-flash-next) |
+| [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound) | Swift AutoRound sibling — **50-iter light** tune; not the Intel 200-iter pack |
 
 Community take: Intel AutoRound sits **between Unsloth Q5_XL and Q6_XL** on quality while the
 weight pack is tens of GB smaller (~**75 GB**). That still wants **four 32 GB** cards plus a

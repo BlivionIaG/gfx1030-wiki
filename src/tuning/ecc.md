@@ -23,6 +23,12 @@ protection; others disable it for long-context KV cache.
 minutes. Community: the extra **~2 GB is not worth it** if the card is already throwing ECC errors
 — leave ECC **on** and RMA / replace. Do not treat a quiet `dmesg` as a clean card.
 
+`#general` (Sep 26): **Flash-Next can surface ECC that a 27B serve does not.** One host only saw
+correctable errors in `dmesg` while running Qwen3.8 Flash-Next; the same cards stayed quiet on
+Qwen3.8-27B. A follow-up Vulkan memtest of about **5–8 minutes per GPU** (wait until temps
+stabilize) was enough to catch a bad card that then started erroring immediately. A replacement
+passed. Leave ECC **on** when `dmesg` reports errors even if a short 27B smoke looks fine.
+
 ## Check whether ECC is on
 
 ```bash
