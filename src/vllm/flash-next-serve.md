@@ -14,9 +14,14 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
 - PLE sidecar: [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
 
-Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class; **128 GB**
-host RAM was **not** enough for KV offload on one 4× host). Long-prompt / intermittent stalls: try
-`VLLM_USE_V2_MODEL_RUNNER=0` — [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
+Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class). On tip
+`700753d9`, PLE is a **CPU sidecar** (`VLLM_PLE_CPU_OFFLOAD=1`): default loads the full table into
+**host RAM** then gather → pinned H2D; **`VLLM_PLE_QUANT_DIR`** `mmap`s INT4 shards from disk
+(`MADV_RANDOM`) so only the gather/dequant working set hits RAM. That is **weight** offload, not
+KV. Native **KV RAM overflow** was broken on one 4× host (Sep 14: **128 GB** not enough); the
+fix is open [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) — [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
+Long-prompt / intermittent stalls: try `VLLM_USE_V2_MODEL_RUNNER=0` —
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [Flash-Next status](./flash-next.md#qwen38-flash-next-on-vllm).
 
 `#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound.

@@ -38,7 +38,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | Image tag matrix | **Needs verify** | [Docker Hub tags](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) |
-| Hub `v0.28.0-extras` | **Needs verify** | `#vllm-rdna` Sep 18 test tag; CI not fully tracked — A/B vs `v0.27.1-extras` |
+| Hub `v0.28.0-extras` | **Needs verify** | `#vllm-rdna` Sep 18 test tag; Sep 26: **no auto-build runner**, tag is **not** HEAD — A/B vs `v0.27.1-extras` or host venv |
 | `PYTORCH_ROCM_ARCH` list | **Solid** | `vllm-rdna-docker` build |
 | Prefer `--dtype float16` | **Solid** | RDNA2 BF16 limitation |
 | Default smoke model `cyankiwi/Qwen3.8-27B-AWQ-INT4` | **Community** | `#vllm-rdna` Sep 13 2026 day-to-day 27B pick |
@@ -99,7 +99,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `opengfx1030/vllm-rdna` ready as published Docker | **Needs verify** | Bake repo is now `opengfx1030/vllm-rdna-docker`; Hub `-extras` still historical 0.27.1 |
 | Flash-Next source is `rdna_extras` | **Community** | `#vllm-rdna` Sep 14–15 — leapdragon branch not updated; published containers may lag |
 | Org 0.28 rebase / Flash-Next cherry-picks | **Community** | `#vllm-rdna` Sep 3–15: PLE load path on HEAD; older PR `#1` was first `rdna_ar` pass |
-| Flash-Next KV ~24 GiB ≈ 300k tokens | **Community** | `#vllm-rdna` Sep 14 — 4× 32 GB still tight; 128 GB host RAM offload not enough |
+| Flash-Next KV ~24 GiB ≈ 300k tokens | **Community** | `#vllm-rdna` Sep 14 — 4× 32 GB still tight. Sep 14 “128 GB RAM offload not enough” is the **pre-`#24`** path |
 | Flash-Next concurrency splits TG / tanks PP | **Community** | `#vllm-rdna` Sep 14 — ~70–80 t/s total vs ~70 single; PP ~500 |
 | 2× V620 Flash-Next: llama.cpp not vLLM | **Community** | `#vllm-rdna` Sep 14 — RAM offload |
 | vLLM 3-card → PP=3 (even TP) | **Community** | `#vllm-rdna` Sep 14 |
@@ -116,7 +116,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | 3× leapdragon + org MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — `alanoo81/flashnext-v620-pp3`; ~1078–2493 PP / ~57–63 TG |
 | DeepSeek-V4 Flash INT4 + gfx1030 tree | **Needs verify** | `#vllm-rdna` Sep 17 — `yiminyuan` HF + `gfx1030/v0.28.0`; intended TP=4 PP=2 |
 | No Q3 on vLLM Flash-Next | **Community** | `#vllm-rdna` Sep 17 — stay W4A16 / AWQ; EXL3 3bpw experimental |
-| `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM packs; prefer LMCache |
+| `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM **weight** packs; still prefer prefix cache. Native KV overflow is `#24`, not this |
 | Intel AutoRound 32–128k ~1296–1393 PP / ~56–73 TG | **Community** | `#vllm-rdna` Sep 16 — 4× V620; pin `4c67bf6…`; int8 decode-shadow quality |
 | QSA live-context bound merged on `rdna_extras` | **Fork-source** | `opengfx1030/vllm-rdna#15` merged 20 Sep 2026; Hub `-extras` lags |
 | QSA `#15` combined-stack ~1830–2040 PP / ~54–73 TG | **Needs verify** | PR recorded table + `#vllm-rdna` Sep 20 author-host; **not reproduced** on two other 4× hosts Sep 21 (~1.07–1.45k PP). The unpublished recovery is **`#17`** |
@@ -129,7 +129,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
 | MTP draft unbreak `700753d9` (amdsmi + local-argmax) | **Fork-source** | `rdna_extras` HEAD 25 Sep; MTP-2 boots, **~0.73–0.85×** vs MTP-0 on author 4× host |
 | `rdna_extra/v0.30.0` Qwen4 rebase | **Needs verify** | Branch exists (`#vllm-rdna` Sep 25); tip `f87be4dc` MoE capture-buffer fix. Not the day-to-day Flash-Next line |
-| Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–26 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light |
+| Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–26 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light, ~5% faster / more quantized |
 | Host-venv TP=2 cyankiwi 27B AWQ | **Needs verify** | `#vllm-rdna` Sep 26 — one source-build host; 29.5 t/s single / 46.9 t/s ×4 |
 | `#18` GPTQ `BLOCK_KN_SIZE` 128→256 | **Needs verify** | Open PR; hold for M>32…2048 sweep (`#vllm-rdna` Sep 24) |
 | `#22` two-shot `rdna_ar` vs force custom AR | **Needs verify** | Open PR; force custom AR crashed one host |
@@ -148,8 +148,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Native RDNA2 FA WIP on Flash-Next HEAD | **Community** | `#vllm-rdna` Sep 15 — A/B `VLLM_USE_RDNA2_FA=0`; Hub `-extras` still uses `1` |
 | `rdna_ar` not a recommended default | **Community** | `#vllm-rdna` Sep 15–24 — prefer simpler `RDNA_AR` over force custom AR; open `#22`; one host crash on force custom AR |
 | hippihx kernel zoo | **Needs verify** | `#hippihx` Sep 16 — public repo; not in published images |
-| Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 — worse on Mamba/SSM; prefer LMCache when it lands |
-| `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; not confirmed on `rdna_extras` |
+| Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 **broken baseline**. Superseded as the gfx1030 experiment by open `#24` (next row) |
+| RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Needs verify** | Open `opengfx1030/vllm-rdna#24` (26 Sep); `#vllm-rdna` Sep 26–27. **Not merged.** SSD tier untested. 8 GiB ≈ ~100k **Needs verify** |
+| `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; gfx1030 follow-through is open `#24`, not this PR alone |
 | LMCache RDNA Docker integration | **Needs verify** | `#lmcache` Sep 23–24: 0.5.6.dev wheel built; official kernels CDNA-only; hybrid Qwen HMA + `LMCacheConnectorV1` not HMA-capable. Still no working compose |
 | Upstream vLLM 0.28 / 0.30 gfx1030 support | **Needs verify** | Official 0.28–0.30 still omit Navi 21 (`#general` Sep 22: 0.30 + ROCm 10.0). Keep extras |
 
@@ -192,7 +193,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | TP `allow_in_graph` fix | **Fork-source** | Commit `b583d64` |
 | HIP MoE non-deterministic (~3.5% top-token drift) | **Needs verify** | `#vllm-rdna` Sep 19 — Triton MoE bit-identical; f32 atomic not landed |
 | QSA live-context prefill bound | **Fork-source** | Merged `opengfx1030/vllm-rdna#15`; Python-only scoring width change |
-| Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; may not apply to current `rdna_extras` |
+| Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
 
 ### `host-venv.md`
 
@@ -296,6 +297,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Area | Status | Notes |
 |---|---|---|
 | `reference/env-vars.md` tables | **Community** | Cheat-sheet; not exhaustive upstream API |
+| `VLLM_PLE_QUANT_DIR` mmap INT4 shards (`700753d9`) | **Community** | `#vllm-rdna` Sep 26 — default PLE is full table in RAM + H2D; quant dir `mmap`s shards |
 | `troubleshooting/vllm.md` graph fix | **Fork-source** | Same image-lag caveat |
 | `troubleshooting/vllm.md` AMDSMI / missing `render` | **Community** | `#vllm-rdna` Docker compose |
 | `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
@@ -338,8 +340,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |
 | `vllm/recipes.md` 4× PIECEWISE Flash-Next serve | **Community** | `#vllm-rdna` Sep 17 — host venv, not Hub |
-| `troubleshooting/vllm.md` upstream KV offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 — Mamba/SSM worse |
-| `troubleshooting/vllm.md` `vllm#57160` pinned CPU KV | **Needs verify** | `#vllm-rdna` Sep 20 — mainline; not on `rdna_extras` yet |
+| `troubleshooting/vllm.md` native KV RAM offload `#24` | **Needs verify** | `#vllm-rdna` Sep 26–27 + open `vllm-rdna#24`; Sep 15 ~1 t/s is the broken baseline |
+| `troubleshooting/vllm.md` `vllm#57160` pinned CPU KV | **Needs verify** | `#vllm-rdna` Sep 20 — mainline; `#24` is the fork follow-through |
 | `vllm/recipes.md` 3× PP3 + MTP VRAM squeeze | **Needs verify** | `#vllm-rdna` Sep 15 — local patches |
 | `setup/hardware.md` V620 vs 32 GB MI50 more PP less TG | **Community** | `#general` Sep 15 — first-pass A/B |
 | `setup/host-firmware.md` GpuMMIOFix every-boot remap | **Needs verify** | `#motherboard` Sep 15–16 — suggested for WS-Z270 ReBAR |

@@ -13,7 +13,7 @@ on [Configuration](configuration.md); fork history on [vLLM forks](fork.md).
 | Goal | Use | Image / repo |
 |---|---|---|
 | Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.27.1-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Running](running.md). `#vllm-rdna` Sep 18 also posted **`v0.28.0-extras`** as a **test** pull (`docker.io/blivioniag/vllm-rdna:v0.28.0-extras`); A/B before replacing 0.27.1. |
-| Latest Flash-Next / `#17`+ HEAD | Host **venv** build | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) + [Host venv](host-venv.md). `#vllm-rdna` Sep 24: Hub tags **lag**; scripts under `rdna_extras/scripts/`. |
+| Latest Flash-Next / `#17`+ / `#24` HEAD | Host **venv** build | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) + [Host venv](host-venv.md). `#vllm-rdna` Sep 24–26: Hub tags **lag** and are **not auto-rebuilt**; scripts under `rdna_extras/scripts/`. |
 | Tuned **27B / 122B** presets, host needs only `amdgpu` + Docker | Recipe book container | [`ghcr.io/leapdragon/vllm-rdna2-recipe:0.27.1-rocm7.2.3-gfx1030`](https://github.com/leapdragon/vllm-rdna2-recipe) (`preset:…`) — mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) |
 | **Qwen3.8 Flash-Next** on **4×** V620 | `rdna_extras` + Flash-Next | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) HEAD; published container may still be [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) — [overview](flash-next.md#qwen38-flash-next-on-vllm) |
 

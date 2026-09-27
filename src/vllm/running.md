@@ -22,7 +22,7 @@ working `torch` on a Radeon card.
 | `v0.27.1-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | upstream — `#vllm-rdna` Sep 24: **can remove**; prefer `-extras` or host build |
 | `v0.27.1-extras` | v0.27.1 | rocm-rdna:7.2.0 | [`rdna_extras` fork](fork.md) |
 | `v0.27.1-extras-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | [`rdna_extras` fork](fork.md) |
-| `v0.28.0-extras` | v0.28.0 | **Needs verify** | [`rdna_extras` fork](fork.md) — `#vllm-rdna` Sep 18 **test** tag; CI not fully tracked. Prefer `v0.27.1-extras*` until you A/B. |
+| `v0.28.0-extras` | v0.28.0 | **Needs verify** | [`rdna_extras` fork](fork.md) — `#vllm-rdna` Sep 18 **test** tag. `#vllm-rdna` Sep 26: Hub is **not auto-rebuilt** (no runner yet); this tag is **not** HEAD. Prefer `v0.27.1-extras*` for Docker, or [host venv](host-venv.md) for latest kernels. |
 | `v0.26.0` | v0.26.0 | rocm-rdna:7.2.0 | upstream |
 | `v0.22.1` | v0.22.1 | — | upstream |
 
