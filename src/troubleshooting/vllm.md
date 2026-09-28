@@ -152,6 +152,21 @@ Community notes (`#vllm-rdna`):
 - If MTP **never starts** (drafter dies on ranks 1–3 / 60 s NCCL watchdog during `profile_run`),
   pull `rdna_extras` **`700753d9`** or later (amdsmi shutdown masking + local-argmax draft).
   `#vllm-rdna` (Sep 25): MTP-2 then **boots** but stays **slower than MTP-0** on the author host.
+- [`30632b2`](https://github.com/opengfx1030/vllm-rdna/commit/30632b2fa3239ea9057afd39595b84b540359d69)
+  (27 Sep) captures the **draft** decode graph at `max_num_reqs` so MTP-2 **c=8** is not eager every
+  step. Author-host: **+18%** at 8×1k / **+5%** at 8×16k. Still **~0.87× vs MTP-0** at 16k —
+  `#vllm-rdna`: “better MTP, still not great.”
+- `#vllm-rdna` (Sep 27–28): **decode-only** concurrency is usable (two streams often **~70–80 t/s**;
+  three starts to sag). **Mixed prefill + decode** is the cliff — decode drops to **~1–6 t/s**,
+  prefill **below 500 tok/s**, MTP accept collapses. One host’s unmerged scheduler experiment
+  (`VLLM_PREFILL_DEFER_INTERVAL=4` + `--long-prefill-token-threshold 256`) recovered **~20–30 t/s**
+  decode with a parallel prefill at the cost of **single-stream prefill**. **Needs verify**; not a
+  recipe — no public PR yet.
+- Concurrent MTP **9–16 token rows** (three chats × MTP-2) used to fall back to tile Triton. Merged
+  [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26) opts in
+  `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**
+  aggregate (**+11%**). **No single-chat gain.** Coding-suite quality still failed
+  `dominant_repeated_token` — do not treat as a quality fix.
 
 ## Native vLLM KV RAM offload {#upstream-kv-offload-tanks-decode}
 
@@ -160,14 +175,14 @@ bring blocks back to VRAM usefully. Community: decode fell to the **~1 t/s** cla
 state models were called out as especially unreliable on that path (including on Hopper-class hosts
 in-channel). Treat that as the **broken baseline**, not the current fork experiment.
 
-`#vllm-rdna` (Sep 26–27) + open
+`#vllm-rdna` (Sep 26–27) +
 [`opengfx1030/vllm-rdna#24`](https://github.com/opengfx1030/vllm-rdna/pull/24)
-(**not merged**): built-in **RAM-tier** KV offload on `rdna_extras` is the path being fixed — private
+(**merged** 27 Sep 2026 into `rdna_extras`): built-in **RAM-tier** KV offload — private
 pinned CPU buffers per ROCm rank, hybrid-group index corrections, MTP/EAGLE boundary blocks, and
 scratch-group filters. Community: **~190k** tokens RAM→VRAM in **~0.4 s**; **three** concurrent
 sessions of **~150k** tokens each while VRAM held only **~270k**; tool-call turns **did not**
 re-prefill the parked session. Slower than fitting everything in VRAM, especially when several
-sessions prefill at once.
+sessions prefill at once. Hub `-extras` still lags — clone + [host venv](../vllm/host-venv.md).
 
 PR-recorded live swap (author host, **48 GiB** RAM tier, swap off, **SSD tier not enabled**):
 
@@ -184,9 +199,8 @@ PR-recorded live swap (author host, **48 GiB** RAM tier, swap off, **SSD tier no
 overflow budget. vLLM can also attach a **second (storage) tier**; `#24` did **not** enable or
 test SSD.
 
-**Needs verify** on a second host. Do **not** pull `#24` into a Hub image or treat it as merged
-`rdna_extras` HEAD. Wait for merge + a second confirmation before planning multi-chat overflow
-around it. See [fork landscape](../vllm/fork.md#consolidation-status) and
+**Needs verify** on a second host. It is on `rdna_extras` HEAD; do **not** expect it in a Hub
+`-extras` tag yet. See [fork landscape](../vllm/fork.md#consolidation-status) and
 [Flash-Next KV](../vllm/flash-next.md#qwen38-flash-next-on-vllm).
 
 `#vllm-rdna` (Sep 16): public RAM-offload Flash-Next **weight** packs (example:

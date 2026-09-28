@@ -98,7 +98,8 @@ HSA topology init — VM passthrough or unbind is the reliable fix when mixed AM
 | Temps | Rough community ballpark: ~**86 °C** at full load can be “OK”; **94–96 °C** is high (often stress / curve tuning) — improve airflow / power cap first |
 | Cooling | Cap at **180 W** (or lower); single-fan / weak blower setups struggle at stock **250 W** |
 | Unducted case 120 mm | `#general` (Sep 13 2026): loud **5000 rpm** 120 mm fans and **no ducts** still hit ~**95 °C** at a **120 W** cap. A **blower / ducted** shroud on the card immediately dropped temps enough to hold **180 W**. |
-| Ducted 120 mm (push) | Community dual-V620: Arctic **P12 Pro** through a duct, ~**62–70 °C** at **175 W** depending on ambient. Needs **static pressure**; air bypasses the heatsink if you leave a gap. |
+| Ducted 120 mm (push) | Community dual-V620: Arctic **P12 Pro** through a duct, ~**62–70 °C** at **175 W** depending on ambient. Needs **static pressure**; air bypasses the heatsink if you leave a gap. `#general` (Sep 27): public [120 mm → fanless GPU ducts](https://makerworld.com/en/models/3184181-custom-fan-ducts-120mm-fans-to-fanless-gpus). |
+| 80 mm high-static (4-card) | `#other` (Sep 28): four **80 mm ~7k** fans at **50–60%** PWM held ~**60 °C** on **4× 180 W** vLLM (community). Two fans may be enough on that chassis. |
 | 40 mm axial on the card | Works but is a **high-pitched screamer**. Prefer a **blower-style** mount (example: [Thingiverse 7153218](https://www.thingiverse.com/thing:7153218)) for compactness vs noise. |
 
 PCB photos for cooler compatibility: community link

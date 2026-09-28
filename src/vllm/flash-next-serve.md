@@ -19,7 +19,8 @@ Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB*
 **host RAM** then gather → pinned H2D; **`VLLM_PLE_QUANT_DIR`** `mmap`s INT4 shards from disk
 (`MADV_RANDOM`) so only the gather/dequant working set hits RAM. That is **weight** offload, not
 KV. Native **KV RAM overflow** was broken on one 4× host (Sep 14: **128 GB** not enough); the
-fix is open [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) — [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
+fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
+[KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
 Long-prompt / intermittent stalls: try `VLLM_USE_V2_MODEL_RUNNER=0` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [Flash-Next status](./flash-next.md#qwen38-flash-next-on-vllm).

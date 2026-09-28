@@ -128,15 +128,15 @@ upstream **0.29** (V2 becomes the default). See
 Community ballpark **~24 GiB ≈ 300k tokens** once the PLE sidecar is loaded — a 4× V620 box can
 still be **tight** (~280k tokens left on one host). The Sep 14 report that **128 GB** host RAM
 offload was **not** enough (and that tool-call sessions **re-prefilled**) describes the
-**pre-`#24`** / broken native path. Open
-[`opengfx1030/vllm-rdna#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) is the RAM-tier
-fix — community: three **~150k** sessions while VRAM held **~270k**, **~0.4 s** to bring
+**pre-`#24`** / broken native path. Merged
+[`opengfx1030/vllm-rdna#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) is the
+RAM-tier fix — community: three **~150k** sessions while VRAM held **~270k**, **~0.4 s** to bring
 **~190k** back, no full re-prefill on tool calls. PR capacity on a **48 GiB** reserved tier:
-**~450k** retained tokens. **Needs verify**; **not merged**; slower than fitting in VRAM.
-Details: [native KV RAM offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
-Concurrent streams still split decode (community: total TG near single-stream ~70–80 t/s while
-**PP fell to ~500 t/s**). Prefer **one stream** plus prefix / radix cache unless you are on
-`#24` and have measured overflow.
+**~450k** retained tokens. **Needs verify** on a second host; slower than fitting in VRAM. Hub
+tags lag. Details: [native KV RAM offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
+Concurrent streams still split decode (community: **decode-only** two streams often **~70–80 t/s**;
+**mixed prefill + decode** drops decode to **~1–6 t/s** and PP **below 500**). Prefer **one
+stream** plus prefix / radix cache unless you have measured overflow on `#24`.
 
 `#vllm-rdna` (Sep 17): the **logged** hybrid KV token count can be **~2.5× too high** versus a
 measured peak — size `--max-model-len` from a real request, not the banner
@@ -209,9 +209,11 @@ unconfirmed (community: “won’t fit”).
 calibration). Community compared that to Intel AutoRound’s **200** iterations and noted Intel’s
 attention projections stay **bf16** while the Swift AutoRound pack quantized them to **int4**.
 `#vllm-rdna` (Sep 26): Swift AutoRound was **~5% faster** than the host’s usual Flash-Next line —
-expected if the pack is more aggressively quantized, not a quality win. Do **not** treat
-“AutoRound vs AWQ quality” as settled from Discord — read the quant config, and prefer the
-**AWQ** sibling if you want a first try. **Community / Needs verify.**
+expected if the pack is more aggressively quantized, not a quality win. `#vllm-rdna` (Sep 27):
+the same AutoRound pack **looped badly** on a later host — treat that as a **quality** warning,
+not a speed footnote. Do **not** treat “AutoRound vs AWQ quality” as settled from Discord —
+read the quant config, and prefer the **AWQ** sibling if you want a first try.
+**Community / Needs verify.**
 
 ## Related
 

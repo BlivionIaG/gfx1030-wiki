@@ -66,8 +66,18 @@ NCCL), and Qwen4Exp MTP uses **local-argmax** draft sampling when
 `speculative_config.use_local_argmax_reduction=true`. Author-host 4× V620 W4A16 Flash-Next
 **MTP-2** then **boots** (FA + `FULL_DECODE_ONLY` **~46 t/s**; Triton + `FULL_AND_PIECEWISE`
 **~49 t/s**) but stays **below MTP-0 (~61 t/s)** — documented **~0.73–0.85×** penalty. `#vllm-rdna`
-(Sep 25): community still reports the same “boots, not faster than MTP-0” class. Hub `-extras`
-lags — clone + [host venv](host-venv.md).
+(Sep 25): community still reports the same “boots, not faster than MTP-0” class.
+
+[`30632b2`](https://github.com/opengfx1030/vllm-rdna/commit/30632b2fa3239ea9057afd39595b84b540359d69)
+(27 Sep) captures the **draft** decode graph at `max_num_reqs` (MTP-2 **c=8** was eager).
+Author-host: **+18%** at 8×1k / **+5%** at 8×16k; still **~0.87× vs MTP-0** at 16k. One later
+host with a matching TunableOp table reported MTP **above** MTP-0 — treat that as **Needs
+verify**, not a retraction of the 0.73–0.87× class. Hub `-extras` lags — clone +
+[host venv](host-venv.md).
+
+Merged [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26): concurrent MTP-2 (9–16 rows)
+can stay on HIP MoE with `VLLM_ROCM_MOE_SKINNY_MAX_M=16`. Default remains **8**. See
+[prefill vs decode](../troubleshooting/vllm.md#prefill-blocks-decode--mtp-stalls-under-concurrency).
 
 ## INT4 on gfx1030 (no native int4 ALUs)
 
@@ -133,7 +143,7 @@ Not in published `-extras` tags. Community + draft
 | [`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound) | PR-validation checkpoint (W4A16 weights, FP16 serve path) |
 | [`Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-RTN-AutoRound) | RTN sibling cited in `#vllm-rdna` (high publisher recovery %) |
 | [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ) | `#vllm-rdna` Sep 25 — shorter-reasoning AWQ (`compressed-tensors`). [Swift notes](flash-next.md#swift-15-flash-next) |
-| [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound) | Swift AutoRound sibling — **50-iter light** tune; not the Intel 200-iter pack |
+| [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound) | Swift AutoRound sibling — **50-iter light** tune; not the Intel 200-iter pack. `#vllm-rdna` Sep 27: **looped badly** on one host — prefer the AWQ sibling first |
 
 Community take: Intel AutoRound sits **between Unsloth Q5_XL and Q6_XL** on quality while the
 weight pack is tens of GB smaller (~**75 GB**). That still wants **four 32 GB** cards plus a
