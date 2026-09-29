@@ -25,6 +25,13 @@ Both kernels can be installed on the same host simultaneously; toggle the defaul
 `grubby --set-default /boot/vmlinuz-<evr>`. Both boot with the **180 W** power cap from
 [Power Tuning](./power.md).
 
+`#vllm-rdna` / `#general` (Sep 24): **Ubuntu 26** may ship a **7.0-class** kernel that sits in the
+gap between these two validated paths. Do **not** assume the Fedora Post-7 recipe applies unchanged
+— rebuild with the toolbox options (or stay on a Pre-7 / ≥7.1 build), then add **`iommu=pt`**,
+confirm **ACS off**, **ReBAR / Above 4G on**, **CSM off**. Power-cap helpers for Ubuntu 26 live under
+[`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning);
+P2P itself remains Fedora-validated.
+
 ## Key prerequisites
 
 - **AMD CPU** — the KFD P2P path is **wiki-validated** on AMD (EPYC 7452). Intel Ice Lake can

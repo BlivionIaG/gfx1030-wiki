@@ -137,17 +137,21 @@ This does **not** replace [PP3 corruption](#flash-next-pp3-output-corruption). H
 can still use `FULL_AND_PIECEWISE` — see [Configuration](../vllm/configuration.md#cuda-graphs-preferred-over---enforce-eager).
 Sanitized serve line: [Flash-Next PIECEWISE recipe](../vllm/flash-next-serve.md#flash-next-4x-piecewise).
 
-The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) uses
-`FULL_AND_PIECEWISE` and states that mode **executes as PIECEWISE on ROCm**
-(`rocm_full_executes_as_piecewise`). It also attributes an earlier “corrupts at c=8” report to
+The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) used
+`FULL_AND_PIECEWISE` and stated that mode **executed as PIECEWISE on ROCm**
+(`rocm_full_executes_as_piecewise`). It also attributed an earlier “corrupts at c=8” report to
 **probe artifacts** (reasoning-parser field / reasoning-budget), not the graphs.
 
-`#vllm-rdna` (Sep 23–24): merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17)
-**measures `FULL_DECODE_ONLY`** (mode `0`, capture `[3,6,12]` with MTP-2). That is **not** the
-same as **FULL-only** (which still corrupted earlier). Open
-[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes compiled `FULL_AND_PIECEWISE` **boot
-and stay correct**, but decode dropped **~63–70 → ~26–34 t/s** (prefill held). Prefer `#17`’s
-`FULL_DECODE_ONLY` until a graph-launch follow-up lands. See [4× `#17` recipe](../vllm/flash-next-serve.md#flash-next-4x-pr17).
+`#vllm-rdna` (Sep 23–25): merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17)
+measured **`FULL_DECODE_ONLY`**. **Merged** [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20)
+(24 Sep) made compiled `FULL_AND_PIECEWISE` **boot**, but the ROCm FULL→piecewise redirect still
+dropped decode **~63–70 → ~26–34 t/s**. Keep-FULL commit
+[`6c26c78d`](https://github.com/opengfx1030/vllm-rdna/commit/6c26c78d54) (`#vllm-rdna` Sep 24: “fixed
+full and piecewise”) sets **`rocm_full_executes_as_piecewise → False`** on `rdna_extras` HEAD —
+uniform decode keeps the FULL graph; mixed/prefill keep piecewise. Prefer
+`--compilation-config '{"mode":3,"cudagraph_mode":"FULL_AND_PIECEWISE",…}'` on HEAD —
+[serve notes](../vllm/flash-next-serve.md#flash-next-4x-full-and-piecewise). Do **not** treat the
+old launcher “executes as PIECEWISE” comment as current.
 
 `#vllm-rdna` (Sep 17): `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (in that recipe) **turns torch.compile off**.
 Community A/B on a 4× TP Flash-Next tree: **~39 t/s** with breakable/eager vs **~55 t/s** after compile

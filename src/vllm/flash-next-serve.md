@@ -14,9 +14,15 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
 - PLE sidecar: [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
 
-Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class; **128 GB**
-host RAM was **not** enough for KV offload on one 4× host). Long-prompt / intermittent stalls: try
-`VLLM_USE_V2_MODEL_RUNNER=0` — [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
+Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class). On tip
+`700753d9`, PLE is a **CPU sidecar** (`VLLM_PLE_CPU_OFFLOAD=1`): default loads the full table into
+**host RAM** then gather → pinned H2D; **`VLLM_PLE_QUANT_DIR`** `mmap`s INT4 shards from disk
+(`MADV_RANDOM`) so only the gather/dequant working set hits RAM. That is **weight** offload, not
+KV. Native **KV RAM overflow** was broken on one 4× host (Sep 14: **128 GB** not enough); the
+fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
+[KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
+Long-prompt / intermittent stalls: try `VLLM_USE_V2_MODEL_RUNNER=0` —
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [Flash-Next status](./flash-next.md#qwen38-flash-next-on-vllm).
 
 `#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound.
@@ -38,8 +44,11 @@ Operational facts that are safe to copy:
 - **Mamba retirement:** backport of [`vllm#55450`](https://github.com/vllm-project/vllm/pull/55450).
   Without it, long prompts (100k+ class) hit a deterministic **preemption loop** (state blocks not
   retired across null gaps).
-- **Graphs:** `--compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[3,6,12]}'`
-  with **MTP-2**. Prefill stays eager. This is the **measured** path, not `PIECEWISE`.
+- **Graphs (`#17` measured):** `--compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[3,6,12]}'`
+  with **MTP-2**. Prefill stays eager.
+- On **current HEAD**, prefer **`FULL_AND_PIECEWISE`** instead — see
+  [FULL_AND_PIECEWISE](#flash-next-4x-full-and-piecewise) (decode uses the same FULL path as this
+  baseline; piecewise covers mixed/prefill).
 - **TunableOp** is **rocBLAS-hash locked**. A mismatched CSV aborts the first GEMM or silently
   uses default algorithms — [regenerate](../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
 - Harness used for the PR numbers: [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench).
@@ -53,11 +62,43 @@ PR-head 16k (author) vs second-host confirm (`#vllm-rdna` Sep 23):
 | Regular / coding TTFT | 8.56 / 9.11 s | 8.44 / 9.10 s |
 | Decode | 69.7 / 68.5 t/s | 63.1 / 70.1 t/s |
 
-Open follow-ups (not the default): [`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) makes
-compiled `FULL_AND_PIECEWISE` **correct** but **slower decode** (~26–34 t/s). Draft
-[`#21`](https://github.com/opengfx1030/vllm-rdna/pull/21) tries to keep FULL decode graphs — **unbenched**.
+### 4× V620 Flash-Next serve (`FULL_AND_PIECEWISE`, Sep 24–25) {#flash-next-4x-full-and-piecewise}
 
-The older Sep 17 PIECEWISE host-venv block below is still useful if you are **not** on `#17` yet.
+**Current recommended graphs on latest `rdna_extras`.** `#vllm-rdna` (Sep 24): maintainer confirmed
+full + piecewise is fixed. Fork-source write-up:
+[`docs/rdna2/V620-FULL-AND-PIECEWISE.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/V620-FULL-AND-PIECEWISE.md).
+
+What changed:
+
+| Layer | Behavior |
+|---|---|
+| **Uniform decode** | Replays the **FULL** CUDA graph (same live capture as `#17` `FULL_DECODE_ONLY`) |
+| **Mixed / prefill** | Replays **piecewise** graphs |
+| **`#20` alone** | Piecewise capture worked, but ROCm still redirected every FULL dispatch → piecewise → decode **~26–34 t/s** |
+| **Keep-FULL fix** | Commit [`6c26c78d`](https://github.com/opengfx1030/vllm-rdna/commit/6c26c78d54) (`#21` / `rocm_full_executes_as_piecewise → False`) — on `rdna_extras` HEAD |
+
+Safe compile line (generalized; do not copy host paths):
+
+```bash
+--compilation-config '{"mode":3,"cudagraph_mode":"FULL_AND_PIECEWISE","cudagraph_capture_sizes":[3,6,12]}'
+```
+
+In-tree launcher: [`tools/rdna2/serve_v620_piecewise.sh`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/tools/rdna2/serve_v620_piecewise.sh)
+(`V620_COMPILE_MODE=3`, `V620_CUDAGRAPH_MODE=FULL_AND_PIECEWISE`). Older comments in that script
+still mention the `#20`-era ~2× decode drop — ignore those once you are on HEAD with the keep-FULL
+commit. Prefer this over bare `PIECEWISE` (no FULL graphs) and over the Sep 17 breakable/`mode:0`
+workaround.
+
+Without compilation / without `VLLM_USE_BREAKABLE_CUDAGRAPH=1`, a `FULL_AND_PIECEWISE` request
+**downgrades to `FULL_DECODE_ONLY`** (keeps FULL decode) instead of dropping every graph; a bare
+`PIECEWISE` request still becomes `NONE`.
+
+`rdna_extras` HEAD (25 Sep, `700753d9`): **MTP-2 boots** after the amdsmi / local-argmax draft
+fix, but author-host decode stays **below MTP-0** (~46–49 vs ~61 t/s). Do not expect MTP to beat
+the no-draft line yet — [MTP](quantization.md#mtp-speculative-decoding).
+
+The older Sep 17 PIECEWISE host-venv block below is only for checkouts **before** `#17` / the
+keep-FULL fix.
 
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
 
@@ -88,10 +129,10 @@ Do not trust the logged hybrid KV token count — [overstated pool](../troublesh
 `VLLM_USE_V2_MODEL_RUNNER=0` (**V2 blocked on Qwen4Exp**), `VLLM_USE_BREAKABLE_CUDAGRAPH=1`, and
 `--max-num-batched-tokens 2048`, but:
 
-- uses `--compilation-config` **`FULL_AND_PIECEWISE`**. The in-tree launcher comment (Sep 18) says
-  that mode **executes as PIECEWISE on ROCm** (`rocm_full_executes_as_piecewise`) and that an earlier
-  “FULL_AND_PIECEWISE corrupts at c=8” report was **probe artifacts** (reasoning-parser field /
-  reasoning-budget), **not** the graphs. Still do **not** use **FULL-only** —
+- uses `--compilation-config` **`FULL_AND_PIECEWISE`**. On **Sep 18** trees that mode still
+  **executed as PIECEWISE on ROCm** (`rocm_full_executes_as_piecewise`). On **current HEAD** the
+  keep-FULL fix turns that redirect off — [FULL_AND_PIECEWISE](#flash-next-4x-full-and-piecewise).
+  Still do **not** use **FULL-only** on old trees —
   [FULL-graph corruption](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption)
 - raises `--kv-cache-memory-bytes` to **7000000000** (7 GiB) and `--gpu-memory-utilization 0.90`
 - reported a **16× 16k** concurrency test as fine (earlier `--max-num-seqs` tightness)

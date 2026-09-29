@@ -10,7 +10,8 @@
 |---|---|
 | [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
-| [Serve lines](./flash-next-serve.md) | PIECEWISE, PP3, overlays, DeepSeek |
+| [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3 |
 
 When something fails, use [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md) rather than the general vLLM list.
 
@@ -36,13 +37,25 @@ Fitting MTP on 3 cards is [community / Needs verify](./flash-next-serve.md#flash
 Sep 17–18: a public overlay that ports org **MoE HIP** onto leapdragon reports **~1078–2493** PP /
 **~57–63** TG with MTP k=2 — [overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
 
-**4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–24):** the **measured `#17` path** is
-**`FULL_DECODE_ONLY`** — [Sep 23 serve notes](./flash-next-serve.md#flash-next-4x-pr17). Older hosts that
-saw **FULL** decode **corrupt** stayed on **`PIECEWISE`** —
-[FULL-graph corruption](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption) and the
-[Sep 17 serve line](./flash-next-serve.md#flash-next-4x-piecewise). Community snapshot on that older recipe:
-**~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3** path on
-vLLM.
+**4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer
+**`FULL_AND_PIECEWISE`** (compile `mode: 3`) — uniform decode uses the **FULL** CUDA graph (same
+live path as `#17` **`FULL_DECODE_ONLY`**); mixed/prefill use piecewise. See
+[FULL_AND_PIECEWISE serve](./flash-next-serve.md#flash-next-4x-full-and-piecewise) and fork
+[`docs/rdna2/V620-FULL-AND-PIECEWISE.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/V620-FULL-AND-PIECEWISE.md).
+[`#20`](https://github.com/opengfx1030/vllm-rdna/pull/20) alone still redirected FULL→piecewise
+(~26–34 t/s decode); the keep-FULL fix (`6c26c78d`, `#vllm-rdna` Sep 24) turns that redirect **off**.
+`#17` **`FULL_DECODE_ONLY`** remains a valid measured baseline —
+[Sep 23 serve notes](./flash-next-serve.md#flash-next-4x-pr17). Older hosts that saw **FULL**
+decode **corrupt** stayed on **`PIECEWISE`** —
+[FULL-graph corruption](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption) /
+[Sep 17 serve line](./flash-next-serve.md#flash-next-4x-piecewise). Community snapshot on that older
+recipe: **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3**
+path on vLLM.
+
+**6× V620 Flash-Next (`#vllm-rdna` Sep 24):** **minimum 3** cards. Maintainer starting points:
+**`PP=3` + `TP=2`** (six GPUs) or **`PP=6`**. Prefer **power-of-2 tensor parallel** over `PP=2` +
+`TP=3`. Disaggregated prefill/decode (two model loads) is a separate WIP — open
+[`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23). **Needs verify** — no published 6× table.
 
 `#vllm-rdna` (Sep 19): **pipeline parallel 4** on Flash-Next was reported to hit **~1950 tok/s**
 prefill at 32k while **decode collapsed**. The same host dropped PP4 and continued on **TP=4**
@@ -111,13 +124,22 @@ leapdragon container. Community: **MoE on the 0.28 Flash-Next line wants the V1 
 upstream **0.29** (V2 becomes the default). See
 [vLLM troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 
-**KV / concurrency (4× 32 GB, `#vllm-rdna` Sep 14):** Flash-Next KV is expensive. Community ballpark
-**~24 GiB ≈ 300k tokens** once the PLE sidecar is loaded — a 4× V620 box can still be **tight**
-(~280k tokens left on one host). Offloading KV to **128 GB** of system RAM was **not** enough;
-budget **>128 GB** host RAM if you try that path. Concurrent streams split decode (community: total
-TG stayed near single-stream ~70–80 t/s while **PP fell to ~500 t/s**) and re-prefill on every
-tool-call session. Prefer **one stream** plus prefix / radix cache; do not expect a linear
-multi-agent multiplier.
+**KV / concurrency (4× 32 GB, `#vllm-rdna` Sep 14 + Sep 26–27):** Flash-Next KV is expensive.
+Community ballpark **~24 GiB ≈ 300k tokens** once the PLE sidecar is loaded — a 4× V620 box can
+still be **tight** (~280k tokens left on one host). The Sep 14 report that **128 GB** host RAM
+offload was **not** enough (and that tool-call sessions **re-prefilled**) describes the
+**pre-`#24`** / broken native path. Merged
+[`opengfx1030/vllm-rdna#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) is the
+RAM-tier fix — community: three **~150k** sessions while VRAM held **~270k**, **~0.4 s** to bring
+**~190k** back, no full re-prefill on tool calls. PR capacity on a **48 GiB** reserved tier:
+**~450k** retained tokens. **Needs verify** on a second host; slower than fitting in VRAM. Hub
+tags lag. Details: [native KV RAM offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
+Concurrent streams still split decode (community: **decode-only** two streams often **~70–80 t/s**;
+**mixed prefill + decode** drops decode to **~1–6 t/s** and PP **below 500**). Prefer **one
+stream** plus prefix / radix cache unless you have measured overflow on `#24`. An unpublished
+`--prefill-schedule-interval` / `--long-prefill-token-threshold` experiment (Sep 28–29) tries to
+keep mixed decode alive — **Needs verify**, not a serve recipe
+([troubleshooting](../troubleshooting/vllm.md#prefill-blocks-decode)).
 
 `#vllm-rdna` (Sep 17): the **logged** hybrid KV token count can be **~2.5× too high** versus a
 measured peak — size `--max-model-len` from a real request, not the banner
@@ -171,10 +193,36 @@ on ROCm 7.14 hosts.
 
 Serve commands (4× PIECEWISE, `#17`, PP3, overlays) are on [Flash-Next serve lines](./flash-next-serve.md).
 
+## Swift 1.5 Flash-Next (`#vllm-rdna` Sep 25–26) {#swift-15-flash-next}
+
+Public **shorter-reasoning** derivative of Qwen3.8 Flash-Next
+([`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ);
+AutoRound sibling
+[`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AutoRound)).
+Publisher card (BF16 vs base, not a wiki bench): **~63%** fewer median thinking tokens at `xhigh`
+with under **1%** claimed accuracy loss. AWQ is `compressed-tensors` W4A16 — same runtime class as
+other Flash-Next INT4 packs, **not** Hub `-extras`.
+
+`#vllm-rdna` (Sep 25–26) community first-look on **3× V620**: the **AWQ** pack ran at about the
+same speed as the host’s usual AutoRound Flash-Next line (**~1300 tok/s** prefill / **~45 t/s**
+decode) and was called **more verbose**. Treat tok/s as **Needs verify**. Two-card fit is
+unconfirmed (community: “won’t fit”).
+
+**AutoRound caveat:** the Swift AutoRound config is **50 iterations / light tuning** (512-token
+calibration). Community compared that to Intel AutoRound’s **200** iterations and noted Intel’s
+attention projections stay **bf16** while the Swift AutoRound pack quantized them to **int4**.
+`#vllm-rdna` (Sep 26): Swift AutoRound was **~5% faster** than the host’s usual Flash-Next line —
+expected if the pack is more aggressively quantized, not a quality win. `#vllm-rdna` (Sep 27):
+the same AutoRound pack **looped badly** on a later host — treat that as a **quality** warning,
+not a speed footnote. Do **not** treat “AutoRound vs AWQ quality” as settled from Discord —
+read the quant config, and prefer the **AWQ** sibling if you want a first try.
+**Community / Needs verify.**
+
 ## Related
 
 - [Serve lines](./flash-next-serve.md)
-- [Recipes](./recipes.md) — Hub `-extras` and the recipe container
+- [Recipes](./recipes.md) — Hub `-extras`, Swift, and the TP=2 27B snapshot
+- [Quantization](./quantization.md) — MTP unbreak, AutoRound vs Swift
 - [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md)
 - [Choose a stack](../choose-a-stack.md)
 

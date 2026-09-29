@@ -42,7 +42,9 @@ a **hidden MMIO High / large-BAR** change. A circulating public write-up is the
    **`0x03` or `0x04`**. Write **base + size together**; keep the existing base. Both sizes have
    been reported as “the one that worked” — A/B on your dump.
 5. **Do not factory-reset, clear CMOS, or pull the CMOS battery** after a successful write — that
-   clears the change.
+   clears the change. `#general` (Sep 23): a host that **lost BIOS settings** (flat CMOS battery
+   suspected) came back with **SR-IOV re-enabled** and **ReBAR off**, then saw **MMIO not allocated**
+   / fewer GPUs than before. Re-apply the known-good firmware settings before chasing ROCm.
 6. After Linux boots, continue with [P2P readiness](../tuning/p2p.md#readiness--verification).
 
 ### Aperture size (community)

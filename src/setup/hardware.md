@@ -70,7 +70,10 @@ on the official support matrix, but in practice they run gfx1030 kernels once yo
   (`gfx11xx`). Matrix math runs on the regular vector ALUs, so expect lower peak throughput than
   RDNA3 or CDNA cards, but very good price/performance for inference.
 - **FP16** is well supported; **BF16** has limited/emulated support and is best avoided for hot paths
-  (prefer `float16`).
+  (prefer `float16`). `#general` (Sep 28 2026): **ComfyUI / image-video** workflows often default
+  to **bf16**. On V620 that path is HIP-emulated, so those pipelines are a poor fit — pick **fp16 /
+  int8** workflows, or use a card with native bf16. Community also called video generation a
+  CUDA-world problem, not a V620 win.
 
 ## How to check your GPU target
 

@@ -129,7 +129,7 @@ If TP works on one image and dies after a host ROCm bump, check the **ROCm versi
 model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
 **7.14.0** — see [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
-## Prefill blocks decode / MTP stalls under concurrency
+## Prefill blocks decode / MTP stalls under concurrency {#prefill-blocks-decode}
 
 Symptom: with speculative decode (MTP) and multiple in-flight requests, generation stalls while
 prefill runs; or graph + MTP3 reaches "Application startup complete" then hangs on PLE lookup /
@@ -149,28 +149,75 @@ Community notes (`#vllm-rdna`):
 - Slow or broken P2P + custom all-reduce can look like MTP latency bugs — A/B the
   [disable vs PIX custom AR](../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks)
   stacks.
+- If MTP **never starts** (drafter dies on ranks 1–3 / 60 s NCCL watchdog during `profile_run`),
+  pull `rdna_extras` **`700753d9`** or later (amdsmi shutdown masking + local-argmax draft).
+  `#vllm-rdna` (Sep 25): MTP-2 then **boots** but stays **slower than MTP-0** on the author host.
+- [`30632b2`](https://github.com/opengfx1030/vllm-rdna/commit/30632b2fa3239ea9057afd39595b84b540359d69)
+  (27 Sep) captures the **draft** decode graph at `max_num_reqs` so MTP-2 **c=8** is not eager every
+  step. Author-host: **+18%** at 8×1k / **+5%** at 8×16k. Still **~0.87× vs MTP-0** at 16k —
+  `#vllm-rdna`: “better MTP, still not great.”
+- `#vllm-rdna` (Sep 27–29): **decode-only** concurrency is usable (two streams often **~70–80 t/s**;
+  three starts to sag). **Mixed prefill + decode** is the cliff — decode drops to **~1–6 t/s**,
+  prefill **below 500 tok/s**, MTP accept collapses. A local (still **unpublished**) scheduler
+  experiment first showed as `VLLM_PREFILL_DEFER_INTERVAL=4` + `--long-prefill-token-threshold 256`,
+  then as CLI `--prefill-schedule-interval` **2 or 4** (higher = more decode time between prefills)
+  with `--long-prefill-token-threshold` **256 / 512 / 1024**. Community: interval **4** + threshold
+  **256** recovered **~20–30 t/s** decode with a parallel prefill but **halved** single-stream PP.
+  Interval **2** was called a milder prefill penalty. One host’s live 4-agent run at
+  **1024 / 8** held mixed **~1030–1050 tok/s** PP / **~33 t/s** gen (decode-only **~24 t/s** with
+  **~94%** prefix hit; single-stream PP sometimes **~1750**). Synthetic benches were called
+  untrustworthy vs live agentic. **`--max-num-batched-tokens 2048`** slightly helped ITL on that
+  host. **Needs verify**; not a recipe — no public PR / not in Hub `-extras`.
+- Concurrent MTP **9–16 token rows** (three chats × MTP-2) used to fall back to tile Triton. Merged
+  [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26) opts in
+  `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**
+  aggregate (**+11%**). **No single-chat gain.** Coding-suite quality still failed
+  `dominant_repeated_token` — do not treat as a quality fix.
 
-## Upstream KV offload tanks decode {#upstream-kv-offload-tanks-decode}
+## Native vLLM KV RAM offload {#upstream-kv-offload-tanks-decode}
 
-`#vllm-rdna` (Sep 15): **upstream vLLM** CPU → SSD **KV cache offload** (not LMCache) failed to
+`#vllm-rdna` (Sep 15): **stock / pre-fix** CPU → SSD **KV cache offload** (not LMCache) failed to
 bring blocks back to VRAM usefully. Community: decode fell to the **~1 t/s** class. **Mamba / SSM**
-state models are called out as especially unreliable on this path (including on Hopper-class hosts
-in-channel).
+state models were called out as especially unreliable on that path (including on Hopper-class hosts
+in-channel). Treat that as the **broken baseline**, not the current fork experiment.
 
-`#vllm-rdna` (Sep 16): public RAM-offload Flash-Next packs (example:
+`#vllm-rdna` (Sep 26–27) +
+[`opengfx1030/vllm-rdna#24`](https://github.com/opengfx1030/vllm-rdna/pull/24)
+(**merged** 27 Sep 2026 into `rdna_extras`): built-in **RAM-tier** KV offload — private
+pinned CPU buffers per ROCm rank, hybrid-group index corrections, MTP/EAGLE boundary blocks, and
+scratch-group filters. Community: **~190k** tokens RAM→VRAM in **~0.4 s**; **three** concurrent
+sessions of **~150k** tokens each while VRAM held only **~270k**; tool-call turns **did not**
+re-prefill the parked session. Slower than fitting everything in VRAM, especially when several
+sessions prefill at once. Hub `-extras` still lags — clone + [host venv](../vllm/host-venv.md).
+
+PR-recorded live swap (author host, **48 GiB** RAM tier, swap off, **SSD tier not enabled**):
+
+| Step | Community / PR snapshot |
+|---|---|
+| Cold ~200k TTFT | **~117 s** |
+| Reload ~200k TTFT | **~2.1 s** (PR: 198,656 tokens from RAM, **11.5 GB** in **0.429 s**) |
+| Decode after reload | **~112 t/s** — no **1 t/s** collapse, sentinels intact |
+| Coding bench 64k / 128k | **~1982 / ~1852** PP, **~70–72** TG (same harness class as `#17`) |
+| Capacity (this layout) | **~450k** retained prompt tokens in 48 GiB; two **200k** sessions, or one **256k** + ~190k. Two full 256k windows **~55 GiB**, three **~82 GiB**. |
+
+`#vllm-rdna` (Sep 27): a **~8 GiB** RAM tier was ballparked at **~100k** tokens. That is
+**Needs verify** and will scale with model / KV layout — do not treat 8 GiB as a production
+overflow budget. vLLM can also attach a **second (storage) tier**; `#24` did **not** enable or
+test SSD.
+
+**Needs verify** on a second host. It is on `rdna_extras` HEAD; do **not** expect it in a Hub
+`-extras` tag yet. See [fork landscape](../vllm/fork.md#consolidation-status) and
+[Flash-Next KV](../vllm/flash-next.md#qwen38-flash-next-on-vllm).
+
+`#vllm-rdna` (Sep 16): public RAM-offload Flash-Next **weight** packs (example:
 [`Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound`](https://huggingface.co/Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound))
-are interesting for long context, but recipes that need **`--no-enable-prefix-caching`** are a
-**non-starter** on gfx1030 vLLM. Qwen4exp KV is already relatively efficient; parking **non-linear**
-state in host RAM fights prefix cache. **LMCache** is still the intended overflow path.
-
-Do not plan production multi-chat overflow on native vLLM KV offload. `#lmcache` is still the
-intended gfx1030 path (standalone LMCache server + vLLM connector) but has **no published recipe**
-yet. See [fork landscape](../vllm/fork.md#consolidation-status).
+are a different topic. Recipes that need **`--no-enable-prefix-caching`** remain a **non-starter**
+on gfx1030 vLLM — parking **non-linear** state in host RAM fights prefix cache.
 
 `#vllm-rdna` (Sep 20): upstream [`vllm#57160`](https://github.com/vllm-project/vllm/pull/57160)
-(mainline ROCm, **not** v0.29 and **not** confirmed on `rdna_extras`) changes CPU KV offload to
-private pinned tensors after `cudaHostRegister` failures on large TP. Treat as a tracking note —
-do not assume it restores usable decode on gfx1030.
+(mainline ROCm, **not** v0.29) uses private pinned tensors after `cudaHostRegister` failures on
+large TP. `#24` is the gfx1030-facing follow-through — do not assume mainline `#57160` alone
+fixes `rdna_extras` without the fork PR.
 
 `#vllm-rdna` / `#general` (Sep 18–19): official **`rocm/pytorch`** images are the **wrong** place to
 compile an LMCache connector (missing HIP / developer packages). Intended shape:
