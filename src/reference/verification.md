@@ -152,7 +152,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. Hub lags |
 | Skinny HIP MoE 9–16 rows `#26` | **Fork-source / Community** | Merged 27 Sep; `VLLM_ROCM_MOE_SKINNY_MAX_M=16`; +11% concurrent regular-text. No single-chat claim |
 | MTP draft graph `30632b2` | **Fork-source** | 27 Sep; +18% / +5% at c=8 1k / 16k; still ~0.87× vs MTP-0 at 16k |
-| Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–28 — decode-only 2 streams OK; mixed cliff. `VLLM_PREFILL_DEFER_INTERVAL` **unmerged / Needs verify** |
+| Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Scheduler defer (`--prefill-schedule-interval` / `--long-prefill-token-threshold`, earlier `VLLM_PREFILL_DEFER_INTERVAL`) **unpublished / Needs verify**. 1024/8 4-agent snapshot **Needs verify** |
 | FA-RDNA2 `#28` / split-decode `#29` | **Needs verify** | `#28` merged 28 Sep **without gfx1030 GPU runs**; `#29` draft, stacked, also untested |
 | Two-shot `rdna_ar` `#22` | **Fork-source** | Merged 27 Sep; library default still off; A/B topology |
 | `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; gfx1030 follow-through is merged `#24`, not this PR alone |
@@ -252,6 +252,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Flash-Next MTP on `markldn` / `okigan` trees, no TP | **Needs verify** | `#llamacpp` Sep 19 — MTP loaded; tensor parallel did not |
 | DeepSeek-V4 llama.cpp TP4 ~22 t/s | **Needs verify** | `#llamacpp` Sep 17 — kernel unpublished |
 | Flash-Next UD-IQ3_XXS ~530 PP / ~30 t/s (2× V620, stock ROCm) | **Community** | `#general` / `#forum` Sep 15 — official llama.cpp ROCm; ~10 t/s at 80k+; Vulkan ~25% slower |
+| Flash-Next AD-4.27 GGUF ~550 PP / ~29–30 t/s (2× V620, no MTP) | **Community** | `#llamacpp` Sep 28–29 — `Navin-Models/Qwen3.8-Flash-Next-Uncensored-AD-4.27-GGUF`; 262k q8 KV; MTP headers failed; PCIe 3.0 host |
 | Flash-Next n-gram table ~50 GB RAM | **Community** | `#llamacpp` Sep 10 — 4× V620 to avoid storage offload |
 | PR #10 / #12 status | **Needs verify** | Re-check fork PRs |
 
@@ -266,6 +267,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Flash-Next TP experimental / deferred | **Community** | Fork update + forum benches; layer-split only |
 | Flash-Next llama.cpp << vLLM | **Community** | `#llamacpp` / forum Sep 2026 — except 2-card / RAM-offload |
 | 2× V620 IQ4_XS layer-split + ngram-mod | **Community** | `#llamacpp` / `#vllm-rdna` Sep 14–15 — host-specific `-t` |
+| 2× V620 AD-4.27 GGUF ~550 PP / ~29–30 t/s | **Community** | `#llamacpp` Sep 28–29 — no MTP; 262k q8; ISTA-DASLab GSQ pack mentioned, no tok/s |
 | `SPEC_SIDECAR=1` MTP path | **Community** | Fork maintainer tip; pull latest |
 | Sidecar GGUF identity / Unsloth vs other Q8 | **Community** | `#llamacpp` Sep 2026 — match publisher families |
 | DFlash2 aperture violation crash | **Community** | `#llamacpp` Sep 2026 — pull latest / A/B MTP |
@@ -346,7 +348,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |
 | `vllm/recipes.md` 4× PIECEWISE Flash-Next serve | **Community** | `#vllm-rdna` Sep 17 — host venv, not Hub |
 | `troubleshooting/vllm.md` native KV RAM offload `#24` | **Fork-source / Needs verify** | `#vllm-rdna` Sep 26–27 + merged `vllm-rdna#24` (27 Sep); Sep 15 ~1 t/s is the broken baseline |
-| `troubleshooting/vllm.md` mixed prefill+decode / `#26` / `30632b2` | **Community / Fork-source** | `#vllm-rdna` Sep 27–28 |
+| `troubleshooting/vllm.md` mixed prefill+decode / `#26` / `30632b2` | **Community / Fork-source** | `#vllm-rdna` Sep 27–29 — scheduler defer still unpublished |
+| `setup/hardware.md` ComfyUI / image-video bf16 | **Community** | `#general` Sep 28 — no native BF16; HIP emulates; prefer fp16/int8 |
 | `troubleshooting/vllm.md` `vllm#57160` pinned CPU KV | **Needs verify** | `#vllm-rdna` Sep 20 — mainline; `#24` is the fork follow-through |
 | `troubleshooting/general.md` 120 mm Makerworld ducts / 80 mm 7k | **Community** | `#general` / `#other` Sep 27–28 |
 | `vllm/recipes.md` 3× PP3 + MTP VRAM squeeze | **Needs verify** | `#vllm-rdna` Sep 15 — local patches |

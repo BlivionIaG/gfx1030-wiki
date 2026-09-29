@@ -27,6 +27,7 @@ looks fine):
 | Dense **27B** | Usable; expect mediocre PP vs newer silicon |
 | **Flash-Next** | Promising on **4×** V620 via [vLLM Flash-Next](./vllm/flash-next.md); not a 1-card path |
 | Dense agentic on 1–2 cards | Often disappointing TTFT / PP — prefer MoE or more cards |
+| ComfyUI image / video | Poor fit — many workflows default to **bf16** (emulated on V620). See [hardware](./setup/hardware.md) |
 
 ## Next
 

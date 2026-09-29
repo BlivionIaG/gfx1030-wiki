@@ -32,7 +32,9 @@ export TORCH_BLAS_PREFER_HIPBLASLT=0
 ## BF16 is extremely slow
 
 Force **FP16** everywhere (`--dtype float16` in vLLM, `dtype=torch.float16` in PyTorch). See
-[Environment variables](../reference/env-vars.md).
+[Environment variables](../reference/env-vars.md). `#general` (Sep 28): **ComfyUI** image/video
+graphs that default to bf16 are a poor V620 fit for the same reason — prefer fp16 / int8
+workflows ([hardware](../setup/hardware.md)).
 
 ## The iGPU is being selected instead of my discrete card
 

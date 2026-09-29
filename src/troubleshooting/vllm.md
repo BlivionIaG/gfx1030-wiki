@@ -129,7 +129,7 @@ If TP works on one image and dies after a host ROCm bump, check the **ROCm versi
 model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
 **7.14.0** — see [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
-## Prefill blocks decode / MTP stalls under concurrency
+## Prefill blocks decode / MTP stalls under concurrency {#prefill-blocks-decode}
 
 Symptom: with speculative decode (MTP) and multiple in-flight requests, generation stalls while
 prefill runs; or graph + MTP3 reaches "Application startup complete" then hangs on PLE lookup /
@@ -156,12 +156,18 @@ Community notes (`#vllm-rdna`):
   (27 Sep) captures the **draft** decode graph at `max_num_reqs` so MTP-2 **c=8** is not eager every
   step. Author-host: **+18%** at 8×1k / **+5%** at 8×16k. Still **~0.87× vs MTP-0** at 16k —
   `#vllm-rdna`: “better MTP, still not great.”
-- `#vllm-rdna` (Sep 27–28): **decode-only** concurrency is usable (two streams often **~70–80 t/s**;
+- `#vllm-rdna` (Sep 27–29): **decode-only** concurrency is usable (two streams often **~70–80 t/s**;
   three starts to sag). **Mixed prefill + decode** is the cliff — decode drops to **~1–6 t/s**,
-  prefill **below 500 tok/s**, MTP accept collapses. One host’s unmerged scheduler experiment
-  (`VLLM_PREFILL_DEFER_INTERVAL=4` + `--long-prefill-token-threshold 256`) recovered **~20–30 t/s**
-  decode with a parallel prefill at the cost of **single-stream prefill**. **Needs verify**; not a
-  recipe — no public PR yet.
+  prefill **below 500 tok/s**, MTP accept collapses. A local (still **unpublished**) scheduler
+  experiment first showed as `VLLM_PREFILL_DEFER_INTERVAL=4` + `--long-prefill-token-threshold 256`,
+  then as CLI `--prefill-schedule-interval` **2 or 4** (higher = more decode time between prefills)
+  with `--long-prefill-token-threshold` **256 / 512 / 1024**. Community: interval **4** + threshold
+  **256** recovered **~20–30 t/s** decode with a parallel prefill but **halved** single-stream PP.
+  Interval **2** was called a milder prefill penalty. One host’s live 4-agent run at
+  **1024 / 8** held mixed **~1030–1050 tok/s** PP / **~33 t/s** gen (decode-only **~24 t/s** with
+  **~94%** prefix hit; single-stream PP sometimes **~1750**). Synthetic benches were called
+  untrustworthy vs live agentic. **`--max-num-batched-tokens 2048`** slightly helped ITL on that
+  host. **Needs verify**; not a recipe — no public PR / not in Hub `-extras`.
 - Concurrent MTP **9–16 token rows** (three chats × MTP-2) used to fall back to tile Triton. Merged
   [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26) opts in
   `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**

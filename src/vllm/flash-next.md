@@ -136,7 +136,10 @@ RAM-tier fix — community: three **~150k** sessions while VRAM held **~270k**, 
 tags lag. Details: [native KV RAM offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
 Concurrent streams still split decode (community: **decode-only** two streams often **~70–80 t/s**;
 **mixed prefill + decode** drops decode to **~1–6 t/s** and PP **below 500**). Prefer **one
-stream** plus prefix / radix cache unless you have measured overflow on `#24`.
+stream** plus prefix / radix cache unless you have measured overflow on `#24`. An unpublished
+`--prefill-schedule-interval` / `--long-prefill-token-threshold` experiment (Sep 28–29) tries to
+keep mixed decode alive — **Needs verify**, not a serve recipe
+([troubleshooting](../troubleshooting/vllm.md#prefill-blocks-decode)).
 
 `#vllm-rdna` (Sep 17): the **logged** hybrid KV token count can be **~2.5× too high** versus a
 measured peak — size `--max-model-len` from a real request, not the banner
