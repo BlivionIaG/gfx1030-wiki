@@ -168,6 +168,10 @@ Community notes (`#vllm-rdna`):
   **~94%** prefix hit; single-stream PP sometimes **~1750**). Synthetic benches were called
   untrustworthy vs live agentic. **`--max-num-batched-tokens 2048`** slightly helped ITL on that
   host. **Needs verify**; not a recipe — no public PR / not in Hub `-extras`.
+  `#vllm-rdna` (Sep 29): when chasing **max single-stream PP**, **unset**
+  `--prefill-schedule-interval` and `--long-prefill-token-threshold` — they trade PP for mixed
+  decode. Same thread: a ~**2k → ~1450** PP drop on latest extras was **resident MoE off**
+  (`VLLM_RDNA_MOE_RESIDENT=1` recovered ~2k), not the scheduler flags.
 - Concurrent MTP **9–16 token rows** (three chats × MTP-2) used to fall back to tile Triton. Merged
   [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26) opts in
   `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**

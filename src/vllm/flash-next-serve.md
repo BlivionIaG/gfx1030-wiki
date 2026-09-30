@@ -40,7 +40,9 @@ Operational facts that are safe to copy:
 
 - **Resident W4A16 MoE** (`VLLM_RDNA_MOE_RESIDENT=1`): convert the checkpoint’s packed INT4 experts
   into the RDNA2 kernel layout **once at load**, keep that layout, and skip repacking every 4k
-  prefill chunk. Precision stays W4A16.
+  prefill chunk. Precision stays W4A16. `#vllm-rdna` (Sep 29): a latest-`rdna_extras` host saw PP
+  fall from ~**2k → ~1450** with this **unset**; setting `1` restored ~2k. Treat a sudden PP cliff
+  after an extras pull as a missing-resident-MoE check before blaming kernels.
 - **Mamba retirement:** backport of [`vllm#55450`](https://github.com/vllm-project/vllm/pull/55450).
   Without it, long prompts (100k+ class) hit a deterministic **preemption loop** (state blocks not
   retired across null gaps).

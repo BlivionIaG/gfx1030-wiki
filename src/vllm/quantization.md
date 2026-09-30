@@ -121,6 +121,12 @@ together. On **published Hub `-extras`**, keep **uniform 3 bpw** and the **head 
 now implements **mul1**, so **existing EXL3 packs can load**. HIP EXL3 work is still in testing.
 **Needs verify** — do not assume Hub tags have this.
 
+`#vllm-rdna` (Sep 29): EXL3 is a **weight format** — you do not need the **exllamav3** runtime to
+serve it from the extras fork. Day-to-day `rdna_extras` still needs the **mul1** decode kernels
+ported back from `rdna_extra/v0.30.0`; draft
+[`opengfx1030/vllm-rdna#32`](https://github.com/opengfx1030/vllm-rdna/pull/32) does that (K=1..8
+trellis + unsigned mul1 sum) but is **not GPU-validated on gfx1030** yet. Not in Hub `-extras`.
+
 A mixed 3+6 bpw pack around **50 GB** was called tight for **2× V620** and still needed
 calibration. Experimental kernels had only been tried on an **Ornith 1.5 9B** quant — not
 confirmed on 2× Flash-Next. `#general` (Sep 18): a ~12.5 GB EXL3 pack **unpacked to ~54 GB** and
@@ -131,6 +137,12 @@ it as a stable checkpoint:
 [`BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated`](https://huggingface.co/BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated).
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
+
+`#vllm-rdna` (Sep 29): **W4A8** is still an explore path (public
+[`opengfx1030/vllm-rdna#9`](https://github.com/opengfx1030/vllm-rdna/pull/9), `w4a8-wiring` branch).
+Community has **not** found W4A8 faster than **W4A16 dequant-on-the-fly** on gfx1030; the wiring
+branch still hits CUDA-graph issues. **W8A8** was called theoretically the fastest int8 layout,
+not a current recipe. Stay on W4A16 / AWQ until a tagged extras build ships a working path.
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

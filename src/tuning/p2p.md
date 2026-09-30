@@ -177,3 +177,7 @@ Not wiki-benched — common `#general` notes:
   Brand-name gen4 risers (e.g. ADT-class) are often the next step — A/B one card first.
 - **V620 + blower shroud length:** community measure ~**37 cm** with a common EFH-08E12W-style fan
   shroud installed — plan chassis / PLX slot spacing accordingly.
+- **5-slot PCIe switch → ATX tray:** `#other` (Sep 30) published a Printables adapter
+  ([PCIe switch to ATX mounting adapter](https://www.printables.com/model/1860633-pcie-switch-to-atx-mounting-adapter))
+  for a **5-slot PCIe 4.0** switch on an ATX hole pattern. Community: it matched one common PLX
+  board even when the listing photos differed. Mechanical only — not a P2P or POST fix.

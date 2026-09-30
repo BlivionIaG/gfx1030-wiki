@@ -92,7 +92,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | MTP can block int4 PLE fused decode | **Community** | `#vllm-rdna` Sep 18 — A/B MTP off on no-P2P hosts |
 | MTP-2 ~0.73–0.85× vs MTP-0 after `700753d9` | **Community** | Author-host 4× W4A16 Flash-Next; `#vllm-rdna` Sep 25 “boots, still a loss”. `30632b2` (27 Sep) lifts c=8 but stays **~0.87×** at 16k |
 | ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in Flash-Next fork `ROCR-CPU-FIX.md` |
-| EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet |
+| EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet. Sep 29 draft `#32` ports mul1 to `rdna_extras` — no gfx1030 GPU run yet |
 | Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 — draft PR #5; not in Hub `-extras` |
 | Official extras source is `opengfx1030/vllm-rdna` `rdna_extras` | **Solid** | `#vllm-rdna` Sep 2026 move; default branch `rdna_extras`; PRs go to the org. Hub `-extras` still from historical clone |
 | Draft PRs `#5` / `#6` on org extras | **Needs verify** | Flash-Next AutoRound + recipe ports; do not treat as released |
@@ -152,7 +152,10 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. Hub lags |
 | Skinny HIP MoE 9–16 rows `#26` | **Fork-source / Community** | Merged 27 Sep; `VLLM_ROCM_MOE_SKINNY_MAX_M=16`; +11% concurrent regular-text. No single-chat claim |
 | MTP draft graph `30632b2` | **Fork-source** | 27 Sep; +18% / +5% at c=8 1k / 16k; still ~0.87× vs MTP-0 at 16k |
-| Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Scheduler defer (`--prefill-schedule-interval` / `--long-prefill-token-threshold`, earlier `VLLM_PREFILL_DEFER_INTERVAL`) **unpublished / Needs verify**. 1024/8 4-agent snapshot **Needs verify** |
+| Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Scheduler defer (`--prefill-schedule-interval` / `--long-prefill-token-threshold`, earlier `VLLM_PREFILL_DEFER_INTERVAL`) **unpublished / Needs verify**. 1024/8 4-agent snapshot **Needs verify**. Sep 29: **unset** those flags for max single-stream PP |
+| `VLLM_RDNA_MOE_RESIDENT=1` missing tanks Flash-Next PP | **Community** | `#vllm-rdna` Sep 29 — latest extras ~2k → ~1450 PP with resident MoE off; `1` recovered ~2k |
+| EXL3 mul1 port `#32` | **Needs verify** | `#vllm-rdna` Sep 29 + draft `opengfx1030/vllm-rdna#32` — mul1 decode / K=1..8 from `rdna_extra/v0.30.0`; **not GPU-run on gfx1030** |
+| W4A8 not faster than W4A16 dequant | **Needs verify** | `#vllm-rdna` Sep 29 — explore `#9` / `w4a8-wiring`; CUDA-graph issues; stay W4A16 |
 | FA-RDNA2 `#28` / split-decode `#29` | **Needs verify** | `#28` merged 28 Sep **without gfx1030 GPU runs**; `#29` draft, stacked, also untested |
 | Two-shot `rdna_ar` `#22` | **Fork-source** | Merged 27 Sep; library default still off; A/B topology |
 | `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; gfx1030 follow-through is merged `#24`, not this PR alone |
@@ -175,7 +178,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | INT4 vdot2 fp16 dequant | **Solid** | ISA + fork code |
 | Qwen3.8-27B AWQ needs `head_size=256` | **Fork-source** | Same as `fa_rdna2` commit; confirm on image |
 | GDN hybrid ~93/331 tok/s | **Community** | Fork author bench |
-| EXL3 9B / Quark W4A16 | **Needs verify** | `#vllm-rdna` Sep 2026 — experimental; Sep 19 `rdna_extras` is 3inst-only; Sep 24 `rdna_extra/v0.29.0` adds **mul1** |
+| EXL3 9B / Quark W4A16 | **Needs verify** | `#vllm-rdna` Sep 2026 — experimental; Sep 19 `rdna_extras` is 3inst-only; Sep 24 `rdna_extra/v0.29.0` adds **mul1**; Sep 29 draft `#32` ports mul1 back to `rdna_extras` (no gfx1030 GPU run yet) |
 | INT8 KV (not decode shadows) | **Needs verify** | `#vllm-rdna` Sep 23–24 — community testing; QSA backends still unquantized-only |
 | HIP MoE non-deterministic vs Triton | **Needs verify** | `#vllm-rdna` Sep 19 — ~3.5% top-token drift; `global_atomic_add_f32` not landed (blocked on 0.29.0) |
 | Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5`; Sep 20 QSA `#15` used this pack + BF16 PLE (not `wtdcode` + PLE-quant) |
@@ -348,7 +351,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |
 | `vllm/recipes.md` 4× PIECEWISE Flash-Next serve | **Community** | `#vllm-rdna` Sep 17 — host venv, not Hub |
 | `troubleshooting/vllm.md` native KV RAM offload `#24` | **Fork-source / Needs verify** | `#vllm-rdna` Sep 26–27 + merged `vllm-rdna#24` (27 Sep); Sep 15 ~1 t/s is the broken baseline |
-| `troubleshooting/vllm.md` mixed prefill+decode / `#26` / `30632b2` | **Community / Fork-source** | `#vllm-rdna` Sep 27–29 — scheduler defer still unpublished |
+| `troubleshooting/vllm.md` mixed prefill+decode / `#26` / `30632b2` | **Community / Fork-source** | `#vllm-rdna` Sep 27–29 — scheduler defer still unpublished; Sep 29 unset flags for max PP + resident MoE PP drop |
+| `tuning/p2p.md` 5-slot PCIe switch ATX Printables | **Community** | `#other` Sep 30 — public model 1860633; mechanical mount only |
 | `setup/hardware.md` ComfyUI / image-video bf16 | **Community** | `#general` Sep 28 — no native BF16; HIP emulates; prefer fp16/int8 |
 | `troubleshooting/vllm.md` `vllm#57160` pinned CPU KV | **Needs verify** | `#vllm-rdna` Sep 20 — mainline; `#24` is the fork follow-through |
 | `troubleshooting/general.md` 120 mm Makerworld ducts / 80 mm 7k | **Community** | `#general` / `#other` Sep 27–28 |

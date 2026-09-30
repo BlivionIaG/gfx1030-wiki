@@ -134,7 +134,9 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 - **EXL3** (in-tree on `rdna_extras`, **not** in published v0.27.1 `-extras` images yet):
   `exl3_hadamard.cu`, `exl3_dot2_*.cu`, plus `vllm/.../quantization/exl3.py`. Experimental.
   `#vllm-rdna` (Sep 24): [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0)
-  now has **mul1** so existing EXL3 packs can load — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+  now has **mul1** so existing EXL3 packs can load. `#vllm-rdna` (Sep 29) + draft
+  [`#32`](https://github.com/opengfx1030/vllm-rdna/pull/32): port that mul1 decode back onto
+  `rdna_extras` (not GPU-validated yet) — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
 ### MoE (mixture of experts)
 
