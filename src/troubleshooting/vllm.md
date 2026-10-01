@@ -46,12 +46,23 @@ Confirm `-extras` image from current extras. See [Fork kernel dispatch](../vllm/
 ## TunableOp aborts or is ~20% slow after a ROCm / rocBLAS bump {#tunableop-rocblas-mismatch}
 
 `#vllm-rdna` (Sep 23–24) + in-tree
-[`tunableop/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop): the committed
-FP16 rows are **locked to one rocBLAS library hash** (qualified example: `rocblas-c27e2252cc7a`).
-Solution IDs must **not** be reused across a different rocBLAS build, even when the version string
-matches.
+[`tunableop/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop): solver IDs are
+**locked to one `librocblas.so.5` build**. Reusing them across a different rocBLAS, even when the
+version string matches, is unsafe.
 
-Symptoms:
+Current registry (`profiles.json` on `rdna_extras`):
+
+| Profile | sha256[:12] | Rows / rank | Role |
+|---|---|---:|---|
+| `rocm7.14-rocblas5.5/` | `f30bb442e9b5` | 783 | Canonical serving build (Flash-Next, 27B AWQ, EXL3 27B) |
+| `rocm10-rocblas5.6/` | `c27e2252cc7a` | 70 | Thin import. Needs its own capture campaign |
+
+`scripts/serve_rdna.sh` auto-selects the profile whose hash matches the loaded
+library. `TUNABLEOP_PROFILE=<name>` forces a registered name and **aborts on
+mismatch**. `TUNABLEOP_ALLOW_MISMATCH=1` is only for experiments. Details:
+[Serve scripts](../vllm/serve-scripts.md#tunableop).
+
+Symptoms when the table does not match the library:
 
 - First GEMM **aborts** / TunableOp turns itself off.
 - Prefill sits **~25% below** the `#17` published table (community: **~1496 vs ~1958** tok/s at 16k)
@@ -59,9 +70,10 @@ Symptoms:
 
 Fix: stop the serve, then regenerate and qualify for **this** library — see
 [Regenerate for another rocBLAS build](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop#regenerate-for-another-rocblas-build).
-Serve with `PYTORCH_TUNABLEOP_ENABLED=1`, `PYTORCH_TUNABLEOP_TUNING=0`, and
-`PYTORCH_TUNABLEOP_FILENAME` pointing at `tunableop/rocblas-<your-hash>/…`. The `#17` launcher
-refuses incompatible solver IDs rather than loading them.
+Lookup stays on and tuning stays off (`PYTORCH_TUNABLEOP_ENABLED=1`,
+`PYTORCH_TUNABLEOP_TUNING=0`). The helper refuses a mismatched named profile
+instead of loading it. A legacy `tunableop/rocblas-<hash>/` folder is still
+honoured when no registered profile matches.
 
 Do not commit a host-specific CSV into the wiki. Do not copy another machine’s library hash.
 

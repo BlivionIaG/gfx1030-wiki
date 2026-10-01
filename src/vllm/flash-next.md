@@ -12,6 +12,7 @@
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
 | [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3 |
+| [Serve scripts](./serve-scripts.md) | `serve_rdna.sh RECIPE=flashnext-mtp2` and siblings |
 
 When something fails, use [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md) rather than the general vLLM list.
 
