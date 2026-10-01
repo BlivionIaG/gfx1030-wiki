@@ -55,12 +55,17 @@ Current registry (`profiles.json` on `rdna_extras`):
 | Profile | sha256[:12] | Rows / rank | Role |
 |---|---|---:|---|
 | `rocm7.14-rocblas5.5/` | `f30bb442e9b5` | 783 | Canonical serving build (Flash-Next, 27B AWQ, EXL3 27B) |
-| `rocm10-rocblas5.6/` | `c27e2252cc7a` | 70 | Thin import. Needs its own capture campaign |
+| `rocm10-rocblas5.6/` | `c27e2252cc7a` | 70 | Thin. Tuned shapes only; other GEMMs use the rocBLAS heuristic |
 
 `scripts/serve_rdna.sh` auto-selects the profile whose hash matches the loaded
-library. `TUNABLEOP_PROFILE=<name>` forces a registered name and **aborts on
-mismatch**. `TUNABLEOP_ALLOW_MISMATCH=1` is only for experiments. Details:
-[Serve scripts](../vllm/serve-scripts.md#tunableop).
+library. A ROCm 10 venv on rocBLAS 5.6 (`c27e2252cc7a`) already picks
+`rocm10-rocblas5.6` — no launcher change. Untuned shapes stay on the heuristic
+until that host runs a capture campaign and registers the new rows.
+`TUNABLEOP_PROFILE=<name>` forces a registered name and **aborts on
+mismatch**. `TUNABLEOP_ALLOW_MISMATCH=1` is only for experiments. An unmatched
+sha uses `rocblas-<sha12>/` or `$HOME/.cache/tunableop/`, not the other
+profile. Details:
+[Serve scripts](../vllm/serve-scripts.md#rocm-10-and-rocblas-56).
 
 Symptoms when the table does not match the library:
 

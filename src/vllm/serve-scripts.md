@@ -161,14 +161,64 @@ Solver IDs are build-specific. The helper
 | Profile | rocBLAS / torch | `librocblas.so.5` sha256[:12] | Rows / rank |
 |---|---|---|---|
 | `rocm7.14-rocblas5.5/` | 5.5.0 / `2.12.0+rocm7.14.0` | `f30bb442e9b5` | **783** (canonical). Covers Flash-Next MTP=0/2, 27B AWQ, and EXL3 27B. |
-| `rocm10-rocblas5.6/` | 5.6.0 / `2.13.0+rocm10.0.0` | `c27e2252cc7a` | **70**, thin. Needs its own capture campaign. |
+| `rocm10-rocblas5.6/` | 5.6.0 / `2.13.0+rocm10.0.0` | `c27e2252cc7a` | **70**, thin. Those shapes are tuned; every other GEMM uses the rocBLAS heuristic. |
 
-- Auto-select is the default. A healthy start logs `TunableOp profile rocm7.14-rocblas5.5 auto-selected for rocBLAS build f30bb442e9b5` when that library is loaded.
-- `TUNABLEOP_PROFILE=<name>` forces a registered profile. A hash mismatch **fails the launch**. `TUNABLEOP_ALLOW_MISMATCH=1` is the experiment-only override (warning, then it uses the rows anyway).
-- Lookup is read-only (`PYTORCH_TUNABLEOP_TUNING=0`). The helper does not write rows to `/tmp` or the process CWD. If no profile matches, it falls back to a legacy `rocblas-<hash>/` folder, then to `$HOME/.cache/tunableop/tunableop_results.csv`.
+- Auto-select is the default. No recipe or launcher change is required when the venv’s `librocblas.so.5` hash changes. A ROCm 7.14 start logs `TunableOp profile rocm7.14-rocblas5.5 auto-selected for rocBLAS build f30bb442e9b5`.
+- `TUNABLEOP_PROFILE=<name>` forces a registered profile. A hash mismatch **fails the launch**. `TUNABLEOP_ALLOW_MISMATCH=1` is the experiment-only override (hard warning, then it uses the rows anyway). Solver IDs are build-specific, so a mismatched profile is never applied silently.
+- Lookup is read-only (`PYTORCH_TUNABLEOP_TUNING=0`). The helper does not write rows to `/tmp` or the process CWD. If no profile matches, it uses a legacy `rocblas-<hash>/` folder when that folder exists, then `$HOME/.cache/tunableop/tunableop_results.csv`.
+- `TUNABLEOP=0` turns lookups off (`PYTORCH_TUNABLEOP_ENABLED=0`) for an A/B against the heuristic.
 - `PRINT=1` reports which profile it would pick, including “NOT registered” if `TUNABLEOP_PROFILE` is unknown.
 
-Regenerate steps and the historical mismatch symptoms:
+### ROCm 10 and rocBLAS 5.6
+
+A venv whose torch loads rocBLAS **5.6** (`librocblas.so.5` sha256[:12] `c27e2252cc7a`) selects `rocm10-rocblas5.6` by that hash. Same recipe, same script:
+
+```sh
+MODEL=/path/to/checkpoint VENV=/path/to/rocm10-venv \
+  bash scripts/serve_rdna.sh RECIPE=27b-awq
+
+MODEL=/path/to/checkpoint VENV=/path/to/rocm10-venv \
+  PRINT=1 bash scripts/serve_rdna.sh RECIPE=27b-awq
+```
+
+Print mode (library present in that venv) reports:
+
+```text
+# tunableop: rocm10-rocblas5.6 (auto-selected for librocblas.so.5 c27e2252cc7a)
+```
+
+A real launch logs `TunableOp profile rocm10-rocblas5.6 auto-selected for rocBLAS build c27e2252cc7a.`
+
+**Thin** means the shipped CSV covers **70 shapes per rank**. Those GEMMs use the recorded solver. Every other shape falls back to the rocBLAS heuristic: safe, and untuned. The validated serving numbers on this wiki were captured on **gfx1030 + ROCm 7.14** (`rocm7.14-rocblas5.5`, 783 rows). Recipe knobs (`TP`, `KV`, `MTP`, graphs) do not depend on the ROCm version. Treat the first ROCm 10 boot as bring-up: run `PRINT=1` and confirm the profile line before leaving it up.
+
+To fill the gap on that machine, tune there and register the result. The in-tree pipeline keeps scratch under `<tree>/cache/tunableop-rows` (never `/tmp`) and does not overwrite the repo profile:
+
+```sh
+VENV=/path/to/rocm10-venv \
+  bash tools/rdna2_028/tunableop_rows_pipeline.sh tune
+```
+
+Curate with `tools/rdna2_028/curate_tunableop_rows.py`, freeze the CSVs into `tunableop/<profile-name>/`, and add that name to `profiles.json` with this library’s sha256. Then prove the lookup actually hits:
+
+```sh
+python tools/rdna2_028/verify_tunableop_lookup.py \
+  --rows tunableop/<profile-name>/tunableop_results0.csv \
+  --out hits.json
+```
+
+A hit means the solver TunableOp recorded equals the shipped row. Contributing that profile back is how the 70-row set grows. The older qualify flow is still documented under [Regenerate for another rocBLAS build](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tunableop#regenerate-for-another-rocblas-build).
+
+Guardrails for a ROCm 10 (or any other) library:
+
+| Situation | What happens |
+|---|---|
+| Loaded sha is `c27e2252cc7a` | Auto-selects `rocm10-rocblas5.6`. |
+| Loaded sha matches neither profile | Legacy `tunableop/rocblas-<sha12>/` if that folder exists, otherwise `$HOME/.cache/tunableop/tunableop_results.csv`. The 7.14 rows are not loaded. |
+| `TUNABLEOP_PROFILE=rocm10-rocblas5.6` but the loaded library is a different sha | Launch **refuses to start**. |
+| `TUNABLEOP_ALLOW_MISMATCH=1` | Proceeds with a hard warning. Experiments only. |
+| `TUNABLEOP=0` | Lookups off. |
+
+Mismatch symptoms and the historical ~25% prefill gap:
 [TunableOp troubleshooting](../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
 
 ## Foreground, aliases, stale workers

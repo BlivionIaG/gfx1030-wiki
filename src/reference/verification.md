@@ -226,7 +226,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `27b-awq` / `27b-exl3` / `full`) | **Fork-source** | `scripts/recipes/*.env` on `rdna_extras` |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
 | `PRINT=1` prints env, command, and TunableOp profile and does not launch | **Fork-source** | `serve_rdna.sh` header; `RECIPE` is an argument, `MODEL` and `VENV` stay required |
-| TunableOp auto-select by `librocblas.so.5` hash; `TUNABLEOP_PROFILE` mismatch aborts | **Fork-source** | `tunableop/README.md` + `profiles.json`: `rocm7.14-rocblas5.5` (783 rows, `f30bb442e9b5`), `rocm10-rocblas5.6` (70, `c27e2252cc7a`) |
+| TunableOp auto-select by `librocblas.so.5` hash; `TUNABLEOP_PROFILE` mismatch aborts | **Fork-source** | `tunableop/README.md` + `profiles.json` + `tools/rdna2_028/tunableop_env.sh`: `rocm7.14-rocblas5.5` (783 rows, `f30bb442e9b5`), `rocm10-rocblas5.6` (70, `c27e2252cc7a`) |
+| ROCm 10 / rocBLAS 5.6 needs no launcher change; 70-row profile is thin | **Fork-source** | Same helper. Untuned GEMMs use the rocBLAS heuristic. Validated serve numbers are gfx1030 + ROCm 7.14. Extend rows with `tunableop_rows_pipeline.sh` + `verify_tunableop_lookup.py` |
 | 27B EXL3 recipe defaults `EAGER=1` and `HIP_VISIBLE_DEVICES=4,5,6,7` | **Fork-source** | `scripts/recipes/27b-exl3.env` (bring-up; second PLX on an 8-GPU chassis) |
 | Launcher is foreground (`exec`); stale kill is scoped to `VLLM_CACHE_ROOT` | **Fork-source** | `serve_rdna.sh` + `rdna_kill_stale` in `scripts/rdna_launcher_common.sh` |
 
