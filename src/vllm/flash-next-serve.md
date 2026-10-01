@@ -282,7 +282,8 @@ reports useful 3-card numbers (one host **~45 t/s** decode / **~1100 tok/s** PP;
 Treat the overlay as **unmaintained / snapshot**; prefer `rdna_extras` once PP3 is clean there.
 
 `#vllm-rdna` (Sep 19): that same **HIP MoE** kernel was reported **non-deterministic** (~3.5% of
-top tokens change between identical runs; Triton MoE did not). See
+top tokens change between identical runs; Triton MoE did not). `#vllm-rdna` (Sep 30): an **fp32
+deterministic** path was described as **opt-in** (throughput cost); no public flag name. See
 [fork MoE note](fork.md#moe-mixture-of-experts). **Needs verify.**
 
 `#vllm-rdna` (Sep 18): the published Flash-Next checkpoint can leave the **MTP draft head's 512

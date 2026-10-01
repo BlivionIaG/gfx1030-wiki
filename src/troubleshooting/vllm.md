@@ -25,8 +25,25 @@ Mount cache volumes — see [Configuration](../vllm/configuration.md#cache-volum
 
 On multi-GPU AOT cache issues: `VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1`
 
+### `TORCHINDUCTOR_CACHE_DIR` survives `VLLM_DISABLE_COMPILE_CACHE` {#torchinductor-cache-survives-vllm-disable-compile-cache}
+
+`rdna_extras` (1 Oct, EXL3 27B mul1 TP=4): piecewise `assert_size_stride` kept failing after a
+fake-kernel stride fix because **Inductor reused a stale compiled graph**.
+`VLLM_DISABLE_COMPILE_CACHE` does **not** cover `TORCHINDUCTOR_CACHE_DIR` — clear that
+directory (or unset and delete the default cache) after kernel / fake-tensor changes, then
+recapture. See [Quantization](../vllm/quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+
 Low throughput (~4–5 t/s on 27B)? Check for **older image** where AWQ still used Triton — see
 [Quantization](../vllm/quantization.md).
+
+## GLM-5.3 vision: MIOpen compiles every image size {#glm-vision-miopen-compile}
+
+`#vllm-rdna` (Sep 30), community **8×** GLM-5.3-Flash AWQ on a **local 0.30 fork** (not Hub):
+MIOpen compiled the vision **downsample conv per image size** (3–4 min; one report that it
+**killed the engine**). Community workaround: implement that conv as a **matmul** (158 s →
+4 ms). This is **not** the Flash-Next `max_pixels` startup OOM
+([Flash-Next vision](vllm-flash-next.md#flash-next-vision-oom)). **Needs verify** on org extras
+— [recipes](../vllm/recipes.md#glm-53-flash).
 
 ## First boot is extremely slow
 

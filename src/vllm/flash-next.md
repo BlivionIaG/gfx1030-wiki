@@ -218,6 +218,11 @@ not a speed footnote. Do **not** treat “AutoRound vs AWQ quality” as settled
 read the quant config, and prefer the **AWQ** sibling if you want a first try.
 **Community / Needs verify.**
 
+llama.cpp sibling: [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF)
+(`#llamacpp` Sep 30). Community **2× V620**, IQ3_xs-class + q4_0 ngrams in **~48 GB** host RAM,
+**MTP**: **~400 PP / ~40 TG**. `--batch-size 4096 --ubatch-size 1024` helped PP a little.
+**Needs verify.** See [speculative table](../llama-cpp/rdna2-speculative.md).
+
 ## Related
 
 - [Serve lines](./flash-next-serve.md)

@@ -121,11 +121,18 @@ together. On **published Hub `-extras`**, keep **uniform 3 bpw** and the **head 
 now implements **mul1**, so **existing EXL3 packs can load**. HIP EXL3 work is still in testing.
 **Needs verify** — do not assume Hub tags have this.
 
-`#vllm-rdna` (Sep 29): EXL3 is a **weight format** — you do not need the **exllamav3** runtime to
-serve it from the extras fork. Day-to-day `rdna_extras` still needs the **mul1** decode kernels
-ported back from `rdna_extra/v0.30.0`; draft
-[`opengfx1030/vllm-rdna#32`](https://github.com/opengfx1030/vllm-rdna/pull/32) does that (K=1..8
-trellis + unsigned mul1 sum) but is **not GPU-validated on gfx1030** yet. Not in Hub `-extras`.
+`#vllm-rdna` (Sep 29–30) + `rdna_extras` commits (30 Sep–1 Oct): EXL3 is a **weight format** —
+you do not need the **exllamav3** runtime. mul1 decode / K=1..8 from `rdna_extra/v0.30.0` is
+now **on `rdna_extras` HEAD** and **GPU-run on gfx1030** (215/215 EXL3 tests; Qwen3.8-27B
+3.00 bpw mul1 **TP=4** `FULL_AND_PIECEWISE` + `RDNA_ATTN` coherence pass). Author-host
+[`74315f4`](https://github.com/opengfx1030/vllm-rdna/commit/74315f4cf7e6f20a31363dbbc6e4b6c3fae51f4d):
+1k/512 **~18.9 t/s** (c=1) / **~81.8 t/s** agg (c=8); 16k/1k **~13.7 t/s** / **~830 tok/s**
+PP (c=1). **Needs verify** on other hosts. Not in Hub `-extras`. Draft
+[`#32`](https://github.com/opengfx1030/vllm-rdna/pull/32) is the earlier kernel-port PR; the
+loader rewrite landed as follow-up commits on HEAD.
+
+Stale inductor artifacts: `VLLM_DISABLE_COMPILE_CACHE` does **not** clear
+`TORCHINDUCTOR_CACHE_DIR` — [troubleshooting](../troubleshooting/vllm.md#torchinductor-cache-survives-vllm-disable-compile-cache).
 
 A mixed 3+6 bpw pack around **50 GB** was called tight for **2× V620** and still needed
 calibration. Experimental kernels had only been tried on an **Ornith 1.5 9B** quant — not
