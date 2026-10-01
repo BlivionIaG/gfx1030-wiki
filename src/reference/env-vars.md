@@ -52,7 +52,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. Prefer `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` on `-extras`. |
 | `PYTORCH_TUNABLEOP_ENABLED` | `0` / `1` | `0` for reproducible benches; `1` to **load** a qualified table (`TUNING=0` in the `#17` launcher). |
 | `PYTORCH_TUNABLEOP_TUNING` | `0` | Keep **off** in serve. Online tuning is a separate regenerate step. |
-| `PYTORCH_TUNABLEOP_FILENAME` | `/path/to/tunableop/rocblas-<hash>/tunableop_results.csv` | **Hash-locked** to that rocBLAS build. Mismatch aborts the first GEMM or falls back — [troubleshooting](../troubleshooting/vllm.md#tunableop-rocblas-mismatch). |
+| `PYTORCH_TUNABLEOP_FILENAME` | set by `serve_rdna.sh` | **Hash-locked** named profile (`rocm7.14-rocblas5.5`, 783 rows, or thin `rocm10-rocblas5.6`). The launcher picks it from `librocblas.so.5`. Override with `TUNABLEOP_PROFILE`; mismatch aborts — [serve scripts](../vllm/serve-scripts.md#tunableop), [troubleshooting](../troubleshooting/vllm.md#tunableop-rocblas-mismatch). |
 | `PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED` | `0` | Disable hipBLASLt in tunableop (pair with `TORCH_BLAS_PREFER_HIPBLASLT=0`). |
 | `VLLM_RDNA_MOE_RESIDENT` | `1` | `#17` resident W4A16 MoE path (pack once at load). |
 | `PYTORCH_ALLOC_CONF` | `expandable_segments:True` | Reduces CUDA/HIP allocator fragmentation. |
