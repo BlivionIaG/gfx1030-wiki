@@ -23,6 +23,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](./fork.md) |
 | Which fork is official vs historical | [Fork landscape](./fork.md#fork-landscape) |
 | Host `uv` venv (7.2.0 or 7.14.0) | [Host venv](./host-venv.md) |
+| One launcher for Flash-Next / 27B / EXL3 (`serve_rdna.sh`) | [Serve scripts](./serve-scripts.md) |
 | Rebuild or extend Docker images | [Building images](./images.md) |
 | Something broke | [vLLM troubleshooting](../troubleshooting/vllm.md) |
 

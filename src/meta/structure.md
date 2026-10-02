@@ -33,6 +33,7 @@ src/
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
     fork.md                # rdna_extras kernels
     host-venv.md           # Host uv venv (ROCm 7.2.0 / 7.14.0)
+    serve-scripts.md       # scripts/serve_rdna.sh recipes (fork checkout)
     images.md              # Building Docker images
 
   llama-cpp/               # llama.cpp and RDNA2 fork
@@ -97,6 +98,7 @@ src/
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
 | Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`) |
+| Fork `scripts/serve_rdna.sh` recipes | `vllm/serve-scripts.md` |
 | llama.cpp vs vLLM | `choose-a-stack.md` |
 | Kernel source, fork branches | `vllm/fork.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |

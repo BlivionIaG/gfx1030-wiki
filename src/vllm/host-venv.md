@@ -176,8 +176,13 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available(), tor
 python -c "import vllm, vllm._rocm_C; print('vllm', vllm.__version__)"
 ```
 
+Once `import vllm` works, serve from that checkout with
+[`scripts/serve_rdna.sh`](serve-scripts.md). Pass `MODEL` and `VENV` yourself;
+the recipes do not bake in paths.
+
 ## Related
 
+- [Serve scripts](serve-scripts.md) — `RECIPE=flashnext-mtp2`, `27b-awq`, `27b-exl3`, …
 - [Running (Docker)](running.md) — prefer this unless you need a host venv.
 - [Building images](images.md) — the bake graph this page mirrors.
 - [vLLM forks](fork.md) — kernel behavior after the install.

@@ -9,7 +9,7 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 `-extras` and not the 27B recipe presets:
 
 - **Source of truth (Sep 14–15):** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` (leapdragon work cherry-picked; PLE load path on HEAD)
-- **In-tree launcher (flags / vision):** [`scripts/serve_gfx1030_flashnext.sh`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/scripts/serve_gfx1030_flashnext.sh) — `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions here. Do **not** copy the script’s host paths.
+- **In-tree launcher:** [`scripts/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext` (production tools/reasoning) or `RECIPE=flashnext-mtp2` / `flashnext-mtp0`. The old `scripts/serve_gfx1030_flashnext.sh` name is a thin alias of `RECIPE=flashnext`. `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions at that file. Do **not** copy host paths out of the tree.
 - **Published container / docs (may lag):** [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) — [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2)
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
 - PLE sidecar: [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
@@ -206,12 +206,13 @@ turns ~**1 s** at ~1300 tok/s; **8192** can block other streams for ~**6 s**. Ra
 only if you hit the [128k prefill cliff](../troubleshooting/vllm-flash-next.md#flash-next-128k-prefill-cliff)
 on Intel AutoRound — that 4096 knob and this PIECEWISE stability recipe are **different bugs**.
 
-Vision (`#vllm-rdna` Sep 17–21 + the in-tree launcher): **on by default** in
-[`serve_gfx1030_flashnext.sh`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/scripts/serve_gfx1030_flashnext.sh)
-and **requires a pixel cap**. `--limit-mm-per-prompt '{"image":1}'` alone is **not** enough (count
+Vision (`#vllm-rdna` Sep 17–21 + the in-tree launcher): Flash-Next recipes pass
+the `vision-cap` feature, which still applies a **pixel cap**.
+`--limit-mm-per-prompt '{"image":1}'` alone is **not** enough (count
 is already 1). Without `max_pixels`, mm-profiling can feed a huge dummy image (~24.8M px) and the
 vision encoder SDPA math backend materializes a **~64 GiB** L×L fp32 score matrix — **startup OOM**
 on 32 GB cards. `max_pixels=1605632` keeps images up to about **1424×1424**.
+[`serve_rdna.sh`](serve-scripts.md) bakes those two flags into `vision-cap`.
 
 ```bash
 --limit-mm-per-prompt '{"image":1}' \
@@ -308,6 +309,7 @@ also mentioned a RDNA2 TP4 DeepSeek-V4 serve (~22 t/s, kernel unpublished) — *
 ## Related
 
 - [Flash-Next status](./flash-next.md) — throughput, KV, AutoRound
+- [Serve scripts](./serve-scripts.md) — `RECIPE=flashnext-mtp2` and the other in-tree configs
 - [Hub `-extras` TP4](./recipes.md#hub--extras-tp4-qwen38-27b-awq) — the non-Flash-Next 27B block
 - [Configuration](./configuration.md)
 - [vLLM forks](./fork.md)
