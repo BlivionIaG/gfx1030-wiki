@@ -107,7 +107,7 @@ and rebuild from that branch, or wait for a tagged image.
 
 | Format | Status | Notes |
 |---|---|---|
-| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Sep 19 kernel was [3inst only](#exl3-3inst-only-vllm-rdna-sep-19); `#vllm-rdna` Sep 24: **`rdna_extra/v0.29.0` now has mul1**. Not a drop-in on every Hub tag. |
+| **EXL3** (e.g. community 9B 3bpw Ornith builds) | **Experimental** | Single-card serve recipes with CUDA graphs (`FULL_AND_PIECEWISE`, capture sizes `1,2,4,8`) were shared in `#vllm-rdna`. Goal is fitting small models on **16 GB** consumer cards; Triton leftovers can still bloat VRAM. Sep 19 kernel was [3inst only](#exl3-3inst-only-vllm-rdna-sep-19); `#vllm-rdna` Sep 24: **`rdna_extra/v0.29.0` now has mul1**. `#vllm-rdna` Oct 2: **HEAD is mul1-tested only**; 3inst is untested. Not a drop-in on every Hub tag. |
 | **AMD Quark** (e.g. [`amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16`](https://huggingface.co/amd/Qwen3.8-27B-Quark-Qronos-INT4-W4A16)) | **Needs verify** | Marketed near MXFP4 quality; needs Quark-capable runtime (upstream PRs `#48606` / `#46110`). Community hit import issues — not a drop-in on current `-extras`. |
 
 ### EXL3: 3inst only (`#vllm-rdna`, Sep 19) {#exl3-3inst-only-vllm-rdna-sep-19}
@@ -134,22 +134,33 @@ loader rewrite landed as follow-up commits on HEAD.
 Stale inductor artifacts: `VLLM_DISABLE_COMPILE_CACHE` does **not** clear
 `TORCHINDUCTOR_CACHE_DIR` — [troubleshooting](../troubleshooting/vllm.md#torchinductor-cache-survives-vllm-disable-compile-cache).
 
+`#vllm-rdna` (Oct 2): current `rdna_extras` HEAD is **tested for mul1 only**. The maintainer has
+**not** run 3inst. Prefer a **mul1** pack on HEAD. Public community mul1 27B:
+[`quark75/Qwen3.8-27B-EXL3-3.0bpw`](https://huggingface.co/quark75/Qwen3.8-27B-EXL3-3.0bpw)
+(use with the [27b-exl3 serve recipe](serve-scripts.md)). A calibrated 3inst Flash-Next upload
+exists — [`BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst`](https://huggingface.co/BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst)
+— but was **not GPU-tested** on that date. Do not treat it as a recipe.
+
 A mixed 3+6 bpw pack around **50 GB** was called tight for **2× V620** and still needed
 calibration. Experimental kernels had only been tried on an **Ornith 1.5 9B** quant — not
-confirmed on 2× Flash-Next. `#general` (Sep 18): a ~12.5 GB EXL3 pack **unpacked to ~54 GB** and
-OOM'd on a 0.27.1 image — size host RAM, not just the download.
+confirmed on 2× Flash-Next. `#general` (Sep 18) and `#vllm-rdna` (Oct 2): older **0.27 / 0.28**
+images can **unpack** an EXL3 download (one ~12.5 GB pack ballooned to **~54 GB**) and OOM —
+size host RAM, not just the download. Flash-Next EXL3 is still **not a 1× V620 path** without
+heavy RAM offload.
 
 An uncalibrated public 3inst upload was posted and immediately flagged for rework — do not treat
 it as a stable checkpoint:
 [`BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated`](https://huggingface.co/BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated).
+The later **calibrated** 3inst repo above is still **Needs verify**.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 
-`#vllm-rdna` (Sep 29): **W4A8** is still an explore path (public
+`#vllm-rdna` (Sep 29): **W4A8** started as an explore path (public
 [`opengfx1030/vllm-rdna#9`](https://github.com/opengfx1030/vllm-rdna/pull/9), `w4a8-wiring` branch).
-Community has **not** found W4A8 faster than **W4A16 dequant-on-the-fly** on gfx1030; the wiring
-branch still hits CUDA-graph issues. **W8A8** was called theoretically the fastest int8 layout,
-not a current recipe. Stay on W4A16 / AWQ until a tagged extras build ships a working path.
+`#vllm-rdna` (Oct 1): W4A8 is **in `rdna_extras` HEAD** (`VLLM_RDNA2_W4A8_SDOT4` / serve-script
+`W4A8=1`) but is **not much faster** than W4A16 dequant-on-the-fly. The stated win is **more
+context**, not decode. EXL3 on the same line still **needs optimizations**. **W8A8** was called
+theoretically the fastest int8 layout, not a current recipe. Stay on W4A16 / AWQ for day-to-day.
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

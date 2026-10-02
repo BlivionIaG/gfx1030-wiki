@@ -137,7 +137,8 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
   `#vllm-rdna` (Sep 24): [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0)
   now has **mul1** so existing EXL3 packs can load. `#vllm-rdna` (Sep 29–30) + `rdna_extras`
   commits (30 Sep–1 Oct): mul1 / K=1..8 plus the v0.30 loader rewrite are **on HEAD** and
-  **GPU-run on gfx1030** (215/215 tests; 27B 3.00 bpw mul1 TP=4 graphs). Draft
+  **GPU-run on gfx1030** (215/215 tests; 27B 3.00 bpw mul1 TP=4 graphs). `#vllm-rdna`
+  (Oct 2): that HEAD path is **mul1-tested only** — 3inst packs are untested. Draft
   [`#32`](https://github.com/opengfx1030/vllm-rdna/pull/32) was the earlier kernel-port PR.
   Not in Hub `-extras` — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
