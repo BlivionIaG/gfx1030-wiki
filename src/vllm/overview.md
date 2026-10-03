@@ -16,6 +16,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 |---|---|
 | Pull an image and run your first model | [Running (Docker)](./running.md) |
 | Which image / model / card count (27B, presets) | [Recipes](./recipes.md) |
+| GLM-5.3-Flash on 8× (local 0.30 fork) | [Recipes — GLM-5.3-Flash](./recipes.md#glm-53-flash) |
 | Qwen3.8 Flash-Next (benchmarks and serve lines) | [Flash-Next](./flash-next.md) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](./configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](./quantization.md) |

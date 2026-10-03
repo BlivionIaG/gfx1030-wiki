@@ -40,7 +40,9 @@ Operational facts that are safe to copy:
 
 - **Resident W4A16 MoE** (`VLLM_RDNA_MOE_RESIDENT=1`): convert the checkpoint’s packed INT4 experts
   into the RDNA2 kernel layout **once at load**, keep that layout, and skip repacking every 4k
-  prefill chunk. Precision stays W4A16.
+  prefill chunk. Precision stays W4A16. `#vllm-rdna` (Sep 29): a latest-`rdna_extras` host saw PP
+  fall from ~**2k → ~1450** with this **unset**; setting `1` restored ~2k. Treat a sudden PP cliff
+  after an extras pull as a missing-resident-MoE check before blaming kernels.
 - **Mamba retirement:** backport of [`vllm#55450`](https://github.com/vllm-project/vllm/pull/55450).
   Without it, long prompts (100k+ class) hit a deterministic **preemption loop** (state blocks not
   retired across null gaps).
@@ -281,7 +283,8 @@ reports useful 3-card numbers (one host **~45 t/s** decode / **~1100 tok/s** PP;
 Treat the overlay as **unmaintained / snapshot**; prefer `rdna_extras` once PP3 is clean there.
 
 `#vllm-rdna` (Sep 19): that same **HIP MoE** kernel was reported **non-deterministic** (~3.5% of
-top tokens change between identical runs; Triton MoE did not). See
+top tokens change between identical runs; Triton MoE did not). `#vllm-rdna` (Sep 30): an **fp32
+deterministic** path was described as **opt-in** (throughput cost); no public flag name. See
 [fork MoE note](fork.md#moe-mixture-of-experts). **Needs verify.**
 
 `#vllm-rdna` (Sep 18): the published Flash-Next checkpoint can leave the **MTP draft head's 512

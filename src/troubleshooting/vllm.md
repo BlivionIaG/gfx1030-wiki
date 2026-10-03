@@ -25,8 +25,25 @@ Mount cache volumes — see [Configuration](../vllm/configuration.md#cache-volum
 
 On multi-GPU AOT cache issues: `VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1`
 
+### `TORCHINDUCTOR_CACHE_DIR` survives `VLLM_DISABLE_COMPILE_CACHE` {#torchinductor-cache-survives-vllm-disable-compile-cache}
+
+`rdna_extras` (1 Oct, EXL3 27B mul1 TP=4): piecewise `assert_size_stride` kept failing after a
+fake-kernel stride fix because **Inductor reused a stale compiled graph**.
+`VLLM_DISABLE_COMPILE_CACHE` does **not** cover `TORCHINDUCTOR_CACHE_DIR` — clear that
+directory (or unset and delete the default cache) after kernel / fake-tensor changes, then
+recapture. See [Quantization](../vllm/quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+
 Low throughput (~4–5 t/s on 27B)? Check for **older image** where AWQ still used Triton — see
 [Quantization](../vllm/quantization.md).
+
+## GLM-5.3 vision: MIOpen compiles every image size {#glm-vision-miopen-compile}
+
+`#vllm-rdna` (Sep 30), community **8×** GLM-5.3-Flash AWQ on a **local 0.30 fork** (not Hub):
+MIOpen compiled the vision **downsample conv per image size** (3–4 min; one report that it
+**killed the engine**). Community workaround: implement that conv as a **matmul** (158 s →
+4 ms). This is **not** the Flash-Next `max_pixels` startup OOM
+([Flash-Next vision](vllm-flash-next.md#flash-next-vision-oom)). **Needs verify** on org extras
+— [recipes](../vllm/recipes.md#glm-53-flash).
 
 ## First boot is extremely slow
 
@@ -185,6 +202,10 @@ Community notes (`#vllm-rdna`):
   **~94%** prefix hit; single-stream PP sometimes **~1750**). Synthetic benches were called
   untrustworthy vs live agentic. **`--max-num-batched-tokens 2048`** slightly helped ITL on that
   host. **Needs verify**; not a recipe — no public PR / not in Hub `-extras`.
+  `#vllm-rdna` (Sep 29): when chasing **max single-stream PP**, **unset**
+  `--prefill-schedule-interval` and `--long-prefill-token-threshold` — they trade PP for mixed
+  decode. Same thread: a ~**2k → ~1450** PP drop on latest extras was **resident MoE off**
+  (`VLLM_RDNA_MOE_RESIDENT=1` recovered ~2k), not the scheduler flags.
 - Concurrent MTP **9–16 token rows** (three chats × MTP-2) used to fall back to tile Triton. Merged
   [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26) opts in
   `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**

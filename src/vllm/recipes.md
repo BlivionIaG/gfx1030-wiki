@@ -34,6 +34,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](./flash-next-serve.md#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub `-extras` still lags. **Needs verify.** |
 | **6× V620** | Flash-Next **minimum is 3** cards. `#vllm-rdna` (Sep 24): start with **`PP=3` + `TP=2`** or **`PP=6`**; keep **TP power-of-2** (avoid `PP=2` + `TP=3` as the first try). Clone HEAD + [host venv](host-venv.md) — Hub tags lag. Disagg prefill/decode across switches is open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) (**Needs verify**). |
+| **8× V620** | Not a Flash-Next recipe. `#vllm-rdna` (Sep 30): community **GLM-5.3-Flash** AWQ on a **local vLLM 0.30 fork**, **TP=8**, **P2P off**, **150 W** — [GLM-5.3-Flash](#glm-53-flash). Org extras stay **0.28**; **Needs verify**. |
 
 Also see [What fits well on V620](../choose-a-stack.md#what-fits-well-on-v620).
 
@@ -55,6 +56,7 @@ Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx10
 | [`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound) | **4×** | `rdna_extras` HEAD (QSA `#15`) / draft `#5` | W4A16 + original BF16 CPU PLE. QSA live-context merge: [overview](flash-next.md#intel-autoround-flash-next). Not Hub `-extras`. |
 | [`cyankiwi/Qwen3.8-Flash-Next-AWQ-INT4`](https://huggingface.co/cyankiwi/Qwen3.8-Flash-Next-AWQ-INT4) | **4×** | Experimental | Mentioned as a possible switch (`#vllm-rdna`); not a drop-in Hub `-extras` path yet. |
 | [`ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-W4A16-AWQ) | **3–4×** | `rdna_extras` HEAD / host venv | `#vllm-rdna` Sep 25–26 — shorter-reasoning AWQ. 3× community **~1300 PP / ~45 TG**. Two-card fit unconfirmed. [Swift](flash-next.md#swift-15-flash-next). |
+| [`wtdcode/GLM-5.3-Flash-AWQ-W4A16`](https://huggingface.co/wtdcode/GLM-5.3-Flash-AWQ-W4A16) | **8×** | Local vLLM **0.30** fork (not Hub / not `rdna_extras` HEAD) | `#vllm-rdna` Sep 30 — TP=8, MTP-2, P2P off. [Notes](#glm-53-flash). |
 
 Small-VRAM experiment: Ornith **9B** EXL3 (~6.8 GB) vs AWQ (~9 GB) — **experimental**, not in published
 `-extras` tags yet. See [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
@@ -188,6 +190,41 @@ they are missing (recipe troubleshooting).
 
 Flash-Next (Qwen3.8, PLE sidecar, 3×/4× V620 serve lines, AutoRound, DeepSeek-V4) lives on
 [Flash-Next](./flash-next.md). This page stays the picker for Hub `-extras` and the recipe-container presets.
+
+## GLM-5.3-Flash (community, Needs verify) {#glm-53-flash}
+
+`#vllm-rdna` (Sep 30): a community **8× V620** host served public
+[`wtdcode/GLM-5.3-Flash-AWQ-W4A16`](https://huggingface.co/wtdcode/GLM-5.3-Flash-AWQ-W4A16)
+(AWQ W4A16 of [`zai-org/GLM-5.3-Flash`](https://huggingface.co/zai-org/GLM-5.3-Flash); routed
+experts INT4, attention / vision / MTP left BF16) on a **local vLLM 0.30 fork**. **TP=8**,
+**MTP-2**, **P2P off** (PLX), **150 W** caps, dual-socket Broadwell-EP class. This is **not**
+Hub `-extras` and **not** `rdna_extras` HEAD.
+
+Org draft [`opengfx1030/vllm-rdna#2`](https://github.com/opengfx1030/vllm-rdna/pull/2) is a
+**runtime-unverified** Glm5Next load path on a **side branch** (`later/glm53-flash-awq`); HIP
+gates default **off**. `#vllm-rdna` (Sep 30): day-to-day extras stay on **0.28**; the
+maintainer **paused** the 0.30 rebase and invited a PR of the community 0.30 work. V2 model
+runner **can** work on that line.
+
+Community snapshot (one host — **Needs verify**):
+
+| Metric | Before local-fork work | After |
+|---|---|---|
+| Decode | ~2.2 t/s | **~32 t/s** |
+| Prefill | ~50 t/s | **~320–500 t/s** (others called this **low** vs Flash-Next; hoped **~1000**) |
+| Context | — | **262k** with vision; needle tests to **180k** |
+| Reliability | — | 377 agent requests at 40–125k tokens: 0 failures / 0 GPU faults; 5–8 s TTFT with prefix cache |
+
+gfx1030-relevant lessons (do **not** treat the unpublished kernel list as a Hub recipe):
+
+- Serve **`--dtype float16`**, not bf16 — no bf16 hardware. Same quality; community **+68%**
+  decode on this host.
+- **Vision:** MIOpen compiled the downsample conv **per image size** (3–4 min; killed the
+  engine once). Community used **conv-as-matmul** (158 s → 4 ms). Separate from the Flash-Next
+  `max_pixels` OOM — [troubleshooting](../troubleshooting/vllm.md#glm-vision-miopen-compile).
+- Indexer / tiled-fp8 / fused mHC / skinny-int4 MoE work lived on the **local fork**.
+
+Not a drop-in for 4× Flash-Next hosts.
 
 ## Related
 

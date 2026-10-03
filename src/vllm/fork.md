@@ -46,7 +46,8 @@ cherry-picking into either stack.
 | **vllm-rdna-qa** | [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa) (`#vllm-rdna` Sep 17): maintainer QA / landing playbook for `opengfx1030/vllm-rdna`. **Not** a second kernel wiki. |
 | **Docker bake** | Source moved to [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker). `#vllm-rdna` Sep 18: Hub **`blivioniag/vllm-rdna:v0.28.0-extras`** is a **test** tag; CI is **not** fully tracked. `#vllm-rdna` (Sep 24–26): Hub tags are **still not auto-rebuilt** (no runner yet) and **do not track HEAD**. Day-to-day Docker remains **`v0.27.1-extras*`**; Flash-Next / `#17`+ / `#24` want **clone + [host venv](host-venv.md)**. Plain **`v0.27.1-rocm7.14.0`** (non-extras) was called **removable**; keep **`rocm-rdna:7.14.0`** as a packaging base. |
 | **0.28 MTP / 0.29 rebase** | `#vllm-rdna` Sep 18: **no MTP support on the 0.28.0 extras line** — rebase continues on [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0) to pick up upstream **Qwen4Exp**. Flash-Next long-prompt hosts that needed `VLLM_USE_V2_MODEL_RUNNER=0` should re-A/B before bumping (V2 becomes the default on 0.29). |
-| **Upstream vLLM 0.30 / Qwen4 rebase** | `#general` (Sep 22): **v0.30** released; official images cite **ROCm 10.0**. gfx1030 is still **not** in mainline. `#vllm-rdna` (Sep 25): fork branch [`rdna_extra/v0.30.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.30.0) exists (Qwen4 patches). Tip commit `f87be4dc` (25 Sep) keeps fused-MoE **capture buffers alive** (`empty_cache` recycled a CUDA-graph address). **WIP** — day-to-day Flash-Next stays on `rdna_extras` HEAD. |
+| **Upstream vLLM 0.30 / Qwen4 rebase** | `#general` (Sep 22): **v0.30** released; official images cite **ROCm 10.0**. gfx1030 is still **not** in mainline. `#vllm-rdna` (Sep 25): fork branch [`rdna_extra/v0.30.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.30.0) exists (Qwen4 patches). Tip commit `f87be4dc` (25 Sep) keeps fused-MoE **capture buffers alive** (`empty_cache` recycled a CUDA-graph address). `#vllm-rdna` (Sep 30): day-to-day extras stay on **0.28**; the maintainer **paused** the 0.30 rebase (“close, then rebase”). V2 model runner **can** work. **WIP** — Flash-Next stays on `rdna_extras` HEAD. |
+| **GLM-5.3-Flash / Glm5Next (`#2`)** | Open [`#2`](https://github.com/opengfx1030/vllm-rdna/pull/2) on side branch `later/glm53-flash-awq` — **runtime-unverified** (no GPU at author time); HIP gates default **off**. `#vllm-rdna` (Sep 30): a **local 0.30 fork** (not this PR) served [`wtdcode/GLM-5.3-Flash-AWQ-W4A16`](https://huggingface.co/wtdcode/GLM-5.3-Flash-AWQ-W4A16) on **8×** TP=8 — [recipes](recipes.md#glm-53-flash). |
 | **MTP unquantized drafter (`#19`)** | **Merged** [`opengfx1030/vllm-rdna#19`](https://github.com/opengfx1030/vllm-rdna/pull/19) (24 Sep): detect MTP tensors that exporters left **unquantized** (missing `quantization_config.dynamic` exclusions) so the drafter loads instead of `AttributeError` on `w2_weight`. Hub `-extras` lags. |
 | **MTP draft unbreak (`700753d9`)** | `rdna_extras` HEAD (25 Sep): swallow failing `amdsmi_shut_down()` so MoE config lookup can fall back; Qwen4Exp MTP **local-argmax** draft sampling. Author-host MTP-2 **boots** but stays **~0.73–0.85×** vs MTP-0. `#vllm-rdna` Sep 25 confirmed “closer, still a loss”. Hub lags. [Quantization](quantization.md#mtp-speculative-decoding). |
 | **GPTQ `BLOCK_KN_SIZE` (`#18`)** | Open [`#18`](https://github.com/opengfx1030/vllm-rdna/pull/18): bump GPTQ `BLOCK_KN_SIZE` **128 → 256** on gfx1030. `#vllm-rdna` (Sep 24): hold merge until an **M > 32** sweep through at least **2048**. |
@@ -134,7 +135,12 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 - **EXL3** (in-tree on `rdna_extras`, **not** in published v0.27.1 `-extras` images yet):
   `exl3_hadamard.cu`, `exl3_dot2_*.cu`, plus `vllm/.../quantization/exl3.py`. Experimental.
   `#vllm-rdna` (Sep 24): [`rdna_extra/v0.29.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.29.0)
-  now has **mul1** so existing EXL3 packs can load — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+  now has **mul1** so existing EXL3 packs can load. `#vllm-rdna` (Sep 29–30) + `rdna_extras`
+  commits (30 Sep–1 Oct): mul1 / K=1..8 plus the v0.30 loader rewrite are **on HEAD** and
+  **GPU-run on gfx1030** (215/215 tests; 27B 3.00 bpw mul1 TP=4 graphs). `#vllm-rdna`
+  (Oct 2): that HEAD path is **mul1-tested only** — 3inst packs are untested. Draft
+  [`#32`](https://github.com/opengfx1030/vllm-rdna/pull/32) was the earlier kernel-port PR.
+  Not in Hub `-extras` — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
 ### MoE (mixture of experts)
 
@@ -146,9 +152,11 @@ wired into vLLM through Python kernel/layer modules and covered by targeted test
 On the same server and the same tokens, about **3.5%** of the most-probable tokens changed between
 runs, costing about **+0.2–0.3%** perplexity versus the best reference that host could run. The
 **Triton MoE** path was **bit-identical** across repeats. Cause not isolated (fp16 accumulation
-order vs a real race). Proposed, **not landed**: replace the `atomic_add_pk4_f16` CAS loop with
-`global_atomic_add_f32` (fewer atomics, possibly worse bandwidth). Maintainer: cannot test until
-the **0.29.0** rebase is unblocked. **Needs verify** — do not switch kernels on this note alone.
+order vs a real race). Proposed, **not landed** as of Sep 19: replace the `atomic_add_pk4_f16`
+CAS loop with `global_atomic_add_f32` (fewer atomics, possibly worse bandwidth). `#vllm-rdna`
+(Sep 30): an **fp32 deterministic** MoE mode was described as **opt-in** because it **cuts
+throughput** — flag name was **not** posted; do not invent an env var. Default stays the
+faster path. **Needs verify** — do not switch kernels on this note alone.
 
 ### GDN (gated delta-net / linear attention)
 

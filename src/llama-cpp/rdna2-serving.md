@@ -116,6 +116,73 @@ Build with `./scripts/build-rdna2-portable.sh`. RCCL needs working [PCIe P2P](..
 is enabled but slower, set `NCCL_P2P_DISABLE=1`. If all-reduce fails, try
 `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none`.
 
+### LocalAI YAML (2× Flash-Next, `#llamacpp` Sep 30) {#localai-flash-next-yaml}
+
+Community LocalAI backend `rocm-llama-cpp-development` for
+[`Navin-Models/Qwen3.8-Flash-Next-Uncensored-AD-4.27-GGUF`](https://huggingface.co/Navin-Models/Qwen3.8-Flash-Next-Uncensored-AD-4.27-GGUF)
+on **2× V620**. Paths generalized. **Needs verify** — not a fork profile.
+
+```yaml
+backend: rocm-llama-cpp-development
+batch: 4096
+ubatch: 1024
+cache_type_k: q8_0
+cache_type_v: q8_0
+context_size: 229376   # 32k under 262144 so a second user can grow KV
+fit_params: false
+flash_attention: true
+main_gpu: 0
+mmap: true
+mmproj: /path/to/mmproj-Qwen3.8-Flash-Next-Uncensored-F16.gguf
+split_mode: tensor
+tensor_split: 1,1.1
+options:
+  - use_jinja:true
+  - parallel:1
+  - cache_reuse:256
+  - context_shift:true
+  - cache_ram:8192
+  - kv_unified:true
+parameters:
+  min_p: 0.05
+  model: /path/to/Qwen3.8-Flash-Next-Uncensored-AD-4.27-00001-of-00033.gguf
+  temperature: 1
+  top_k: 40
+  top_p: 0.8
+template:
+  use_tokenizer_template: true
+```
+
+Same thread: `--batch-size 4096 --ubatch-size 1024` also helped Swift GSQ-RCO PP a little
+([speculative table](rdna2-speculative.md)).
+
+### Swift IQ3_XXS + MTP (2× V620, `#llamacpp` Oct 2) {#swift-iq3-xxs-2x}
+
+Community `llama-server` line for
+[`ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF`](https://huggingface.co/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF)
+**IQ3_XXS** on **2× V620**. Paths generalized. **Needs verify** — VRAM was called the bottleneck.
+
+```sh
+HIP_VISIBLE_DEVICES=0,1 ./build/bin/llama-server \
+  -m /path/to/Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf \
+  --mmproj /path/to/mmproj-Swift-Qwen3.8-Flash-Next-BF16.gguf \
+  -ngl all -sm tensor -ts 1,1.1 \
+  -ot 'per_layer_token_embd\\.weight=CPU' \
+  --lazy-mode off --load-mode none \
+  -c 71680 -fa on -ctk f16 -ctv f16 \
+  -b 2048 -ub 1024 \
+  -np 1 --cache-ram 8192 \
+  --jinja --reasoning-preserve \
+  -md /path/to/mtp-Qwen3.8-Flash-Next-Q4_0.gguf \
+  --spec-type draft-mtp --spec-draft-ngl all --spec-draft-n-max 3 \
+  --temp 1.0 --top-k 40 --top-p 0.8 --min-p 0.05 \
+  --host 127.0.0.1 --port 8085
+```
+
+Community snapshot: PP starts around **~800 t/s** and falls to **~650** by ~30k context; decode
+**~35 → ~20 t/s**. The Sep 30 Swift row used **4k/1k** batch and reported **~400 / ~40** — treat
+both as single-host numbers, not a recipe bake-off.
+
 The RDNA2 fork's recent HIP/RCCL work is validated primarily against **ROCm 7.14** (`#llamacpp`,
 Sep 2026). Mid-7.2.x (e.g. 7.2.4) is not a confident target — upgrade or pin per
 [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).

@@ -54,7 +54,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `PYTORCH_TUNABLEOP_TUNING` | `0` | Keep **off** in serve. Online tuning is a separate regenerate step. |
 | `PYTORCH_TUNABLEOP_FILENAME` | set by `serve_rdna.sh` | **Hash-locked** named profile (`rocm7.14-rocblas5.5`, 783 rows, or thin `rocm10-rocblas5.6`). The launcher picks it from `librocblas.so.5`. Override with `TUNABLEOP_PROFILE`; mismatch aborts — [serve scripts](../vllm/serve-scripts.md#tunableop), [troubleshooting](../troubleshooting/vllm.md#tunableop-rocblas-mismatch). |
 | `PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED` | `0` | Disable hipBLASLt in tunableop (pair with `TORCH_BLAS_PREFER_HIPBLASLT=0`). |
-| `VLLM_RDNA_MOE_RESIDENT` | `1` | `#17` resident W4A16 MoE path (pack once at load). |
+| `VLLM_RDNA_MOE_RESIDENT` | `1` | `#17` resident W4A16 MoE path (pack once at load). `#vllm-rdna` Sep 29: leaving this **off** on latest `rdna_extras` dropped Flash-Next PP from ~**2k → ~1450**; restoring `1` recovered ~2k. |
 | `PYTORCH_ALLOC_CONF` | `expandable_segments:True` | Reduces CUDA/HIP allocator fragmentation. |
 | `VLLM_USE_DEEP_GEMM` | `0` | Disable DeepGEMM (NVIDIA-oriented). |
 | `VLLM_USE_FLASHINFER_SAMPLER` | `0` | Disable FlashInfer sampler (not useful on RDNA2). |

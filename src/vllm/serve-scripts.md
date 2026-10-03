@@ -191,6 +191,12 @@ A real launch logs `TunableOp profile rocm10-rocblas5.6 auto-selected for rocBLA
 
 **Thin** means the shipped CSV covers **70 shapes per rank**. Those GEMMs use the recorded solver. Every other shape falls back to the rocBLAS heuristic: safe, and untuned. The validated serving numbers on this wiki were captured on **gfx1030 + ROCm 7.14** (`rocm7.14-rocblas5.5`, 783 rows). Recipe knobs (`TP`, `KV`, `MTP`, graphs) do not depend on the ROCm version. Treat the first ROCm 10 boot as bring-up: run `PRINT=1` and confirm the profile line before leaving it up.
 
+`#vllm-rdna` (Oct 1): hosts **not** on rocBLAS **5.5 + ROCm 7.14** do not get the canonical
+783-row benefit from the serve script — they need a matching profile (the thin ROCm 10 set,
+a local `$HOME/.cache/tunableop/` table, or a contributed CSV). The shipped 7.14 rows are the
+**4-card** serving set; **8×** shapes were **not** in that table yet — generate local rows on
+that host rather than expecting a silent speedup.
+
 To fill the gap on that machine, tune there and register the result. The in-tree pipeline keeps scratch under `<tree>/cache/tunableop-rows` (never `/tmp`) and does not overwrite the repo profile:
 
 ```sh
