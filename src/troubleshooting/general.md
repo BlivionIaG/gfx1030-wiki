@@ -103,6 +103,8 @@ HSA topology init — VM passthrough or unbind is the reliable fix when mixed AM
 | Ducted 120 mm (push) | Community dual-V620: Arctic **P12 Pro** through a duct, ~**62–70 °C** at **175 W** depending on ambient. Needs **static pressure**; air bypasses the heatsink if you leave a gap. `#general` (Sep 27): public [120 mm → fanless GPU ducts](https://makerworld.com/en/models/3184181-custom-fan-ducts-120mm-fans-to-fanless-gpus). |
 | 80 mm high-static (4-card) | `#other` (Sep 28): four **80 mm ~7k** fans at **50–60%** PWM held ~**60 °C** on **4× 180 W** vLLM (community). Two fans may be enough on that chassis. |
 | 40 mm axial on the card | Works but is a **high-pitched screamer**. Prefer a **blower-style** mount (example: [Thingiverse 7153218](https://www.thingiverse.com/thing:7153218)) for compactness vs noise. |
+| 9733 blower (4U last slot) | `#general` (Oct 4 2026): [Thingiverse 7296707](https://www.thingiverse.com/thing:7296707) mounts a **9733** blower on V620 with intake toward the CPU so the last 4U slot does not suck the case wall. Community: **loud at 100%** when the PWM box **pulses full/off** instead of true PWM. Fan rating cited **~2.94 A**; one report that **one Molex** can feed **four** — **Needs verify**. |
+| EFH-08E12W + PWM hub | `#general` (Oct 4): quieter idle path than a 9733-at-100% is **EFH-08E12W-JP01** on [Thingiverse 7153218](https://www.thingiverse.com/thing:7153218) plus a real PWM hub (example: Arctic **ACFAN00351A**) and a software curve ([CoolerControl](https://docs.coolercontrol.org/)). |
 
 PCB photos for cooler compatibility: community link
 [Linus Tech Tips V620 thread](https://linustechtips.com/topic/1588645-radeon-pro-v620-but-tencent-edition-meeting-issues-with-everything/).

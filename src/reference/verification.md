@@ -408,6 +408,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` 5 GPUs → TP=4 + 1 standalone | **Community** | `#general` Sep 11 2026 |
 | `troubleshooting/llama-cpp.md` lemonade-sdk M-RoPE A/B | **Needs verify** | `#llamacpp` Sep 13 — one host; not the RDNA2 fork |
 | `troubleshooting/general.md` blower vs unducted 120 mm | **Community** | `#general` Sep 13 2026 |
+| `troubleshooting/general.md` 9733 / Thingiverse 7296707 + PWM hub | **Community** | `#general` Oct 4 — 9733 loud with pulse PWM; EFH-08E12W-JP01 + Arctic ACFAN00351A + CoolerControl; Molex-for-four **Needs verify** |
+| `meta/resources.md` TensorFold ROCm PR `#1` | **Needs verify** | `#tensorfold` / `#vllm-rdna` Oct 3–4 + public `BlivionIaG/TensorFold#1`. Published TensorFold is MLX/CUDA. RDNA2 path is FP16 `v_dot2` / GEMV, not WMMA. No gfx1030 serve recipe |
 
 ### `setup/host-firmware.md`
 
