@@ -153,7 +153,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. Hub lags |
 | Skinny HIP MoE 9–16 rows `#26` | **Fork-source / Community** | Merged 27 Sep; `VLLM_ROCM_MOE_SKINNY_MAX_M=16`; +11% concurrent regular-text. No single-chat claim |
 | MTP draft graph `30632b2` | **Fork-source** | 27 Sep; +18% / +5% at c=8 1k / 16k; still ~0.87× vs MTP-0 at 16k |
-| Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Scheduler defer (`--prefill-schedule-interval` / `--long-prefill-token-threshold`, earlier `VLLM_PREFILL_DEFER_INTERVAL`) **unpublished / Needs verify**. 1024/8 4-agent snapshot **Needs verify**. Sep 29: **unset** those flags for max single-stream PP |
+| Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Static `--prefill-schedule-interval` / `--long-prefill-token-threshold` trade PP for mixed decode. Sep 29: **unset** those flags for max single-stream PP |
+| Adaptive prefill `#36` (`VLLM_RDNA_DYNAMIC_PREFILL=1`) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#36` (5 Oct). Default off. `#vllm-rdna` Oct 4: ~25 t/s burst at 3 decode + 1 prefill; later sustain decode + **>1000** PP. Synthetic benches called a poor measure. Hub lags |
 | `VLLM_RDNA_MOE_RESIDENT=1` missing tanks Flash-Next PP | **Community** | `#vllm-rdna` Sep 29 — latest extras ~2k → ~1450 PP with resident MoE off; `1` recovered ~2k |
 | EXL3 mul1 port `#32` + HEAD loader | **Fork-source / Needs verify** | `#vllm-rdna` Sep 29–30 + `rdna_extras` 30 Sep–1 Oct — mul1 / K=1..8 **GPU-run** (215/215 tests; 27B 3.00 bpw TP=4 graphs). Author-host `74315f4` 1k/512 ~18.9 / ~81.8 t/s; 16k/1k ~13.7 t/s / ~830 PP. Not Hub. Oct 2: HEAD **mul1-tested only**; 3inst untested |
 | GLM-5.3-Flash AWQ 8× TP=8 ~32 t/s / 320–500 PP | **Community / Needs verify** | `#vllm-rdna` Sep 30 — `wtdcode/GLM-5.3-Flash-AWQ-W4A16` on a **local 0.30 fork**; 262k + vision; org `#2` still unverified side branch |
@@ -204,6 +205,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | HIP MoE non-deterministic (~3.5% top-token drift) | **Needs verify** | `#vllm-rdna` Sep 19 — Triton MoE bit-identical; Sep 30 fp32 deterministic **opt-in** (perf cost); no public flag name |
 | QSA live-context prefill bound | **Fork-source** | Merged `opengfx1030/vllm-rdna#15`; Python-only scoring width change |
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
+| Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. Hub lags |
+| MoE expert DRAM cache `#37` | **Needs verify** | Draft `opengfx1030/vllm-rdna#37`; `#vllm-rdna` Oct 4; no gfx1030 tok/s |
 
 ### `host-venv.md`
 
@@ -368,7 +371,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |
 | `vllm/recipes.md` 4× PIECEWISE Flash-Next serve | **Community** | `#vllm-rdna` Sep 17 — host venv, not Hub |
 | `troubleshooting/vllm.md` native KV RAM offload `#24` | **Fork-source / Needs verify** | `#vllm-rdna` Sep 26–27 + merged `vllm-rdna#24` (27 Sep); Sep 15 ~1 t/s is the broken baseline |
-| `troubleshooting/vllm.md` mixed prefill+decode / `#26` / `30632b2` | **Community / Fork-source** | `#vllm-rdna` Sep 27–29 — scheduler defer still unpublished; Sep 29 unset flags for max PP + resident MoE PP drop |
+| `troubleshooting/vllm.md` mixed prefill+decode / `#26` / `30632b2` / `#36` | **Community / Fork-source** | `#vllm-rdna` Sep 27–29 static flags; `#36` merged 5 Oct (opt-in dynamic). Sep 29 unset flags for max PP + resident MoE PP drop |
 | `tuning/p2p.md` 5-slot PCIe switch ATX Printables | **Community** | `#other` Sep 30 — public model 1860633; mechanical mount only |
 | `vllm/recipes.md` GLM-5.3-Flash 8× local 0.30 fork | **Community / Needs verify** | `#vllm-rdna` Sep 30 — `wtdcode` AWQ; org `#2` unverified |
 | `vllm/quantization.md` EXL3 mul1 GPU-run on HEAD | **Fork-source / Needs verify** | `rdna_extras` 30 Sep–1 Oct + `#vllm-rdna` Sep 30 |
@@ -409,7 +412,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/llama-cpp.md` lemonade-sdk M-RoPE A/B | **Needs verify** | `#llamacpp` Sep 13 — one host; not the RDNA2 fork |
 | `troubleshooting/general.md` blower vs unducted 120 mm | **Community** | `#general` Sep 13 2026 |
 | `troubleshooting/general.md` 9733 / Thingiverse 7296707 + PWM hub | **Community** | `#general` Oct 4 — 9733 loud with pulse PWM; EFH-08E12W-JP01 + Arctic ACFAN00351A + CoolerControl; Molex-for-four **Needs verify** |
-| `meta/resources.md` TensorFold ROCm PR `#1` | **Needs verify** | `#tensorfold` / `#vllm-rdna` Oct 3–4 + public `BlivionIaG/TensorFold#1`. Published TensorFold is MLX/CUDA. RDNA2 path is FP16 `v_dot2` / GEMV, not WMMA. No gfx1030 serve recipe |
+| `meta/resources.md` TensorFold ROCm `#389` | **Needs verify** | `#tensorfold` Oct 4 + public `ashhart/TensorFold#389` (draft `--backend rocm`). RDNA2 is FP16 `v_dot2`, not WMMA. Community: not faster than vLLM. No wiki serve recipe |
 
 ### `setup/host-firmware.md`
 

@@ -55,6 +55,8 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `PYTORCH_TUNABLEOP_FILENAME` | set by `serve_rdna.sh` | **Hash-locked** named profile (`rocm7.14-rocblas5.5`, 783 rows, or thin `rocm10-rocblas5.6`). The launcher picks it from `librocblas.so.5`. Override with `TUNABLEOP_PROFILE`; mismatch aborts — [serve scripts](../vllm/serve-scripts.md#tunableop), [troubleshooting](../troubleshooting/vllm.md#tunableop-rocblas-mismatch). |
 | `PYTORCH_TUNABLEOP_HIPBLASLT_ENABLED` | `0` | Disable hipBLASLt in tunableop (pair with `TORCH_BLAS_PREFER_HIPBLASLT=0`). |
 | `VLLM_RDNA_MOE_RESIDENT` | `1` | `#17` resident W4A16 MoE path (pack once at load). `#vllm-rdna` Sep 29: leaving this **off** on latest `rdna_extras` dropped Flash-Next PP from ~**2k → ~1450**; restoring `1` recovered ~2k. |
+| `VLLM_RDNA_DYNAMIC_PREFILL` | `1` | Opt-in adaptive mixed prefill+decode (`#36`, merged 5 Oct). Must be the string **`1`**. Default **off** — static `--prefill-schedule-interval` / `--long-prefill-token-threshold` stay as set. Leave off for max single-stream PP. — [troubleshooting](../troubleshooting/vllm.md#prefill-blocks-decode). |
+| `VLLM_RDNA_DYN_FLOOR_TPS` | `5.0` | Per-decoder tok/s floor the `#36` controller must not break (default **5**). Other `VLLM_RDNA_DYN_*` knobs (window, cap ladder, interval ceiling) are documented on the PR; restart required to change them. |
 | `PYTORCH_ALLOC_CONF` | `expandable_segments:True` | Reduces CUDA/HIP allocator fragmentation. |
 | `VLLM_USE_DEEP_GEMM` | `0` | Disable DeepGEMM (NVIDIA-oriented). |
 | `VLLM_USE_FLASHINFER_SAMPLER` | `0` | Disable FlashInfer sampler (not useful on RDNA2). |

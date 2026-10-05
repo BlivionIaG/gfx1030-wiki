@@ -110,8 +110,8 @@ VLLM_PLE_QUANT_DIR=/path/to/ples_int4 \
 | `BLOCK_SIZE` | `--block-size`. |
 | `SEQS` | `--max-num-seqs` (default 8). |
 | `MAXBAT` | `--max-num-batched-tokens` (default 2048). |
-| `LPTH` | `--long-prefill-token-threshold`. |
-| `PREFILL_INTERVAL` | `--prefill-schedule-interval`. |
+| `LPTH` | `--long-prefill-token-threshold` (static). Merged [`#36`](https://github.com/opengfx1030/vllm-rdna/pull/36) can self-tune this when `VLLM_RDNA_DYNAMIC_PREFILL=1`. |
+| `PREFILL_INTERVAL` | `--prefill-schedule-interval` (static). Same `#36` controller when the dynamic flag is on. |
 | `KV` | `--kv-cache-memory-bytes`. **Required** (a recipe with no KV budget aborts). |
 | `GMEM` | `--gpu-memory-utilization`. |
 | `COMPILE_MODE` | Compilation `mode` inside `--compilation-config`. |

@@ -192,20 +192,28 @@ Community notes (`#vllm-rdna`):
   `#vllm-rdna`: “better MTP, still not great.”
 - `#vllm-rdna` (Sep 27–29): **decode-only** concurrency is usable (two streams often **~70–80 t/s**;
   three starts to sag). **Mixed prefill + decode** is the cliff — decode drops to **~1–6 t/s**,
-  prefill **below 500 tok/s**, MTP accept collapses. A local (still **unpublished**) scheduler
-  experiment first showed as `VLLM_PREFILL_DEFER_INTERVAL=4` + `--long-prefill-token-threshold 256`,
-  then as CLI `--prefill-schedule-interval` **2 or 4** (higher = more decode time between prefills)
-  with `--long-prefill-token-threshold` **256 / 512 / 1024**. Community: interval **4** + threshold
+  prefill **below 500 tok/s**, MTP accept collapses. A local scheduler experiment first showed as
+  `VLLM_PREFILL_DEFER_INTERVAL=4` + `--long-prefill-token-threshold 256`, then as CLI
+  `--prefill-schedule-interval` **2 or 4** (higher = more decode time between prefills) with
+  `--long-prefill-token-threshold` **256 / 512 / 1024**. Community: interval **4** + threshold
   **256** recovered **~20–30 t/s** decode with a parallel prefill but **halved** single-stream PP.
   Interval **2** was called a milder prefill penalty. One host’s live 4-agent run at
   **1024 / 8** held mixed **~1030–1050 tok/s** PP / **~33 t/s** gen (decode-only **~24 t/s** with
   **~94%** prefix hit; single-stream PP sometimes **~1750**). Synthetic benches were called
   untrustworthy vs live agentic. **`--max-num-batched-tokens 2048`** slightly helped ITL on that
-  host. **Needs verify**; not a recipe — no public PR / not in Hub `-extras`.
-  `#vllm-rdna` (Sep 29): when chasing **max single-stream PP**, **unset**
-  `--prefill-schedule-interval` and `--long-prefill-token-threshold` — they trade PP for mixed
-  decode. Same thread: a ~**2k → ~1450** PP drop on latest extras was **resident MoE off**
-  (`VLLM_RDNA_MOE_RESIDENT=1` recovered ~2k), not the scheduler flags.
+  host.
+- **Merged** [`opengfx1030/vllm-rdna#36`](https://github.com/opengfx1030/vllm-rdna/pull/36) (5 Oct
+  2026) is the public landing of that work: opt-in
+  `VLLM_RDNA_DYNAMIC_PREFILL=1` self-tunes the same two knobs (chunk cap + step cadence) from
+  live traffic. Default **off** — the static CLI path is unchanged. `#vllm-rdna` (Oct 4): the
+  earlier static pair still **paused decode** while a prefill ran; the dynamic controller kept
+  decode moving (**~25 t/s** burst with pauses at 3 decode + 1 prefill; later note: sustain
+  decode and **>1000** PP). Author: synthetic benches will not show much (slight tok/s drop,
+  better inter-token latency). Still **Needs verify** on a second host; **not** in Hub `-extras`.
+  When chasing **max single-stream PP**, leave the dynamic flag **off** and **unset** the static
+  interval / threshold — they trade PP for mixed decode. Same Sep 29 thread: a ~**2k → ~1450** PP
+  drop on latest extras was **resident MoE off** (`VLLM_RDNA_MOE_RESIDENT=1` recovered ~2k), not
+  the scheduler flags.
 - Concurrent MTP **9–16 token rows** (three chats × MTP-2) used to fall back to tile Triton. Merged
   [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26) opts in
   `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**
