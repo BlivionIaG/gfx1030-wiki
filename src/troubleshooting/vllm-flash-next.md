@@ -165,6 +165,10 @@ the profile run, skinny GEMM `wvSplitK_hf_sml_<half,…>` (`skinny_gemms`) raise
 `HSA_STATUS_ERROR_EXCEPTION`. **`VLLM_RDNA_DENSE_GEMV=1`** avoided the fault on more than one host.
 It does **not** fix [PP3 corruption](#flash-next-pp3-output-corruption).
 
+`#vllm-rdna` (Oct 6): on a **different** (27B fp16, no-fault) host, **leaving wvSplitK enabled**
+improved decode concurrency vs stacked LLMM1 — [vLLM troubleshooting](./vllm.md#wvsplitk-concurrency).
+Keep `VLLM_RDNA_DENSE_GEMV=1` if you still hit this exception.
+
 The GPU core dumps written on that path are **several GB each** and land in the **process working
 directory** — start the server from a scratch dir (the 4× recipe already `cd`s to `/tmp`).
 
