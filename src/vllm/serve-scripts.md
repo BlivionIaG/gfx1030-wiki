@@ -143,7 +143,7 @@ Legacy names the entry point still accepts: `MODEL`←`MODEL_PATH`,
 | `auto-tool` | `--enable-auto-tool-choice --tool-call-parser qwen3_coder` |
 | `expert-parallel` | `--enable-expert-parallel` |
 | `trust-remote-code` | `--trust-remote-code` |
-| `prompt-tokens-details` | `--enable-prompt-tokens-details` |
+| `prompt-tokens-details` | `--enable-prompt-tokens-details` — `#vllm-rdna` (Oct 7): DeepSeek / Pi harnesses that always show **0%** cache hits usually lack this metadata flag, not a dead prefix cache. |
 | `vision-cap` | `--limit-mm-per-prompt '{"image":1}'` and `--mm-processor-kwargs '{"max_pixels":1605632}'` |
 
 An unknown token aborts. `vision-cap` is how Flash-Next recipes keep the pixel

@@ -38,6 +38,12 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 
 Also see [What fits well on V620](../choose-a-stack.md#what-fits-well-on-v620).
 
+`#vllm-rdna` (Oct 8), for llama.cpp migrants: **`--pipeline-parallel-size N`** is the vLLM analogue
+of llama.cpp **layer split** (`-sm layer`); **`--tensor-parallel-size N`** is the analogue of
+**tensor split** (`-sm row` / `-ts`). vLLM can **combine** them (example: **TP=2 + PP=2** on four
+cards). Prefer **power-of-2 TP**. Flash-Next on four cards still wants **TP=4**, not PP=4
+(PP=4 can look great on long prefill then **tank decode** — table above).
+
 ### Gemma 4 note
 
 Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx1030 vLLM paths

@@ -225,6 +225,12 @@ Maintainer: prefix caching **was fixed**, but the **reported** hit rate can stay
 counter is not proof the cache is dead — A/B repeat-prompt TTFT. Details:
 [PP3 graph KeyError](#flash-next-pp3-graph-keyerror).
 
+`#vllm-rdna` (Oct 7): a **DeepSeek harness** (and one **Pi** host) showed **0% cache hits** on every
+turn while the server was actually reusing prefix. That is **missing response metadata**, not the
+Sep 17 QSA 0% bug. Pass **`--enable-prompt-tokens-details`** (launcher token
+`prompt-tokens-details` — [serve scripts](../vllm/serve-scripts.md)). Then A/B repeat-prompt TTFT
+before chasing a cache rewrite.
+
 ## FP8 KV rejected on QSA / Flash-Next {#fp8-kv-rejected-on-qsa}
 
 `#vllm-rdna` (Sep 22): `--kv-cache-dtype fp8` **fails at startup** on current QSA Flash-Next rather

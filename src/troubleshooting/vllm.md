@@ -277,6 +277,14 @@ PR-recorded live swap (author host, **48 GiB** RAM tier, swap off, **SSD tier no
 overflow budget. vLLM can also attach a **second (storage) tier**; `#24` did **not** enable or
 test SSD.
 
+`#vllm-rdna` (Oct 7): the user-facing CLI on current extras / 0.30+ trees is
+**`--kv-offloading-size <GiB>`** (optional `--kv-offloading-backend native`). Community parked
+unused sessions with **`--kv-offloading-size 64`** (64 GiB **total** across TP ranks, not per
+GPU — see [upstream cache config](https://github.com/vllm-project/vllm/blob/main/vllm/config/cache.py)).
+RAM-tier only; storage offload still **untested** on gfx1030. Hybrid Qwen may still need
+`--disable-hybrid-kv-cache-manager` if the connector refuses HMA — that is a **compatibility**
+trade, not a speed win. Hub `-extras` lags.
+
 **Needs verify** on a second host. It is on `rdna_extras` HEAD; do **not** expect it in a Hub
 `-extras` tag yet. See [fork landscape](../vllm/fork.md#consolidation-status) and
 [Flash-Next KV](../vllm/flash-next.md#qwen38-flash-next-on-vllm).
