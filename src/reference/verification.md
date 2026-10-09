@@ -129,7 +129,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
 | MTP draft unbreak `700753d9` (amdsmi + local-argmax) | **Fork-source** | `rdna_extras` HEAD 25 Sep; MTP-2 boots, **~0.73–0.85×** vs MTP-0 on author 4× host |
 | `rdna_extra/v0.30.0` Qwen4 rebase | **Needs verify** | Branch exists (`#vllm-rdna` Sep 25); tip `f87be4dc` MoE capture-buffer fix. Not the day-to-day Flash-Next line |
-| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. PLE sidecar flag errors; launchers under `tools/rdna/`. Not day-to-day |
+| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. PLE sidecar flag errors; launchers under `tools/rdna/`. `#vllm-rdna` Oct 9: vs 0.30 listed gain is Qwen4Exp upstream (unchecked). Not day-to-day |
 | Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–27 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light, ~5% faster / more quantized; Sep 27 **looping** on one host |
 | GLM-5.3-Flash org `#2` vs community 8× | **Needs verify** | `#2` side branch runtime-unverified; `#vllm-rdna` Sep 30 local 0.30 fork ~32 t/s / 320–500 PP on 8× |
 | Host-venv TP=2 cyankiwi 27B AWQ | **Needs verify** | `#vllm-rdna` Sep 26 — one source-build host; 29.5 t/s single / 46.9 t/s ×4 |
@@ -154,6 +154,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 **broken baseline**. Superseded as the gfx1030 path by merged `#24` (next row) |
 | RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. Hub lags |
 | `--kv-offloading-size` RAM parking | **Community / Needs verify** | `#vllm-rdna` Oct 7 — community `--kv-offloading-size 64` (GiB **total** across TP). Storage tier still untested |
+| MTP `draft_sample_method=probabilistic` when temp>0 | **Community** | `#vllm-rdna` Oct 8 — required on current `rdna_extras` MTP-2; greedy/local-argmax is the default |
+| `PLE_OFFLOAD_PREFAULT=0` low-RAM | **Community / Needs verify** | `#vllm-rdna` Oct 8 — ~22–28% slower vs prefault=1 (prose). Unprefixed overlay name; ~1:2 RAM:VRAM OK; 32 GiB + 2× V620 tight |
 | Skinny HIP MoE 9–16 rows `#26` | **Fork-source / Community** | Merged 27 Sep; `VLLM_ROCM_MOE_SKINNY_MAX_M=16`; +11% concurrent regular-text. No single-chat claim |
 | MTP draft graph `30632b2` | **Fork-source** | 27 Sep; +18% / +5% at c=8 1k / 16k; still ~0.87× vs MTP-0 at 16k |
 | Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Static `--prefill-schedule-interval` / `--long-prefill-token-threshold` trade PP for mixed decode. Sep 29: **unset** those flags for max single-stream PP |
@@ -212,7 +214,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
 | Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. Hub lags |
 | MoE expert DRAM cache `#37` | **Needs verify** | Draft `opengfx1030/vllm-rdna#37`; `#vllm-rdna` Oct 4; no gfx1030 tok/s |
-| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8. MTP-2 correctness regression; not a serve recipe |
+| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8–9. MTP-2 correctness regression; vs 0.30 = Qwen4Exp upstream (unchecked). Not a serve recipe |
 
 ### `host-venv.md`
 
@@ -374,9 +376,13 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` prefix cache 0% / `e45dd5cb` | **Fork-source** | `#vllm-rdna` Sep 17 + org extras commit |
 | `troubleshooting/vllm-flash-next.md` `--enable-prompt-tokens-details` | **Community** | `#vllm-rdna` Oct 7 — DeepSeek / Pi harness 0% is missing metadata, not a dead cache |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
-| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; stay on `rdna_extras` |
+| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8–9 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; vs 0.30 = Qwen4Exp upstream (unchecked). Stay on `rdna_extras` |
 | `vllm/recipes.md` TP vs PP llama.cpp mapping | **Community** | `#vllm-rdna` Oct 8 — PP≈layer split, TP≈tensor split; can combine |
 | `troubleshooting/general.md` unused V620 fan pads | **Community** | `#general` Oct 7 — 4-pad footprint; do not use as PWM (100% / no curve) |
+| `vllm/quantization.md` MTP `draft_sample_method` | **Community** | `#vllm-rdna` Oct 8 — `probabilistic` when temperature > 0 |
+| `reference/env-vars.md` `PLE_OFFLOAD_PREFAULT` | **Community / Needs verify** | `#vllm-rdna` Oct 8 — overlay/sidecar name; ~25% slower off; not org extras HEAD |
+| `choose-a-stack.md` / `meta/resources.md` Strata HIP | **Community / Needs verify** | `#general` Oct 7–8 + public `Niko1221/Strata`. 2× V620 0.1.39+#835/#849 PP jump; 3-card behind vLLM. No serve recipe |
+| `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates` |
 | `vllm/recipes.md` 3× MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — public temp repo |
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |

@@ -70,6 +70,7 @@ performance work happens first.
 | [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe) | Community recipe book + GHCR presets (27B/122B; parts pile; concurrent MTP PRs) — [wiki recipes](../vllm/recipes.md) |
 | [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) | Org mirror of the recipe book (`#vllm-rdna`) |
 | [`edwinbrowwn/llama.cpp-rdna2`](https://github.com/edwinbrowwn/llama.cpp-rdna2) | RDNA2/V620 llama.cpp fork — see [overview](../llama-cpp/rdna2-overview.md) |
+| [`Niko1221/Strata`](https://github.com/Niko1221/Strata) | Separate HIP engine (not llama.cpp / vLLM). gfx1030 notes in [`docs/AMD_HIP.md`](https://github.com/Niko1221/Strata/blob/main/docs/AMD_HIP.md). Opt-in `STRATA_HIP_PROMPT_F16=1` (PR **#835**) runs 16-bit prompt GEMMs FP16 I/O on gfx103x. `#general` Oct 7–8: 2× V620 0.1.39 + **#835/#849** ~doubled PP vs 0.1.38; 0.1.40.2 similar with the env on. 3-card: prefill still behind vLLM; decode collapsed with concurrency. **No wiki serve recipe.** |
 | [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench) | Reproducible long-context PP/TG benches (real prompts) — used by `#benchmarks` |
 | [`LMCache/LMCache`](https://github.com/LMCache/LMCache) | KV cache layer (RAM/SSD/remote) — `#lmcache` WIP; use [`lmcache/standalone`](https://hub.docker.com/r/lmcache/standalone) (CPU) + connector. Official kernels **CDNA-only**; hybrid Qwen needs HMA the connector lacks — [troubleshooting](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode) |
 | [`2kiss/flash-attention-rdna2`](https://github.com/2kiss/flash-attention-rdna2) | Independent RDNA2 FlashAttention kernel — `#vllm-rdna` Sep 22–24: **stale**; org target remains in-tree `fa_rdna2` (currently disabled after `#17`) — [fork](../vllm/fork.md#attention) |
@@ -81,6 +82,9 @@ performance work happens first.
 
 - [Unsloth: Qwen3.8-Flash-Next / MTP llama.cpp](https://unsloth.ai/docs/models/qwen3.8-next) —
   public MTP build notes (`#llamacpp` / `#general` Sep 16–17).
+- [`froggeric/Qwen-Fixed-Chat-Templates`](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates)
+  — drop-in Jinja for official Qwen chat templates (`#vllm-rdna` Oct 8; also usable with llama.cpp
+  `--chat-template-file`). Community: fewer empty-think / KV-invalidation stalls. **Needs verify.**
 - [Disabling ECC on Radeon Pro GPUs (lunnova.dev)](https://lunnova.dev/articles/amdgpu-disabling-ecc/) —
   `amdgpu.ras_enable=0` + two reboots; pinned in `#vllm-rdna`. See [Disabling ECC](../tuning/ecc.md).
 - `rocminfo`, `rocm-smi`, `amd-smi`, `clinfo` — GPU visibility, topology, and P2P checks. See

@@ -152,6 +152,7 @@ export VLLM_PLE_QUANT_DIR="$(python -c "from huggingface_hub import snapshot_dow
 
 export VLLM_PLE_CPU_OFFLOAD=1
 export VLLM_PLE_OFFLOAD_READY_TIMEOUT=3600
+# Low-RAM hosts only: PLE_OFFLOAD_PREFAULT=0  (skips RAM prefault; ~25% slower — see env-vars)
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False
 export VLLM_FORCE_CUSTOM_ALL_REDUCE=1   # only if GPU↔GPU P2P works
 export VLLM_USE_V2_MODEL_RUNNER=0

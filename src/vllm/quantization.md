@@ -79,6 +79,18 @@ Merged [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26): concurrent MTP
 can stay on HIP MoE with `VLLM_ROCM_MOE_SKINNY_MAX_M=16`. Default remains **8**. See
 [prefill vs decode](../troubleshooting/vllm.md#prefill-blocks-decode--mtp-stalls-under-concurrency).
 
+`#vllm-rdna` (Oct 8): on current `rdna_extras` MTP-2, if **temperature > 0**, set
+`"draft_sample_method":"probabilistic"` inside `--speculative-config`. The greedy / local-argmax
+draft path (`700753d9`) is the default; non-zero temp without the probabilistic sampler is the
+community-reported miss. Example:
+
+```bash
+--speculative-config '{"method":"mtp","num_speculative_tokens":2,"draft_sample_method":"probabilistic"}'
+```
+
+Same thread: day-to-day `rdna_extras` MTP-2 was **~60–90 t/s** on one host (community; not a
+recipe). Hub `-extras` still lags.
+
 ## INT4 on gfx1030 (no native int4 ALUs)
 
 RDNA2 has no hardware int4 matrix units. The `-extras` W4A16 kernels use **vdot2 on fp16 with on-the-fly
