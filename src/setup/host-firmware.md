@@ -76,9 +76,23 @@ switch** on a **bifurcation** card, guest **Proxmox**.
 
 | Platform | Community note |
 |---|---|
+| **Supermicro H12D** | `#general` (Oct 6 2026): one **H12D** + V620 host looped POST codes **`95, DE, AD, DF, 36, 05, 37`** (reporter thought the card was dead). The combo that then POSTed: **SR-IOV off**, **Above 4G decode on**, **CSM off**, **ReBAR on**. Same thread: **SR-IOV off** was also needed for **4 GPUs per PLX** on that board. **Needs verify** on other H12D BIOS revs — see [below](#supermicro-h12d). |
 | **HP Z4 G4** | Firmware described as **32-bit MMIO** with V620 — BAR / crosstalk pain; dual-CPU Z6/Z8 G4 are a different (more complex) story. `#motherboard` (Sep 16), **Xeon W-2133** host: BIOS **PCIe MIMO Assignment = 32-bit** **and** **ReBAR on**. That 32-bit ceiling would fail to map **64 GB** of VRAM; Linux then **reallocates** with GRUB `pci=realloc=off pci=nocrs iommu=pt amdgpu.aspm=0 amdgpu.gpu_recovery=1`. **Needs verify** on other Z4 BIOS revs. |
 | **ASUS WS-Z270 + ReBAR** | `#motherboard` WIP on **MI50** (not V620). **Above 4G on**, **CSM off**, [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI). One card at 32 GB ReBAR, two cards collapsing to 16 GB / POST code **96** is **not** a gfx1030 recipe. Sep 15: `ReBarState` **> 14** with two 32 GB cards threw code **96**; UEFIPatch hit **PciBus** only, not **PciRootBridge**. Suggested A/B: [GpuMMIOFix](https://github.com/Radi0Glitch/GpuMMIOFix) (OS remap, typically **every boot**) — **Needs verify**. |
 | **Modern desktop (Z690-class, etc.)** | Often POSTs 4× V620 + PLX **without** hidden MMIO patches (community contrast to Precision). |
+
+### Supermicro H12D {#supermicro-h12d}
+
+`#general` (Oct 6 2026): dual-SP3 **H12D** (community also uses **H12D-8D** as a [P2P / bifurcation](../tuning/p2p.md#plx--pcie-switches) host) can fail to POST a V620 with a repeating debug-LED loop. Community first-success set:
+
+1. **SR-IOV** — **disabled** (also reported required for **4 GPUs behind one PLX** on this board).
+2. **Above 4G decode** — **on**.
+3. **CSM** — **off**.
+4. **ReBAR** — **on**.
+
+That is a **menu-level** combo, not the Dell hidden-`mmiohsize` path above. Do not factory-reset /
+clear CMOS after it works — on other boards that re-enables SR-IOV and turns ReBAR off. **Needs
+verify** on other H12D revisions.
 
 BIOS editors and unsigned flashes **void warranty** and can brick the board. Use the vendor
 flashback / recovery path if you have one. This wiki does not publish byte patches.

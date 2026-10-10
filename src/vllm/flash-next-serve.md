@@ -152,6 +152,7 @@ export VLLM_PLE_QUANT_DIR="$(python -c "from huggingface_hub import snapshot_dow
 
 export VLLM_PLE_CPU_OFFLOAD=1
 export VLLM_PLE_OFFLOAD_READY_TIMEOUT=3600
+# Low-RAM hosts only: PLE_OFFLOAD_PREFAULT=0  (skips RAM prefault; ~25% slower — see env-vars)
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False
 export VLLM_FORCE_CUSTOM_ALL_REDUCE=1   # only if GPU↔GPU P2P works
 export VLLM_USE_V2_MODEL_RUNNER=0
@@ -303,6 +304,12 @@ plus a gfx1030 vLLM tree
 [`yiminyuan/vllm` @ `gfx1030/v0.28.0`](https://github.com/yiminyuan/vllm/tree/gfx1030/v0.28.0).
 Publisher intent: **TP=4 / PP=2**. This is **not** Hub `-extras` and **not** wiki-tested. `#llamacpp`
 also mentioned a RDNA2 TP4 DeepSeek-V4 serve (~22 t/s, kernel unpublished) — **Needs verify**.
+
+`#vllm-rdna` (Oct 10): on the current extras / **v0.31** test line, **DeepSeek-V4** is expected to
+run once mixed **prefill/decode stalls** are fixed (suspected **CUDA-graph capture range** too
+narrow). That is **not** a serve recipe yet — stay on the yiminyuan tree or wait for the stall
+fix. **GLM-5.3** on the same fork was asked and **not answered**. See
+[mixed prefill](../troubleshooting/vllm.md#prefill-blocks-decode).
 
 ---
 

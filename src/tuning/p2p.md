@@ -132,8 +132,8 @@ Fedora 43 AMD validation).
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).
-- Workstation hosts that **do not POST** with 4× V620 + PLX (Dell Precision MMIO High / SR-IOV):
-  [Host firmware](../setup/host-firmware.md).
+- Workstation hosts that **do not POST** with V620 + PLX (Dell Precision MMIO High / SR-IOV;
+  **Supermicro H12D** POST loop): [Host firmware](../setup/host-firmware.md).
 - **External PCIe expansion** (`#general`, Sep 2026 — e.g. Cubix Xpander–class enclosures): each
   group of cards may get full-width slots **behind the switch**, while only **one x16** (often
   **PCIe 3.0**) returns to the host. Community: 8× GPU on that pattern was fine at low context but

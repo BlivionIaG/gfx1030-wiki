@@ -110,8 +110,8 @@ VLLM_PLE_QUANT_DIR=/path/to/ples_int4 \
 | `BLOCK_SIZE` | `--block-size`. |
 | `SEQS` | `--max-num-seqs` (default 8). |
 | `MAXBAT` | `--max-num-batched-tokens` (default 2048). |
-| `LPTH` | `--long-prefill-token-threshold`. |
-| `PREFILL_INTERVAL` | `--prefill-schedule-interval`. |
+| `LPTH` | `--long-prefill-token-threshold` (static). Merged [`#36`](https://github.com/opengfx1030/vllm-rdna/pull/36) can self-tune this when `VLLM_RDNA_DYNAMIC_PREFILL=1`. |
+| `PREFILL_INTERVAL` | `--prefill-schedule-interval` (static). Same `#36` controller when the dynamic flag is on. |
 | `KV` | `--kv-cache-memory-bytes`. **Required** (a recipe with no KV budget aborts). |
 | `GMEM` | `--gpu-memory-utilization`. |
 | `COMPILE_MODE` | Compilation `mode` inside `--compilation-config`. |
@@ -143,7 +143,7 @@ Legacy names the entry point still accepts: `MODEL`←`MODEL_PATH`,
 | `auto-tool` | `--enable-auto-tool-choice --tool-call-parser qwen3_coder` |
 | `expert-parallel` | `--enable-expert-parallel` |
 | `trust-remote-code` | `--trust-remote-code` |
-| `prompt-tokens-details` | `--enable-prompt-tokens-details` |
+| `prompt-tokens-details` | `--enable-prompt-tokens-details` — `#vllm-rdna` (Oct 7): DeepSeek / Pi harnesses that always show **0%** cache hits usually lack this metadata flag, not a dead prefix cache. |
 | `vision-cap` | `--limit-mm-per-prompt '{"image":1}'` and `--mm-processor-kwargs '{"max_pixels":1605632}'` |
 
 An unknown token aborts. `vision-cap` is how Flash-Next recipes keep the pixel

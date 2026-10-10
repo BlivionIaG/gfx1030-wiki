@@ -165,6 +165,10 @@ the profile run, skinny GEMM `wvSplitK_hf_sml_<half,…>` (`skinny_gemms`) raise
 `HSA_STATUS_ERROR_EXCEPTION`. **`VLLM_RDNA_DENSE_GEMV=1`** avoided the fault on more than one host.
 It does **not** fix [PP3 corruption](#flash-next-pp3-output-corruption).
 
+`#vllm-rdna` (Oct 6): on a **different** (27B fp16, no-fault) host, **leaving wvSplitK enabled**
+improved decode concurrency vs stacked LLMM1 — [vLLM troubleshooting](./vllm.md#wvsplitk-concurrency).
+Keep `VLLM_RDNA_DENSE_GEMV=1` if you still hit this exception.
+
 The GPU core dumps written on that path are **several GB each** and land in the **process working
 directory** — start the server from a scratch dir (the 4× recipe already `cd`s to `/tmp`).
 
@@ -220,6 +224,12 @@ correctness test (you lose the TTFT win).
 Maintainer: prefix caching **was fixed**, but the **reported** hit rate can stay wrong. A 0%
 counter is not proof the cache is dead — A/B repeat-prompt TTFT. Details:
 [PP3 graph KeyError](#flash-next-pp3-graph-keyerror).
+
+`#vllm-rdna` (Oct 7): a **DeepSeek harness** (and one **Pi** host) showed **0% cache hits** on every
+turn while the server was actually reusing prefix. That is **missing response metadata**, not the
+Sep 17 QSA 0% bug. Pass **`--enable-prompt-tokens-details`** (launcher token
+`prompt-tokens-details` — [serve scripts](../vllm/serve-scripts.md)). Then A/B repeat-prompt TTFT
+before chasing a cache rewrite.
 
 ## FP8 KV rejected on QSA / Flash-Next {#fp8-kv-rejected-on-qsa}
 
