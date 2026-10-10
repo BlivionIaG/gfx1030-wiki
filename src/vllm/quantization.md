@@ -170,9 +170,12 @@ Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker bui
 `#vllm-rdna` (Sep 29): **W4A8** started as an explore path (public
 [`opengfx1030/vllm-rdna#9`](https://github.com/opengfx1030/vllm-rdna/pull/9), `w4a8-wiring` branch).
 `#vllm-rdna` (Oct 1): W4A8 is **in `rdna_extras` HEAD** (`VLLM_RDNA2_W4A8_SDOT4` / serve-script
-`W4A8=1`) but is **not much faster** than W4A16 dequant-on-the-fly. The stated win is **more
-context**, not decode. EXL3 on the same line still **needs optimizations**. **W8A8** was called
-theoretically the fastest int8 layout, not a current recipe. Stay on W4A16 / AWQ for day-to-day.
+`W4A8=1`) but was **not much faster** than W4A16 dequant-on-the-fly — the stated win then was
+**more context**, not decode. `#vllm-rdna` (Oct 9): a later kernel on the **v0.31.0** test line
+was called **somewhat competitive vs W4A16** (27B W4A8 on vs off still running). That is
+**Needs verify**, not a Hub recipe, and **not** a reason to leave day-to-day W4A16 / AWQ.
+EXL3 on the same line still **needs optimizations**. **W8A8** was called theoretically the
+fastest int8 layout, not a current recipe.
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

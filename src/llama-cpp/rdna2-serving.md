@@ -73,7 +73,8 @@ Recent long-context community recipes commonly use `--batch-size 16384 --ubatch-
 - **Qwen chat templates:** `#vllm-rdna` (Oct 8) pointed at
   [`froggeric/Qwen-Fixed-Chat-Templates`](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates)
   as a drop-in `--chat-template-file` when official Qwen Jinja wastes tokens or stalls agents.
-  **Needs verify** — [resources](../meta/resources.md).
+  `#general` (Oct 9): community reports **tool calls** holding up on that Jinja (OG Qwen3.8 +
+  Open WebUI). **Needs verify** — [resources](../meta/resources.md).
 
 ### Full validated example (4× V620, Qwen3.5-122B-A10B-MTP)
 

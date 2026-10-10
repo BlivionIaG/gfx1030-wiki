@@ -114,7 +114,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Prefix cache 0% before `e45dd5cb` | **Fork-source** | `#vllm-rdna` Sep 17 + `opengfx1030/vllm-rdna` commit; TTFT 12.2s → 0.3s |
 | `vllm#55506` port `741e5bc3` | **Fork-source** | V2 mamba spec-decode tables; did not fix V1 0% / `!!!` |
 | 3× leapdragon + org MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — `alanoo81/flashnext-v620-pp3`; ~1078–2493 PP / ~57–63 TG |
-| DeepSeek-V4 Flash INT4 + gfx1030 tree | **Needs verify** | `#vllm-rdna` Sep 17 — `yiminyuan` HF + `gfx1030/v0.28.0`; intended TP=4 PP=2 |
+| DeepSeek-V4 Flash INT4 + gfx1030 tree | **Needs verify** | `#vllm-rdna` Sep 17 — `yiminyuan` HF + `gfx1030/v0.28.0`; intended TP=4 PP=2. Oct 10: extras DSV4 expected after mixed-stall / CUDA-graph-range fix |
 | No Q3 on vLLM Flash-Next | **Community** | `#vllm-rdna` Sep 17 — stay W4A16 / AWQ; EXL3 3bpw experimental |
 | `--no-enable-prefix-caching` KV offload non-starter | **Community** | `#vllm-rdna` Sep 16 — QSA/RAM **weight** packs; still prefer prefix cache. Native KV overflow is `#24`, not this |
 | Intel AutoRound 32–128k ~1296–1393 PP / ~56–73 TG | **Community** | `#vllm-rdna` Sep 16 — 4× V620; pin `4c67bf6…`; int8 decode-shadow quality |
@@ -129,7 +129,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
 | MTP draft unbreak `700753d9` (amdsmi + local-argmax) | **Fork-source** | `rdna_extras` HEAD 25 Sep; MTP-2 boots, **~0.73–0.85×** vs MTP-0 on author 4× host |
 | `rdna_extra/v0.30.0` Qwen4 rebase | **Needs verify** | Branch exists (`#vllm-rdna` Sep 25); tip `f87be4dc` MoE capture-buffer fix. Not the day-to-day Flash-Next line |
-| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. PLE sidecar flag errors; launchers under `tools/rdna/`. `#vllm-rdna` Oct 9: vs 0.30 listed gain is Qwen4Exp upstream (unchecked). Not day-to-day |
+| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. PLE sidecar flag errors; launchers under `tools/rdna/`. `#vllm-rdna` Oct 9: vs 0.30 listed gain is Qwen4Exp upstream (unchecked). Oct 9–10: still aiming at 0.31 default; W4A8 “somewhat competitive”; mixed stall / CUDA-graph range / DSV4 WIP. Not day-to-day |
 | Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–27 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light, ~5% faster / more quantized; Sep 27 **looping** on one host |
 | GLM-5.3-Flash org `#2` vs community 8× | **Needs verify** | `#2` side branch runtime-unverified; `#vllm-rdna` Sep 30 local 0.30 fork ~32 t/s / 320–500 PP on 8× |
 | Host-venv TP=2 cyankiwi 27B AWQ | **Needs verify** | `#vllm-rdna` Sep 26 — one source-build host; 29.5 t/s single / 46.9 t/s ×4 |
@@ -139,6 +139,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#23` PCIe P2P KV disagg prefill/decode | **Needs verify** | Open PR; local PLX-switch split — not a recipe |
 | Flash-Next 6× `PP=3`+`TP=2` / `PP=6` | **Needs verify** | `#vllm-rdna` Sep 24 — min 3 cards; no published 6× table |
 | Qwen3.8-27B fp16 stock 0.29.0 TP4 W6800X Duo | **Community** | `#benchmarks` Sep 24 — 1k–255k ctx, no MTP; ~1394→560 PP / ~29→19 TG |
+| Qwen3.8-27B fp16 vLLM 0.30.0 TP4 W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 512 gen; 1k ~1398 PP / ~66 TG; 255k ~546 / ~32; c=3 1k ~165 agg. Not a V620 recipe |
 | Flash-Next vision pixel cap (`max_pixels=1605632`) | **Fork-source** | `rdna_extras` `scripts/serve_rdna.sh` `vision-cap` (old `serve_gfx1030_flashnext.sh` is an alias); `--limit-mm-per-prompt` alone is not enough |
 | Flash-Next vision ~15–20 s/image + runtime OOM | **Community** | `#vllm-rdna` / `#general` Sep 21 — works with launcher flags; no reserved vision pool; PP3 especially tight |
 | Flash-Next `FULL_AND_PIECEWISE` executes as PIECEWISE on ROCm | **Fork-source (historical)** | Launcher comment 18 Sep 2026 + `#20`-era redirect. **Superseded** on HEAD by `6c26c78d` (`rocm_full_executes_as_piecewise → False`) — prefer `FULL_AND_PIECEWISE` again |
@@ -165,7 +166,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `VLLM_RDNA_MOE_RESIDENT=1` missing tanks Flash-Next PP | **Community** | `#vllm-rdna` Sep 29 — latest extras ~2k → ~1450 PP with resident MoE off; `1` recovered ~2k |
 | EXL3 mul1 port `#32` + HEAD loader | **Fork-source / Needs verify** | `#vllm-rdna` Sep 29–30 + `rdna_extras` 30 Sep–1 Oct — mul1 / K=1..8 **GPU-run** (215/215 tests; 27B 3.00 bpw TP=4 graphs). Author-host `74315f4` 1k/512 ~18.9 / ~81.8 t/s; 16k/1k ~13.7 t/s / ~830 PP. Not Hub. Oct 2: HEAD **mul1-tested only**; 3inst untested |
 | GLM-5.3-Flash AWQ 8× TP=8 ~32 t/s / 320–500 PP | **Community / Needs verify** | `#vllm-rdna` Sep 30 — `wtdcode/GLM-5.3-Flash-AWQ-W4A16` on a **local 0.30 fork**; 262k + vision; org `#2` still unverified side branch |
-| W4A8 not faster than W4A16 dequant | **Needs verify** | `#vllm-rdna` Sep 29 explore `#9`; Oct 1: **in HEAD** (`W4A8=1`) but still not much faster — context room, not decode |
+| W4A8 vs W4A16 | **Needs verify** | `#vllm-rdna` Sep 29 explore `#9`; Oct 1: **in HEAD** (`W4A8=1`) not much faster (context room). Oct 9: 0.31-line kernel called **somewhat competitive vs W4A16** — not a recipe |
 | FA-RDNA2 `#28` / split-decode `#29` | **Needs verify** | `#28` merged 28 Sep **without gfx1030 GPU runs**; `#29` draft, stacked, also untested |
 | Two-shot `rdna_ar` `#22` | **Fork-source** | Merged 27 Sep; library default still off; A/B topology |
 | `vllm#57160` private pinned CPU KV tensors | **Needs verify** | `#vllm-rdna` Sep 20 — mainline ROCm; gfx1030 follow-through is merged `#24`, not this PR alone |
@@ -214,7 +215,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
 | Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. Hub lags |
 | MoE expert DRAM cache `#37` | **Needs verify** | Draft `opengfx1030/vllm-rdna#37`; `#vllm-rdna` Oct 4; no gfx1030 tok/s |
-| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8–9. MTP-2 correctness regression; vs 0.30 = Qwen4Exp upstream (unchecked). Not a serve recipe |
+| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8–10. MTP-2 correctness regression; vs 0.30 = Qwen4Exp upstream (unchecked). W4A8 / mixed-stall CUDA-graph range / DSV4 WIP. Not a serve recipe |
 
 ### `host-venv.md`
 
@@ -357,6 +358,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
 | `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
 | `troubleshooting/llama-cpp.md` RADV crash / AMDVLK slow | **Community** | `#llamacpp` — prefer ROCm for TP |
+| `troubleshooting/llama-cpp.md` Windows Unsloth Vulkan | **Needs verify** | `#general` Oct 10 — 2× V620 Q8 ~12–13 t/s |
 | `troubleshooting/llama-cpp.md` FA `max_blocks_per_sm` abort | **Community** | head-256 occupancy 0 on gfx1030; q8 KV needs FA |
 | `troubleshooting/llama-cpp.md` DAX mmap SVM oops | **Community** | `--no-mmap` mandatory on `dax=always` |
 | `troubleshooting/general.md` CPU governor / unsupported AMDGPU punt | **Community** | Flash-Next PP; Polaris/WX4100-in-box ROCm skip; unbind > ROCR_VISIBLE alone |
@@ -376,13 +378,19 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` prefix cache 0% / `e45dd5cb` | **Fork-source** | `#vllm-rdna` Sep 17 + org extras commit |
 | `troubleshooting/vllm-flash-next.md` `--enable-prompt-tokens-details` | **Community** | `#vllm-rdna` Oct 7 — DeepSeek / Pi harness 0% is missing metadata, not a dead cache |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
-| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8–9 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; vs 0.30 = Qwen4Exp upstream (unchecked). Stay on `rdna_extras` |
+| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8–10 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; vs 0.30 = Qwen4Exp upstream (unchecked). Oct 9–10 W4A8 / CUDA-graph range / DSV4 WIP. Stay on `rdna_extras` |
+| `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
+| `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line; still not a Hub recipe |
+| `troubleshooting/vllm.md` mixed stall / CUDA-graph range | **Needs verify** | `#vllm-rdna` Oct 9–10 — no public flag; DSV4 expected after |
+| `vllm/flash-next-serve.md` DSV4 on extras WIP | **Needs verify** | `#vllm-rdna` Oct 10 — will work after stall fix; stay on yiminyuan tree |
+| `llama-cpp/rdna2-serving.md` froggeric tool calls | **Needs verify** | `#general` Oct 9 — OG Qwen3.8 + Open WebUI |
+| `troubleshooting/llama-cpp.md` Windows Unsloth Vulkan | **Needs verify** | `#general` Oct 10 — 2× V620 Q8 ~12–13 t/s; check both GPUs / Q4_0 |
 | `vllm/recipes.md` TP vs PP llama.cpp mapping | **Community** | `#vllm-rdna` Oct 8 — PP≈layer split, TP≈tensor split; can combine |
 | `troubleshooting/general.md` unused V620 fan pads | **Community** | `#general` Oct 7 — 4-pad footprint; do not use as PWM (100% / no curve) |
 | `vllm/quantization.md` MTP `draft_sample_method` | **Community** | `#vllm-rdna` Oct 8 — `probabilistic` when temperature > 0 |
 | `reference/env-vars.md` `PLE_OFFLOAD_PREFAULT` | **Community / Needs verify** | `#vllm-rdna` Oct 8 — overlay/sidecar name; ~25% slower off; not org extras HEAD |
 | `choose-a-stack.md` / `meta/resources.md` Strata HIP | **Community / Needs verify** | `#general` Oct 7–8 + public `Niko1221/Strata`. 2× V620 0.1.39+#835/#849 PP jump; 3-card behind vLLM. No serve recipe |
-| `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates` |
+| `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates`; `#general` Oct 9 tool calls |
 | `vllm/recipes.md` 3× MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — public temp repo |
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |
 | `setup/hardware.md` no NVIDIA+V620 TP | **Community** | `#general` Sep 17 — mixed prefill collapsed |
@@ -398,7 +406,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `llama-cpp/rdna2-serving.md` LocalAI AD-4.27 YAML | **Community** | `#llamacpp` Sep 30 — 2×; context 229376 |
 | `llama-cpp/rdna2-speculative.md` Swift GSQ-RCO GGUF | **Community** | `#llamacpp` Sep 30 — ~400/40 on 2× MTP; Oct 2 IQ3_XXS ~800→650 / ~35→20 |
 | `llama-cpp/rdna2-serving.md` Swift IQ3_XXS llama-server | **Community** | `#llamacpp` Oct 2 — 2×; paths generalized |
-| `vllm/quantization.md` EXL3 mul1-only + W4A8 in HEAD | **Community / Needs verify** | `#vllm-rdna` Oct 1–2 — 3inst untested; W4A8 not a speed win |
+| `vllm/quantization.md` EXL3 mul1-only + W4A8 in HEAD | **Community / Needs verify** | `#vllm-rdna` Oct 1–2 — 3inst untested; Oct 1 W4A8 not a speed win; Oct 9 0.31-line kernel more competitive (**Needs verify**) |
 | `vllm/serve-scripts.md` TunableOp 4-card / 8× local rows | **Community** | `#vllm-rdna` Oct 1 — 783-row set is 4-card 7.14; other rocBLAS needs local tune |
 | `setup/hardware.md` ComfyUI / image-video bf16 | **Community** | `#general` Sep 28 — no native BF16; HIP emulates; prefer fp16/int8 |
 | `troubleshooting/vllm.md` `vllm#57160` pinned CPU KV | **Needs verify** | `#vllm-rdna` Sep 20 — mainline; `#24` is the fork follow-through |

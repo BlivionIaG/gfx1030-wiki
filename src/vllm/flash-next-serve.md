@@ -305,6 +305,12 @@ plus a gfx1030 vLLM tree
 Publisher intent: **TP=4 / PP=2**. This is **not** Hub `-extras` and **not** wiki-tested. `#llamacpp`
 also mentioned a RDNA2 TP4 DeepSeek-V4 serve (~22 t/s, kernel unpublished) — **Needs verify**.
 
+`#vllm-rdna` (Oct 10): on the current extras / **v0.31** test line, **DeepSeek-V4** is expected to
+run once mixed **prefill/decode stalls** are fixed (suspected **CUDA-graph capture range** too
+narrow). That is **not** a serve recipe yet — stay on the yiminyuan tree or wait for the stall
+fix. **GLM-5.3** on the same fork was asked and **not answered**. See
+[mixed prefill](../troubleshooting/vllm.md#prefill-blocks-decode).
+
 ---
 
 ## Related

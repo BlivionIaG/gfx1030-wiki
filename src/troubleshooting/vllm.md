@@ -220,6 +220,11 @@ Community notes (`#vllm-rdna`):
   `VLLM_ROCM_MOE_SKINNY_MAX_M=16` (default stays **8**). PR regular-text c=3: **~47 → ~52 t/s**
   aggregate (**+11%**). **No single-chat gain.** Coding-suite quality still failed
   `dominant_repeated_token` — do not treat as a quality fix.
+- `#vllm-rdna` (Oct 9–10): on the **v0.31** test line, mixed **prefill/decode still stalls**
+  (per-request, then hangs). Maintainer: the fix looks like **widening CUDA-graph capture
+  range**; **c=8** also looked wrong on that host. **DeepSeek-V4** is expected to work after
+  that lands. **Needs verify** — no public flag / endpoint list yet; do not invent
+  `compile_ranges_endpoints`. Day-to-day stays on `rdna_extras` HEAD.
 
 ## wvSplitK vs stacked LLMM1 (concurrency) {#wvsplitk-concurrency}
 
@@ -245,6 +250,35 @@ Same host at **240k** context: c=1 **~20.2**, c=2 **~36.8**, c=3 **~44.2** (c=4 
 MTP layout: **~48 t/s** single-stream and **~70 t/s** across two instances (community: scales
 better than stock 3.8 27B). **Not** the Flash-Next Swift packs — two-card Flash-Next fit is still
 unconfirmed. **Community / Needs verify.** See [recipes](../vllm/recipes.md#host-venv-tp2-qwen38-27b-awq).
+
+## W6800X Duo ALU 0.9.4 (community, 0.30 MTP-2) {#w6800x-duo-alu-093}
+
+`#benchmarks` (Oct 10): same **gfx1030** class as V620 — **4× W6800X Duo**, vLLM **0.30.0**
+**TP=4**, **Qwen3.8-27B fp16** (no quant), **ALU 0.9.4**, **512** generated tokens. **Community**,
+not wiki-tested, **not** a V620 serve recipe. Contrast the Sep 24 **0.29.0 / MTP-0** row
+(~29 → ~19 TG, ~1394 → ~560 PP) in [Verification](../reference/verification.md).
+
+**Concurrency 1**, APC off, **MTP-2**:
+
+| Context | Community PP t/s | Community decode t/s |
+|---|---:|---:|
+| 1k | ~1398 | ~66.2 |
+| 16k | ~1366 | ~57.8 |
+| 64k | ~1042 | ~55.2 |
+| 128k | ~812 | ~43.5 |
+| 255k | ~546 | ~31.8 |
+
+**APC on**, **MTP-2** (per-stream / aggregate decode):
+
+| Context | c=2 | c=3 |
+|---|---|---|
+| 1k | ~62 / ~122 | ~57 / ~165 |
+| 16k | ~56 / ~111 | ~51 / ~147 |
+| 64k | ~44 / ~83 | ~35 / ~97 |
+| 255k | ~22 / ~42 | ~14 / ~40 |
+
+Prefill on the c=1 table stays in the **~1400–550** band of the older 0.29 no-MTP run; MTP-2
+is the decode jump. **Needs verify** on V620.
 
 ## Native vLLM KV RAM offload {#upstream-kv-offload-tanks-decode}
 

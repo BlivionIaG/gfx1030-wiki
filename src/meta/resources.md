@@ -84,7 +84,8 @@ performance work happens first.
   public MTP build notes (`#llamacpp` / `#general` Sep 16–17).
 - [`froggeric/Qwen-Fixed-Chat-Templates`](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates)
   — drop-in Jinja for official Qwen chat templates (`#vllm-rdna` Oct 8; also usable with llama.cpp
-  `--chat-template-file`). Community: fewer empty-think / KV-invalidation stalls. **Needs verify.**
+  `--chat-template-file`). Community: fewer empty-think / KV-invalidation stalls. `#general`
+  (Oct 9): tool calls holding up (OG Qwen3.8 + Open WebUI). **Needs verify.**
 - [Disabling ECC on Radeon Pro GPUs (lunnova.dev)](https://lunnova.dev/articles/amdgpu-disabling-ecc/) —
   `amdgpu.ras_enable=0` + two reboots; pinned in `#vllm-rdna`. See [Disabling ECC](../tuning/ecc.md).
 - `rocminfo`, `rocm-smi`, `amd-smi`, `clinfo` — GPU visibility, topology, and P2P checks. See
