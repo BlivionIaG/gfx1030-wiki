@@ -140,7 +140,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Flash-Next 6× `PP=3`+`TP=2` / `PP=6` | **Needs verify** | `#vllm-rdna` Sep 24 — min 3 cards; no published 6× table |
 | Qwen3.8-27B fp16 stock 0.29.0 TP4 W6800X Duo | **Community** | `#benchmarks` Sep 24 — 1k–255k ctx, no MTP; ~1394→560 PP / ~29→19 TG |
 | Qwen3.8-27B fp16 vLLM 0.30.0 TP4 W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 512 gen; 1k ~1398 PP / ~66 TG; 255k ~546 / ~32; c=3 1k ~165 agg. Not a V620 recipe |
-| Flash-Next vision pixel cap (`max_pixels=1605632`) | **Fork-source** | `rdna_extras` `scripts/serve_rdna.sh` `vision-cap` (old `serve_gfx1030_flashnext.sh` is an alias); `--limit-mm-per-prompt` alone is not enough |
+| Flash-Next vision pixel cap (`max_pixels=1605632`) | **Fork-source** | `rdna_extras` `tools/rdna/serve_rdna.sh` `vision-cap` (old `serve_gfx1030_flashnext.sh` is an alias); `--limit-mm-per-prompt` alone is not enough |
 | Flash-Next vision ~15–20 s/image + runtime OOM | **Community** | `#vllm-rdna` / `#general` Sep 21 — works with launcher flags; no reserved vision pool; PP3 especially tight |
 | Flash-Next `FULL_AND_PIECEWISE` executes as PIECEWISE on ROCm | **Fork-source (historical)** | Launcher comment 18 Sep 2026 + `#20`-era redirect. **Superseded** on HEAD by `6c26c78d` (`rocm_full_executes_as_piecewise → False`) — prefer `FULL_AND_PIECEWISE` again |
 | QSA fused MTP-3 draft decode no gain | **Needs verify** | `#vllm-rdna` Sep 20 — one host; prefill held ~2k |
@@ -239,14 +239,16 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| `scripts/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `rdna_extras` `scripts/serve_rdna.sh` and the five alias headers |
-| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `27b-awq` / `27b-exl3` / `full`) | **Fork-source** | `scripts/recipes/*.env` on `rdna_extras` |
+| `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
+| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env` |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
+| Flash-Next recipes on v0.31 use upstream Engram PLE; fork INT4 PLE sidecar unwired (reintro in progress) | **Community** | Recipe headers + `#vllm-rdna` Oct 11 |
+| Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
 | `PRINT=1` prints env, command, and TunableOp profile and does not launch | **Fork-source** | `serve_rdna.sh` header; `RECIPE` is an argument, `MODEL` and `VENV` stay required |
 | TunableOp auto-select by `librocblas.so.5` hash; `TUNABLEOP_PROFILE` mismatch aborts | **Fork-source** | `tunableop/README.md` + `profiles.json` + `tools/rdna2_028/tunableop_env.sh`: `rocm7.14-rocblas5.5` (783 rows, `f30bb442e9b5`), `rocm10-rocblas5.6` (70, `c27e2252cc7a`) |
 | ROCm 10 / rocBLAS 5.6 needs no launcher change; 70-row profile is thin | **Fork-source** | Same helper. Untuned GEMMs use the rocBLAS heuristic. Validated serve numbers are gfx1030 + ROCm 7.14. Extend rows with `tunableop_rows_pipeline.sh` + `verify_tunableop_lookup.py` |
-| 27B EXL3 recipe defaults `EAGER=1` and `HIP_VISIBLE_DEVICES=4,5,6,7` | **Fork-source** | `scripts/recipes/27b-exl3.env` (bring-up; second PLX on an 8-GPU chassis) |
-| Launcher is foreground (`exec`); stale kill is scoped to `VLLM_CACHE_ROOT` | **Fork-source** | `serve_rdna.sh` + `rdna_kill_stale` in `scripts/rdna_launcher_common.sh` |
+| 27B EXL3 recipe defaults `EAGER=1` and `HIP_VISIBLE_DEVICES=4,5,6,7` | **Fork-source** | `tools/rdna/recipes/27b-exl3.env` (bring-up; second PLX on an 8-GPU chassis) |
+| Launcher is foreground (`exec`); stale kill is scoped to `VLLM_CACHE_ROOT` | **Fork-source** | `serve_rdna.sh` + `rdna_kill_stale` in `tools/rdna/rdna_launcher_common.sh` |
 
 ---
 

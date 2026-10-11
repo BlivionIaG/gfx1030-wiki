@@ -74,7 +74,7 @@ Current registry (`profiles.json` on `rdna_extras`):
 | `rocm7.14-rocblas5.5/` | `f30bb442e9b5` | 783 | Canonical serving build (Flash-Next, 27B AWQ, EXL3 27B) |
 | `rocm10-rocblas5.6/` | `c27e2252cc7a` | 70 | Thin. Tuned shapes only; other GEMMs use the rocBLAS heuristic |
 
-`scripts/serve_rdna.sh` auto-selects the profile whose hash matches the loaded
+`tools/rdna/serve_rdna.sh` auto-selects the profile whose hash matches the loaded
 library. A ROCm 10 venv on rocBLAS 5.6 (`c27e2252cc7a`) already picks
 `rocm10-rocblas5.6` — no launcher change. Untuned shapes stay on the heuristic
 until that host runs a capture campaign and registers the new rows.

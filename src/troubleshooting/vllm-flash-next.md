@@ -137,7 +137,7 @@ This does **not** replace [PP3 corruption](#flash-next-pp3-output-corruption). H
 can still use `FULL_AND_PIECEWISE` — see [Configuration](../vllm/configuration.md#cuda-graphs-preferred-over---enforce-eager).
 Sanitized serve line: [Flash-Next PIECEWISE recipe](../vllm/flash-next-serve.md#flash-next-4x-piecewise).
 
-The in-tree Flash-Next launcher (`scripts/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) used
+The in-tree Flash-Next launcher (`tools/rdna/serve_gfx1030_flashnext.sh`, comment 18 Sep 2026) used
 `FULL_AND_PIECEWISE` and stated that mode **executed as PIECEWISE on ROCm**
 (`rocm_full_executes_as_piecewise`). It also attributed an earlier “corrupts at c=8” report to
 **probe artifacts** (reasoning-parser field / reasoning-budget), not the graphs.
