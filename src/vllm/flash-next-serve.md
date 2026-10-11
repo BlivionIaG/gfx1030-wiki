@@ -14,16 +14,21 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 - **In-tree launcher:** [`tools/rdna/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext` (production tools/reasoning) or `RECIPE=flashnext-mtp2` / `flashnext-mtp0`. The old `tools/rdna/serve_gfx1030_flashnext.sh` name is a thin alias of `RECIPE=flashnext`. `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions at that file. Do **not** copy host paths out of the tree. Prefer the recipe over agent-generated env dumps — drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` and do **not** force `VLLM_RDNA_FUSED_HC=0` on Flash-Next (`#vllm-rdna` Oct 10).
 - **Published container / docs (may lag):** [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) — [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2). `#vllm-rdna` Oct 10: no Flash-Next image yet; next bake targets **ROCm 7.14** after validation.
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
-- PLE / n-gram: on **v0.31** recipes use **upstream** `EngramConfig.cpu_offload` (default). The fork INT4
-  sidecar path (`VLLM_PLE_QUANT_DIR` / `VLLM_PLE_CPU_OFFLOAD`) is **unwired** on that branch;
-  `#vllm-rdna` (Oct 11): INT4 support is being **reintroduced**. Older tip notes for
-  `VLLM_PLE_QUANT_DIR` + [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
-  still describe the 0.28 / sidecar era — re-check after the INT4 land.
+- PLE / n-gram: recipes default to **upstream** `EngramConfig.cpu_offload` (**BF16** table).
+  [`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) **merged** 11 Oct 2026 into `rdna_extras`:
+  `VLLM_PLE_QUANT_DIR=/path/to/ples_int4`
+  ([`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant))
+  loads **INT4 group-16** on that same upstream path (unset = BF16 unchanged). Old
+  `VLLM_PLE_CPU_OFFLOAD=1` still **errors** on v0.31. `#vllm-rdna` (Oct 11): **on-disk mmap
+  load is still in progress**. Cherry-pick onto `rdna_extra/v0.31.0` **Needs verify**.
 
-Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class). On older tip
-`700753d9` (0.28), PLE was a **CPU sidecar** (`VLLM_PLE_CPU_OFFLOAD=1`): default loads the full table into
-**host RAM** then gather → pinned H2D; **`VLLM_PLE_QUANT_DIR`** `mmap`s INT4 shards from disk
-(`MADV_RANDOM`) so only the gather/dequant working set hits RAM. That is **weight** offload, not
+Expect large **host DRAM** for the n-gram / PLE store. `#49` author table (4× V620, Flash-Next
+W4A16, TP=4, `FULL_AND_PIECEWISE`): BF16 peak **~160 GB**; INT4 peak **~90 GB** (MTP-0) /
+**~95 GB** (MTP-2); INT4 table **30 GB** total in pinned storage. On older tip `700753d9` (0.28),
+PLE was a **CPU sidecar** (`VLLM_PLE_CPU_OFFLOAD=1`): default loads the full table into **host RAM**
+then gather → pinned H2D; **`VLLM_PLE_QUANT_DIR`** `mmap`s INT4 shards from disk (`MADV_RANDOM`) so
+only the gather/dequant working set hits RAM. `#49` is the upstream-path replacement, **not** that
+mmap sidecar — `#vllm-rdna` (Oct 11) says on-disk load is still WIP. That is **weight** offload, not
 KV. Native **KV RAM overflow** was broken on one 4× host (Sep 14: **128 GB** not enough); the
 fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
 [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).

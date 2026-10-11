@@ -179,9 +179,12 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 
 **Gotchas** (do not treat as a drop-in Hub image):
 
-- Known-good PLE is the **embedded BF16** n-gram table (~**95 GiB** tensor data) with
-  `--engram-config '{"cpu_offload":true}'`. **Quantized CPU PLE** (group-16 INT4 sidecar) is **not**
-  end-to-end validated; `#vllm-rdna` saw **incoherent** generation on that path.
+- Default PLE is still the **embedded BF16** n-gram table (~**95 GiB** tensor data) with
+  `--engram-config '{"cpu_offload":true}'`. The historical **group-16 INT4 sidecar** was **not**
+  end-to-end validated (`#vllm-rdna` saw **incoherent** generation on that older path). Merged
+  [`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) (11 Oct, `rdna_extras`) is a different
+  opt-in: `VLLM_PLE_QUANT_DIR` INT4 on the **upstream** PLE path (author gates PASS; PPL 4.83 vs
+  4.80 BF16). Treat `#49` tok/s as **Fork-source / Needs verify**. Hub images do not have it.
 - `--max-num-batched-tokens 2048` + chunked prefill was the suspected cause of the **128k PP cliff**.
   Raise to **4096** (or see [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-128k-prefill-cliff)).
 - Concurrent varlen GDN prefill still has a fork kernel addressing bug

@@ -84,7 +84,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Intel AutoRound Flash-Next ~962 PP / ~41–56 decode | **Community** | `#vllm-rdna` Sep 10–11 + draft `opengfx1030/vllm-rdna#5`; 4× V620; dirty PR |
 | `--max-num-batched-tokens 4096` fixes 128k PP cliff | **Community** | `#vllm-rdna` Sep 11 — 375 → ~950 PP; A/B on your scheduler |
 | Intel AutoRound ~75 GB / BF16 PLE ~95 GiB | **Community** | Publisher checkpoint + PR validation notes |
-| Quantized group-16 INT4 PLE incoherent | **Needs verify** | `#vllm-rdna` — not the published PR path (BF16 PLE) |
+| Quantized group-16 INT4 PLE incoherent | **Needs verify** | Historical `#vllm-rdna` sidecar path — not `#49`. Known-good AutoRound benches used BF16 PLE |
 | GDN varlen second-seq output bug | **Fork-source** | `gdn_prefill_o_rdna2.cu` in draft PR #5; concurrent prefill |
 | Recipe ports / Hybrid gfx10 opt-in | **Needs verify** | Draft `opengfx1030/vllm-rdna#6` — RDNA2 stays auto default |
 | vLLM 0.29 defaults V2 runner | **Community** | `#vllm-rdna` Sep 11; Hub day-to-day still 0.27.1; Sep 18 `rdna_extra/v0.29.0` rebase |
@@ -129,7 +129,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
 | MTP draft unbreak `700753d9` (amdsmi + local-argmax) | **Fork-source** | `rdna_extras` HEAD 25 Sep; MTP-2 boots, **~0.73–0.85×** vs MTP-0 on author 4× host |
 | `rdna_extra/v0.30.0` Qwen4 rebase | **Needs verify** | Branch exists (`#vllm-rdna` Sep 25); tip `f87be4dc` MoE capture-buffer fix. Not the day-to-day Flash-Next line |
-| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. PLE sidecar flag errors; launchers under `tools/rdna/`. `#vllm-rdna` Oct 9: vs 0.30 listed gain is Qwen4Exp upstream (unchecked). Oct 9–10: still aiming at 0.31 default; W4A8 “somewhat competitive”; mixed stall / CUDA-graph range / DSV4 WIP. Not day-to-day |
+| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. Old PLE sidecar flag errors; `#49` INT4 landed on `rdna_extras` first. `#vllm-rdna` Oct 9: vs 0.30 listed gain is Qwen4Exp upstream (unchecked). Oct 9–10: still aiming at 0.31 default; W4A8 “somewhat competitive”; mixed stall / CUDA-graph range / DSV4 WIP. Not day-to-day |
 | Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–27 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light, ~5% faster / more quantized; Sep 27 **looping** on one host |
 | GLM-5.3-Flash org `#2` vs community 8× | **Needs verify** | `#2` side branch runtime-unverified; `#vllm-rdna` Sep 30 local 0.30 fork ~32 t/s / 320–500 PP on 8× |
 | Host-venv TP=2 cyankiwi 27B AWQ | **Needs verify** | `#vllm-rdna` Sep 26 — one source-build host; 29.5 t/s single / 46.9 t/s ×4 |
@@ -215,7 +215,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
 | Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. Hub lags |
 | MoE expert DRAM cache `#37` | **Needs verify** | Draft `opengfx1030/vllm-rdna#37`; `#vllm-rdna` Oct 4; no gfx1030 tok/s |
-| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8–10. MTP-2 correctness regression; vs 0.30 = Qwen4Exp upstream (unchecked). W4A8 / mixed-stall CUDA-graph range / DSV4 WIP. Not a serve recipe |
+| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8–11. MTP-2 correctness regression; vs 0.30 = Qwen4Exp upstream (unchecked). W4A8 / mixed-stall CUDA-graph range / DSV4 WIP. INT4 PLE landed on `rdna_extras` `#49` first — v0.31 cherry-pick unchecked. Not a serve recipe |
 
 ### `host-venv.md`
 
@@ -242,7 +242,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
 | Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env` |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
-| Flash-Next recipes on v0.31 use upstream Engram PLE; fork INT4 PLE sidecar unwired (reintro in progress) | **Community** | Recipe headers + `#vllm-rdna` Oct 11 |
+| Flash-Next `#49` INT4 PLE on upstream path | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#49` (11 Oct) into `rdna_extras`. `VLLM_PLE_QUANT_DIR` INT4 group-16; unset = BF16. Author 4× V620: speed at parity, host RAM −65–70 GB. `#vllm-rdna` Oct 11: on-disk mmap still WIP. v0.31 cherry-pick + Hub **Needs verify** |
 | Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
 | `PRINT=1` prints env, command, and TunableOp profile and does not launch | **Fork-source** | `serve_rdna.sh` header; `RECIPE` is an argument, `MODEL` and `VENV` stay required |
 | TunableOp auto-select by `librocblas.so.5` hash; `TUNABLEOP_PROFILE` mismatch aborts | **Fork-source** | `tunableop/README.md` + `profiles.json` + `tools/rdna2_028/tunableop_env.sh`: `rocm7.14-rocblas5.5` (783 rows, `f30bb442e9b5`), `rocm10-rocblas5.6` (70, `c27e2252cc7a`) |
@@ -338,7 +338,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Area | Status | Notes |
 |---|---|---|
 | `reference/env-vars.md` tables | **Community** | Cheat-sheet; not exhaustive upstream API |
-| `VLLM_PLE_QUANT_DIR` mmap INT4 shards (`700753d9`) | **Community** | `#vllm-rdna` Sep 26 — default PLE is full table in RAM + H2D; quant dir `mmap`s shards |
+| `VLLM_PLE_QUANT_DIR` INT4 (`#49` / older mmap) | **Fork-source / Community** | `#49` (11 Oct) on `rdna_extras`: INT4 into upstream pinned storage. Older `700753d9` `mmap`s shards. `#vllm-rdna` Oct 11: on-disk load still WIP |
 | `troubleshooting/vllm.md` graph fix | **Fork-source** | Same image-lag caveat |
 | `troubleshooting/vllm.md` AMDSMI / missing `render` | **Community** | `#vllm-rdna` Docker compose |
 | `tuning/power.md` Fedora path | **Solid** | From `v620_toolbox` powertuning |
@@ -380,7 +380,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` prefix cache 0% / `e45dd5cb` | **Fork-source** | `#vllm-rdna` Sep 17 + org extras commit |
 | `troubleshooting/vllm-flash-next.md` `--enable-prompt-tokens-details` | **Community** | `#vllm-rdna` Oct 7 — DeepSeek / Pi harness 0% is missing metadata, not a dead cache |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
-| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8–10 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; vs 0.30 = Qwen4Exp upstream (unchecked). Oct 9–10 W4A8 / CUDA-graph range / DSV4 WIP. Stay on `rdna_extras` |
+| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8–11 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; vs 0.30 = Qwen4Exp upstream (unchecked). Oct 9–10 W4A8 / CUDA-graph range / DSV4 WIP. INT4 PLE is `#49` on `rdna_extras` first |
+| `vllm/fork.md` INT4 PLE `#49` | **Fork-source / Needs verify** | `#vllm-rdna` Oct 11 + merged `opengfx1030/vllm-rdna#49`. Upstream-path INT4 via `VLLM_PLE_QUANT_DIR`. On-disk mmap still WIP. Not Hub |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
 | `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line; still not a Hub recipe |
 | `troubleshooting/vllm.md` mixed stall / CUDA-graph range | **Needs verify** | `#vllm-rdna` Oct 9–10 — no public flag; DSV4 expected after |

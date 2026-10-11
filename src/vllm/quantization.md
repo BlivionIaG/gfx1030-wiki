@@ -194,8 +194,10 @@ Community take: Intel AutoRound sits **between Unsloth Q5_XL and Q6_XL** on qual
 weight pack is tens of GB smaller (~**75 GB**). That still wants **four 32 GB** cards plus a
 large **CPU PLE / n-gram** table (embedded BF16 table is ~**95 GiB** — offload to RAM).
 
-Do **not** assume group-16 INT4 PLE sidecars match the published benches. See
-[overview](flash-next.md#intel-autoround-flash-next).
+Do **not** assume the historical group-16 INT4 PLE **sidecar** matches published AutoRound benches
+(those used BF16 PLE). Merged [`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) (11 Oct) is
+the **upstream-path** INT4 opt-in (`VLLM_PLE_QUANT_DIR`) on `rdna_extras` — different from that
+sidecar. See [overview](flash-next.md#intel-autoround-flash-next).
 
 `#vllm-rdna` (Sep 20): merged [`opengfx1030/vllm-rdna#15`](https://github.com/opengfx1030/vllm-rdna/pull/15)
 used this Intel AutoRound pack with the **unquantized / original BF16** PLE table (~**100 GB** class

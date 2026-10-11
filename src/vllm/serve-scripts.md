@@ -51,13 +51,20 @@ Copy one and change only the deltas to add a config.
 
 ### PLE / n-gram on current recipes
 
-On the **v0.31** line, Flash-Next recipes rely on **upstream** `EngramConfig.cpu_offload`
-(pinned host / UVA) for the n-gram table. The fork’s older INT4 PLE sidecar
-(`VLLM_PLE_CPU_OFFLOAD` / `VLLM_PLE_QUANT_DIR`) is **not wired** on that branch —
-`#vllm-rdna` (Oct 11): maintainer skipped it when upstream PLE landed, and is
-**reintroducing INT4** support. Do not copy a stale `VLLM_PLE_QUANT_DIR=…/ples_int4`
-requirement from older wiki lines onto a fresh `tools/rdna/recipes/flashnext*.env`.
-Expect large **host DRAM** either way. See [Flash-Next serve lines](flash-next-serve.md).
+Flash-Next recipes still default to **upstream** `EngramConfig.cpu_offload` (pinned
+host / UVA) for the **BF16** n-gram table. The old fork sidecar
+(`VLLM_PLE_CPU_OFFLOAD=1`) **errors** on the v0.31 line.
+
+[`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) **merged** 11 Oct 2026 into
+`rdna_extras`: set `VLLM_PLE_QUANT_DIR=/path/to/ples_int4`
+([`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant))
+to serve that table as **INT4 group-16** on the **upstream** PLE path. Unset = no
+change (BF16). Each rank loads its rows into upstream pinned storage (**30 GB**
+table total; PR host-RAM peak **~90–95 GB** vs **~160 GB** BF16). Speed called
+**at parity** with BF16 (**Fork-source / Needs verify**). `#vllm-rdna` (Oct 11):
+**on-disk mmap load is still in progress** — this is not the older `700753d9`
+mmap-only working set. Cherry-pick onto `rdna_extra/v0.31.0` / `#47` is **Needs
+verify**. Hub images do not have this. See [Flash-Next serve lines](flash-next-serve.md).
 
 ### Do not paste these onto Flash-Next
 

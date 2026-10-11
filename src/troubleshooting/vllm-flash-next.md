@@ -50,8 +50,10 @@ KV, CPU PLE offload). See [overview](../vllm/flash-next.md#intel-autoround-flash
 If output is **wrong** rather than just slow, stay on **2048** and switch graphs to **PIECEWISE**
 first — [FULL-graph corruption](#flash-next-full-graph-corruption).
 
-If 128k is still slow after 4096, A/B [V2 runner](#flash-next-long-prompt-stalls) and confirm you
-are not on quantized PLE (known-good is the embedded BF16 n-gram table).
+If 128k is still slow after 4096, A/B [V2 runner](#flash-next-long-prompt-stalls). Default PLE is
+the embedded **BF16** n-gram table. Historical INT4 **sidecar** paths were the incoherent ones;
+merged [`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) INT4 on the upstream path is
+opt-in via `VLLM_PLE_QUANT_DIR` (`rdna_extras` HEAD, not Hub).
 
 ## Flash-Next PP3 output corruption on `rdna_extras` {#flash-next-pp3-output-corruption}
 
