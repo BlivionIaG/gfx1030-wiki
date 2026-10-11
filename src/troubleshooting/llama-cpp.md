@@ -92,6 +92,23 @@ If a **new V620** hard-reboots a box that was stable with a 3080, read
 [Slot power and PSU transients](../tuning/power.md#slot-power-and-psu-transients) before chasing
 Vulkan ICDs.
 
+## Windows Unsloth / Vulkan is far below Linux ROCm {#windows-unsloth-vulkan}
+
+`#general` (Oct 10): a **Windows** host running **Unsloth** (bundled llama.cpp) over **Vulkan**
+on **2× V620** (plus an RX 6800 for display) with **Qwen3.8-27B Q8** reported about **12–13 t/s**
+decode (prefill not posted). Community: that is far below Linux **ROCm** two-card expectations
+(~**600–800** PP / ~**60** decode without MTP, ~**70–80** with MTP — ballpark, not a recipe).
+
+Check, in order:
+
+1. Unsloth actually **sees both GPUs**.
+2. **Model Settings → Advanced Options → GPU Offload / Layer Splitting** is using both cards
+   (community: Q8 + cache will not fit one 32 GB V620).
+3. A/B **Q4_0** on a **single** V620 — that quant should fit one card with context left over.
+
+This wiki’s day-to-day path is **Linux ROCm**, not Windows Vulkan. Unofficial Windows vLLM:
+[resources](../meta/resources.md). **Needs verify.**
+
 ## DFlash2 / sidecar crashes {#dflash2--sidecar-crashes}
 
 Symptoms (`#llamacpp` Sep 2026):

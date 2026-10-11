@@ -177,7 +177,7 @@ python -c "import vllm, vllm._rocm_C; print('vllm', vllm.__version__)"
 ```
 
 Once `import vllm` works, serve from that checkout with
-[`scripts/serve_rdna.sh`](serve-scripts.md). Pass `MODEL` and `VENV` yourself;
+[`tools/rdna/serve_rdna.sh`](serve-scripts.md). Pass `MODEL` and `VENV` yourself;
 the recipes do not bake in paths.
 
 ## Related

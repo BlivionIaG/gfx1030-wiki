@@ -70,6 +70,11 @@ Recent long-context community recipes commonly use `--batch-size 16384 --ubatch-
 - **DAX / Optane model store:** fast loads are nice for swap-testing; **never mmap** GGUFs from
   `dax=always` mounts into ROCm — use `--no-mmap` / `--load-mode none`. See
   [troubleshooting](../troubleshooting/llama-cpp.md#dax-backed-mmap-oopses-amdgpu-svm).
+- **Qwen chat templates:** `#vllm-rdna` (Oct 8) pointed at
+  [`froggeric/Qwen-Fixed-Chat-Templates`](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates)
+  as a drop-in `--chat-template-file` when official Qwen Jinja wastes tokens or stalls agents.
+  `#general` (Oct 9): community reports **tool calls** holding up on that Jinja (OG Qwen3.8 +
+  Open WebUI). **Needs verify** — [resources](../meta/resources.md).
 
 ### Full validated example (4× V620, Qwen3.5-122B-A10B-MTP)
 

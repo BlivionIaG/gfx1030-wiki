@@ -12,6 +12,7 @@ Numbers below are **community** snapshots — see [Verification status](./refere
 | Qwen3.8 **Flash-Next** on 4× V620 (weights in VRAM) | **vLLM** Flash-Next / `rdna_extras` — see [Flash-Next](./vllm/flash-next.md). llama.cpp on the same job is typically much slower |
 | Flash-Next on **2×** V620, or any host that **must RAM/CPU-offload** | **llama.cpp** (`--n-cpu-moe`, `-ot …=CPU`). Community 2-card IQ4_XS ~**25 t/s** / **150–200** PP — [recipe](./llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) |
 | MoE / lighter agentic (Qwen3.6 35B-A3B, Ornith-class) | **Either** — the sweet spot on these cards |
+| Curious about [Strata](https://github.com/Niko1221/Strata) (HIP, not llama.cpp) | **Experimental.** `#general` Oct 7–8: 2× V620 prompt jumped after gfx103x PRs **#835 / #849** + `STRATA_HIP_PROMPT_F16=1`; 3-card hosts still could not match vLLM prefill and decode sagged under concurrency. Not a wiki default — [resources](./meta/resources.md) |
 
 New to the cards? Start with [RDNA2 serving](./llama-cpp/rdna2-serving.md), then [vLLM](./vllm/overview.md) when you need concurrency. Multi-GPU tensor parallel benefits from [PCIe P2P](./tuning/p2p.md).
 

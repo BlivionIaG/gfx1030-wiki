@@ -13,9 +13,9 @@ on [Configuration](configuration.md); fork history on [vLLM forks](fork.md).
 | Goal | Use | Image / repo |
 |---|---|---|
 | Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.27.1-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Running](running.md). `#vllm-rdna` Sep 18 also posted **`v0.28.0-extras`** as a **test** pull (`docker.io/blivioniag/vllm-rdna:v0.28.0-extras`); A/B before replacing 0.27.1. |
-| Latest Flash-Next / `#17`+ / `#24` HEAD | Host **venv** build | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) + [Host venv](host-venv.md), then [`scripts/serve_rdna.sh`](serve-scripts.md). `#vllm-rdna` Sep 24–26: Hub tags **lag** and are **not auto-rebuilt**. |
+| Latest Flash-Next / `#17`+ / `#24` / **v0.31** | Host **venv** build | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extra/v0.31.0` for current Flash-Next bring-up) + [Host venv](host-venv.md), then [`tools/rdna/serve_rdna.sh`](serve-scripts.md). Hub tags **lag** (`#vllm-rdna` Sep 24–26, Oct 10). |
 | Tuned **27B / 122B** presets, host needs only `amdgpu` + Docker | Recipe book container | [`ghcr.io/leapdragon/vllm-rdna2-recipe:0.27.1-rocm7.2.3-gfx1030`](https://github.com/leapdragon/vllm-rdna2-recipe) (`preset:…`) — mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) |
-| **Qwen3.8 Flash-Next** on **4×** V620 | `rdna_extras` + Flash-Next | [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) HEAD; published container may still be [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) — [overview](flash-next.md#qwen38-flash-next-on-vllm) |
+| **Qwen3.8 Flash-Next** on **4×** V620 | Host venv + launcher | [`tools/rdna/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext-mtp2` (or `flashnext` / `flashnext-mtp0`). Prefer [`rdna_extra/v0.31.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.31.0). Published containers lag — [overview](flash-next.md#qwen38-flash-next-on-vllm) |
 
 `#vllm-rdna` (Sep 2026): the recipe repo is treated as a **parts pile** (compose/env/patches against
 pristine vLLM 0.27.1). New Flash-Next work lives on **`opengfx1030/vllm-rdna` `rdna_extras`** (Sep
@@ -30,13 +30,19 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | Cards | Community starting point (`#vllm-rdna`) |
 |---|---|
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). |
-| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` / a [host-venv](host-venv.md) clone with `--tensor-parallel-size 2`. `#vllm-rdna` (Sep 26): one host built `vllm-rdna` from source and served **cyankiwi 27B AWQ-INT4** TP=2 — [community table](#host-venv-tp2-qwen38-27b-awq). **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
+| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` / a [host-venv](host-venv.md) clone with `--tensor-parallel-size 2`. `#vllm-rdna` (Sep 26): one host built `vllm-rdna` from source and served **cyankiwi 27B AWQ-INT4** TP=2 — [community table](#host-venv-tp2-qwen38-27b-awq). `#vllm-rdna` (Oct 6): **Qwen3.8-27B fp16** TP=2 + MTP **~40–48 t/s** single-stream; a **Swift 1.5** 27B tune on the same layout **~48 t/s** single / **~70 t/s** across two instances — **not** Flash-Next. **Flash-Next** on 2 cards needs host RAM / MoE offload — prefer [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) over vLLM (`#vllm-rdna` Sep 14). |
 | **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](./flash-next-serve.md#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../llama-cpp/rdna2-serving.md#notable-limits)). |
-| **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub `-extras` still lags. **Needs verify.** |
+| **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub `-extras` still lags. **Needs verify.** Same **gfx1030** class: `#benchmarks` (Oct 10) **4× W6800X Duo**, vLLM **0.30.0** TP4, Qwen3.8-27B **fp16**, ALU **0.9.4**, **MTP-2** — [community table](../troubleshooting/vllm.md#w6800x-duo-alu-093). Not a V620 serve line. |
 | **6× V620** | Flash-Next **minimum is 3** cards. `#vllm-rdna` (Sep 24): start with **`PP=3` + `TP=2`** or **`PP=6`**; keep **TP power-of-2** (avoid `PP=2` + `TP=3` as the first try). Clone HEAD + [host venv](host-venv.md) — Hub tags lag. Disagg prefill/decode across switches is open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) (**Needs verify**). |
 | **8× V620** | Not a Flash-Next recipe. `#vllm-rdna` (Sep 30): community **GLM-5.3-Flash** AWQ on a **local vLLM 0.30 fork**, **TP=8**, **P2P off**, **150 W** — [GLM-5.3-Flash](#glm-53-flash). Org extras stay **0.28**; **Needs verify**. |
 
 Also see [What fits well on V620](../choose-a-stack.md#what-fits-well-on-v620).
+
+`#vllm-rdna` (Oct 8), for llama.cpp migrants: **`--pipeline-parallel-size N`** is the vLLM analogue
+of llama.cpp **layer split** (`-sm layer`); **`--tensor-parallel-size N`** is the analogue of
+**tensor split** (`-sm row` / `-ts`). vLLM can **combine** them (example: **TP=2 + PP=2** on four
+cards). Prefer **power-of-2 TP**. Flash-Next on four cards still wants **TP=4**, not PP=4
+(PP=4 can look great on long prefill then **tank decode** — table above).
 
 ### Gemma 4 note
 
@@ -148,6 +154,12 @@ coherent, no NaNs. **Community / Needs verify.**
 
 Day-to-day 27B on **4 cards** still uses the [TP4 block](#hub--extras-tp4-qwen38-27b-awq) or a
 recipe preset. This table is only the **two-card / source-build** snapshot.
+
+`#vllm-rdna` (Oct 6): a different 2× host ran **unquantized fp16** Qwen3.8-27B at **TP=2** with
+**MTP** and reported **~40–48 t/s** single-stream. A shorter-reasoning **Swift 1.5** 27B (not the
+[Flash-Next Swift packs](flash-next.md#swift-15-flash-next)) on the same card count was **~48 t/s**
+single-stream and **~70 t/s** across two instances. **Community / Needs verify.** Concurrency
+notes for wvSplitK vs stacked LLMM1: [troubleshooting](../troubleshooting/vllm.md#wvsplitk-concurrency).
 
 ---
 

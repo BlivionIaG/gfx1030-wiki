@@ -8,14 +8,20 @@
 For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM stack — not Hub
 `-extras` and not the 27B recipe presets:
 
-- **Source of truth (Sep 14–15):** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` (leapdragon work cherry-picked; PLE load path on HEAD)
-- **In-tree launcher:** [`scripts/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext` (production tools/reasoning) or `RECIPE=flashnext-mtp2` / `flashnext-mtp0`. The old `scripts/serve_gfx1030_flashnext.sh` name is a thin alias of `RECIPE=flashnext`. `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions at that file. Do **not** copy host paths out of the tree.
-- **Published container / docs (may lag):** [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) — [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2)
+- **Source of truth:** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) — day-to-day Flash-Next on the **v0.31** line is
+  [`rdna_extra/v0.31.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.31.0) (`#vllm-rdna` Oct 10);
+  `rdna_extras` remains the older 0.28 aggregation. Hub Docker tags **lag** both.
+- **In-tree launcher:** [`tools/rdna/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext` (production tools/reasoning) or `RECIPE=flashnext-mtp2` / `flashnext-mtp0`. The old `tools/rdna/serve_gfx1030_flashnext.sh` name is a thin alias of `RECIPE=flashnext`. `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions at that file. Do **not** copy host paths out of the tree. Prefer the recipe over agent-generated env dumps — drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` and do **not** force `VLLM_RDNA_FUSED_HC=0` on Flash-Next (`#vllm-rdna` Oct 10).
+- **Published container / docs (may lag):** [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next) — [`docs/rdna2/`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2). `#vllm-rdna` Oct 10: no Flash-Next image yet; next bake targets **ROCm 7.14** after validation.
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
-- PLE sidecar: [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
+- PLE / n-gram: on **v0.31** recipes use **upstream** `EngramConfig.cpu_offload` (default). The fork INT4
+  sidecar path (`VLLM_PLE_QUANT_DIR` / `VLLM_PLE_CPU_OFFLOAD`) is **unwired** on that branch;
+  `#vllm-rdna` (Oct 11): INT4 support is being **reintroduced**. Older tip notes for
+  `VLLM_PLE_QUANT_DIR` + [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
+  still describe the 0.28 / sidecar era — re-check after the INT4 land.
 
-Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class). On tip
-`700753d9`, PLE is a **CPU sidecar** (`VLLM_PLE_CPU_OFFLOAD=1`): default loads the full table into
+Expect large **host DRAM** for the n-gram / PLE store (community: **~64–95 GB** class). On older tip
+`700753d9` (0.28), PLE was a **CPU sidecar** (`VLLM_PLE_CPU_OFFLOAD=1`): default loads the full table into
 **host RAM** then gather → pinned H2D; **`VLLM_PLE_QUANT_DIR`** `mmap`s INT4 shards from disk
 (`MADV_RANDOM`) so only the gather/dequant working set hits RAM. That is **weight** offload, not
 KV. Native **KV RAM overflow** was broken on one 4× host (Sep 14: **128 GB** not enough); the
@@ -152,6 +158,7 @@ export VLLM_PLE_QUANT_DIR="$(python -c "from huggingface_hub import snapshot_dow
 
 export VLLM_PLE_CPU_OFFLOAD=1
 export VLLM_PLE_OFFLOAD_READY_TIMEOUT=3600
+# Low-RAM hosts only: PLE_OFFLOAD_PREFAULT=0  (skips RAM prefault; ~25% slower — see env-vars)
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False
 export VLLM_FORCE_CUSTOM_ALL_REDUCE=1   # only if GPU↔GPU P2P works
 export VLLM_USE_V2_MODEL_RUNNER=0
@@ -303,6 +310,12 @@ plus a gfx1030 vLLM tree
 [`yiminyuan/vllm` @ `gfx1030/v0.28.0`](https://github.com/yiminyuan/vllm/tree/gfx1030/v0.28.0).
 Publisher intent: **TP=4 / PP=2**. This is **not** Hub `-extras` and **not** wiki-tested. `#llamacpp`
 also mentioned a RDNA2 TP4 DeepSeek-V4 serve (~22 t/s, kernel unpublished) — **Needs verify**.
+
+`#vllm-rdna` (Oct 10): on the current extras / **v0.31** test line, **DeepSeek-V4** is expected to
+run once mixed **prefill/decode stalls** are fixed (suspected **CUDA-graph capture range** too
+narrow). That is **not** a serve recipe yet — stay on the yiminyuan tree or wait for the stall
+fix. **GLM-5.3** on the same fork was asked and **not answered**. See
+[mixed prefill](../troubleshooting/vllm.md#prefill-blocks-decode).
 
 ---
 

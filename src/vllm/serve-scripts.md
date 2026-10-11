@@ -2,21 +2,24 @@
 
 > **WIP / fork-source.** See [Verification status](../reference/verification.md#serve-scriptsmd).
 > Knobs below are the in-tree launcher on
-> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`
-> (`scripts/serve_rdna.sh`, `scripts/recipes/*.env`, `tunableop/README.md`).
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
+> (`tools/rdna/serve_rdna.sh`, `tools/rdna/recipes/*.env`, `tunableop/README.md`).
+> Same path on `rdna_extras` and [`rdna_extra/v0.31.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.31.0).
 > Build the venv first: [Host venv](host-venv.md). Card-count picks stay on
 > [Recipes](recipes.md). Flash-Next graph history stays on
 > [Serve lines](flash-next-serve.md).
 
-The fork ships **one** serve entry point. A recipe file holds only that config’s
-deltas. The script owns the venv, ROCm library path, TunableOp profile, GPU
-selection, cache roots, stale-worker teardown, and the `vllm serve` argv.
+The fork ships **one** serve entry point under `tools/rdna/` (moved from the old
+`scripts/` tree). A recipe file holds only that config’s deltas. The script owns
+the venv, ROCm library path, TunableOp profile, GPU selection, cache roots,
+stale-worker teardown, and the `vllm serve` argv.
 
-Run it from a checkout of `rdna_extras`:
+Run it from a checkout of the branch you built (day-to-day Flash-Next / HEAD
+work is often on `rdna_extra/v0.31.0` while Hub `-extras` still lags):
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/venv \
-  bash scripts/serve_rdna.sh RECIPE=<name> [KEY=value …]
+  bash tools/rdna/serve_rdna.sh RECIPE=<name> [KEY=value …]
 ```
 
 `MODEL` and `VENV` (or an already-activated `$VIRTUAL_ENV`) are required. Nothing
@@ -33,20 +36,38 @@ The launcher defaults `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`. Pass a
 
 ## Recipes
 
-Files live in [`scripts/recipes/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/scripts/recipes).
+Files live in [`tools/rdna/recipes/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tools/rdna/recipes).
 Copy one and change only the deltas to add a config.
 
 | Recipe | Model / config | Defaults worth knowing |
 |---|---|---|
-| `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`. Requires `VLLM_PLE_QUANT_DIR`. |
+| `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. |
 | `flashnext-mtp0` | Same family, **MTP=0**. Recipe note: MTP=0 wins at **8×1k / 512, c=8** (short prompts). | Same ports and graphs as `flashnext-mtp2`, with `MTP=0`. |
-| `flashnext` | Flash-Next **production** stack: V1 runner, tools + reasoning, six in-flight sequences. Separate from `flashnext-mtp0`. | Port **18094**, `--host 0.0.0.0`, CLI entry, KV **7000000000**, `gpu-memory-utilization 0.90`, block size 16. `ATTN=none` (FA is `VLLM_USE_RDNA2_FA=1`, no `--attention-backend`). Requires `VLLM_PLE_QUANT_DIR`. |
-| `27b-awq` | Qwen3.8-27B AWQ INT4, compressed-tensors **W4A16**. `W4A8=1` opts into `VLLM_RDNA2_W4A8_SDOT4`. | Port **18210**, MTP=0, KV **8000000000**, no `MAXLEN` (the checkpoint’s own context). `language-model-only`. |
+| `flashnext` | Flash-Next **production** stack: tools + reasoning, six in-flight sequences. Separate from `flashnext-mtp0`. | Port **18094**, `--host 0.0.0.0`, CLI entry, KV **7000000000**, `gpu-memory-utilization 0.90`, block size **1024**, `ATTN=fa`, V2 runner. |
+| `27b-awq` | Qwen3.8-27B AWQ INT4, compressed-tensors **W4A16**. `W4A8=1` opts into `VLLM_RDNA2_W4A8_SDOT4` (recipe note: prefill-heavy win on v0.31). | Port **18210**, MTP=0, KV **8000000000**, no `MAXLEN` (the checkpoint’s own context). `language-model-only`. Decode-stall cap `VLLM_RDNA_DECODE_STALL_MS=250` on. |
 | `27b-exl3` | Qwen3.8-27B EXL3 **3.00bpw mul1**. **Eager** bring-up (`EAGER=1`): no torch.compile / CUDA graphs until you turn that off. | Port **18105**, `MAXLEN=20480`, KV **6000000000**. `HIP_VISIBLE_DEVICES=4,5,6,7` (second PLX on an 8-GPU chassis). On a 4-card host set `HIP_VISIBLE_DEVICES=0,1,2,3`. |
+| `dsv4-flash` | DeepSeek-V4-Flash (K128): fp8 dense + MXFP4 experts. **Needs verify.** | Port **18300**, TP=4, `MAXLEN=32768`, KV **6000000000**, `ATTN=none`, `--kv-cache-dtype fp8`. This recipe **does** set `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (piecewise needs it on that model). |
 | `full` | The old `serve_gfx1030_full.sh` config (FA-RDNA2 + W4A16 + HIP KV + HIP GDN, breakable `FULL_AND_PIECEWISE`). | TP=**2**, devices `0,1`, `MAXLEN=200000` (floor **32768**), KV **7000000000**. `HOST` is empty so vLLM binds its default address. |
 
-Flash-Next recipes need the int4 PLE sidecar
-(`VLLM_PLE_QUANT_DIR=…/ples_int4`). See [Flash-Next serve lines](flash-next-serve.md).
+### PLE / n-gram on current recipes
+
+On the **v0.31** line, Flash-Next recipes rely on **upstream** `EngramConfig.cpu_offload`
+(pinned host / UVA) for the n-gram table. The fork’s older INT4 PLE sidecar
+(`VLLM_PLE_CPU_OFFLOAD` / `VLLM_PLE_QUANT_DIR`) is **not wired** on that branch —
+`#vllm-rdna` (Oct 11): maintainer skipped it when upstream PLE landed, and is
+**reintroducing INT4** support. Do not copy a stale `VLLM_PLE_QUANT_DIR=…/ples_int4`
+requirement from older wiki lines onto a fresh `tools/rdna/recipes/flashnext*.env`.
+Expect large **host DRAM** either way. See [Flash-Next serve lines](flash-next-serve.md).
+
+### Do not paste these onto Flash-Next
+
+`#vllm-rdna` (Oct 10): agent / Unsloth / old overlay pastes still break serves.
+
+| Knob | Flash-Next (`flashnext*`) | Why |
+|---|---|---|
+| `VLLM_USE_BREAKABLE_CUDAGRAPH=1` | **Remove** | Turns compile off / wrong path on current recipes. Only `dsv4-flash` sets it on purpose. |
+| `VLLM_RDNA_FUSED_HC=0` | **Do not set** | Fused hyper-connection is a small win now; leave the default on. |
+| Gemini / Hub Docker as Flash-Next | **No** | Hub images **lag**. Bare-metal / [host venv](host-venv.md) + this launcher until a validated bake lands (`#vllm-rdna` Oct 10: next image aims at **ROCm 7.14**). |
 
 Recipes that omit `HIP_VISIBLE_DEVICES` use the harness default **`0,1,2,3`**
 (override with `GPUIDS` or `HIP_VISIBLE_DEVICES`).
@@ -60,7 +81,7 @@ then exits. It does not launch vLLM. Print mode still requires `MODEL` and
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/venv \
-  PRINT=1 bash scripts/serve_rdna.sh RECIPE=27b-exl3
+  PRINT=1 bash tools/rdna/serve_rdna.sh RECIPE=27b-exl3
 ```
 
 ## Examples
@@ -70,15 +91,14 @@ note says MTP=2 wins:
 
 ```sh
 MODEL=/path/to/flash-next VENV=/path/to/venv \
-VLLM_PLE_QUANT_DIR=/path/to/ples_int4 \
-  bash scripts/serve_rdna.sh RECIPE=flashnext-mtp2
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-mtp2
 ```
 
 27B AWQ at MTP=2, with port and KV overrides:
 
 ```sh
 MODEL=/path/to/qwen3.8-27b-awq VENV=/path/to/venv \
-  bash scripts/serve_rdna.sh RECIPE=27b-awq MTP=2 KV=8000000000 PORT=18210
+  bash tools/rdna/serve_rdna.sh RECIPE=27b-awq MTP=2 KV=8000000000 PORT=18210
 ```
 
 EXL3 stays eager unless you clear that flag. `CG_MODE=FULL_AND_PIECEWISE` is
@@ -86,7 +106,7 @@ already the recipe default; it applies once `EAGER=0`:
 
 ```sh
 MODEL=/path/to/qwen3.8-27b-exl3 VENV=/path/to/venv \
-  bash scripts/serve_rdna.sh RECIPE=27b-exl3 EAGER=0 CG_MODE=FULL_AND_PIECEWISE \
+  bash tools/rdna/serve_rdna.sh RECIPE=27b-exl3 EAGER=0 CG_MODE=FULL_AND_PIECEWISE \
   HIP_VISIBLE_DEVICES=0,1,2,3
 ```
 
@@ -94,8 +114,7 @@ Disable TunableOp lookups for an A/B:
 
 ```sh
 MODEL=/path/to/flash-next VENV=/path/to/venv \
-VLLM_PLE_QUANT_DIR=/path/to/ples_int4 \
-  bash scripts/serve_rdna.sh RECIPE=flashnext-mtp2 TUNABLEOP=0
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-mtp2 TUNABLEOP=0
 ```
 
 ## Option map
@@ -110,8 +129,8 @@ VLLM_PLE_QUANT_DIR=/path/to/ples_int4 \
 | `BLOCK_SIZE` | `--block-size`. |
 | `SEQS` | `--max-num-seqs` (default 8). |
 | `MAXBAT` | `--max-num-batched-tokens` (default 2048). |
-| `LPTH` | `--long-prefill-token-threshold`. |
-| `PREFILL_INTERVAL` | `--prefill-schedule-interval`. |
+| `LPTH` | `--long-prefill-token-threshold` (static). Merged [`#36`](https://github.com/opengfx1030/vllm-rdna/pull/36) can self-tune this when `VLLM_RDNA_DYNAMIC_PREFILL=1`. |
+| `PREFILL_INTERVAL` | `--prefill-schedule-interval` (static). Same `#36` controller when the dynamic flag is on. |
 | `KV` | `--kv-cache-memory-bytes`. **Required** (a recipe with no KV budget aborts). |
 | `GMEM` | `--gpu-memory-utilization`. |
 | `COMPILE_MODE` | Compilation `mode` inside `--compilation-config`. |
@@ -143,7 +162,7 @@ Legacy names the entry point still accepts: `MODEL`←`MODEL_PATH`,
 | `auto-tool` | `--enable-auto-tool-choice --tool-call-parser qwen3_coder` |
 | `expert-parallel` | `--enable-expert-parallel` |
 | `trust-remote-code` | `--trust-remote-code` |
-| `prompt-tokens-details` | `--enable-prompt-tokens-details` |
+| `prompt-tokens-details` | `--enable-prompt-tokens-details` — `#vllm-rdna` (Oct 7): DeepSeek / Pi harnesses that always show **0%** cache hits usually lack this metadata flag, not a dead prefix cache. |
 | `vision-cap` | `--limit-mm-per-prompt '{"image":1}'` and `--mm-processor-kwargs '{"max_pixels":1605632}'` |
 
 An unknown token aborts. `vision-cap` is how Flash-Next recipes keep the pixel
@@ -175,10 +194,10 @@ A venv whose torch loads rocBLAS **5.6** (`librocblas.so.5` sha256[:12] `c27e225
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/rocm10-venv \
-  bash scripts/serve_rdna.sh RECIPE=27b-awq
+  bash tools/rdna/serve_rdna.sh RECIPE=27b-awq
 
 MODEL=/path/to/checkpoint VENV=/path/to/rocm10-venv \
-  PRINT=1 bash scripts/serve_rdna.sh RECIPE=27b-awq
+  PRINT=1 bash tools/rdna/serve_rdna.sh RECIPE=27b-awq
 ```
 
 Print mode (library present in that venv) reports:
@@ -234,7 +253,7 @@ readiness:
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/venv \
-  nohup bash scripts/serve_rdna.sh RECIPE=27b-awq >serve.log 2>&1 &
+  nohup bash tools/rdna/serve_rdna.sh RECIPE=27b-awq >serve.log 2>&1 &
 # port follows the recipe (27b-awq is 18210)
 curl -sf http://127.0.0.1:18210/v1/models
 ```
@@ -249,11 +268,11 @@ trailing `KEY=value`:
 
 | Old script | Calls |
 |---|---|
-| `scripts/serve_gfx1030_flashnext.sh` | `RECIPE=flashnext` |
-| `scripts/serve_gfx1030_flashnext_mtp.sh` | `RECIPE=flashnext-mtp2` |
-| `scripts/serve_gfx1030_27b_dense.sh` | `RECIPE=27b-awq` |
-| `scripts/serve_gfx1030_exl3_27b.sh` | `RECIPE=27b-exl3` |
-| `scripts/serve_gfx1030_full.sh` | `RECIPE=full` |
+| `tools/rdna/serve_gfx1030_flashnext.sh` | `RECIPE=flashnext` |
+| `tools/rdna/serve_gfx1030_flashnext_mtp.sh` | `RECIPE=flashnext-mtp2` |
+| `tools/rdna/serve_gfx1030_27b_dense.sh` | `RECIPE=27b-awq` |
+| `tools/rdna/serve_gfx1030_exl3_27b.sh` | `RECIPE=27b-exl3` |
+| `tools/rdna/serve_gfx1030_full.sh` | `RECIPE=full` |
 
 ## Related
 
