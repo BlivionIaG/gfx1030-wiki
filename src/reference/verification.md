@@ -38,7 +38,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | Image tag matrix | **Needs verify** | [Docker Hub tags](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) |
-| Hub `v0.28.0-extras` | **Needs verify** | `#vllm-rdna` Sep 18 test tag; Sep 26: **no auto-build runner**, tag is **not** HEAD — A/B vs `v0.27.1-extras` or host venv |
+| Hub `v0.31.0-extras` | **Fork-source** | `#announcements` 11 Oct 2026 + Hub push 11 Oct 15:14 UTC (same digest as `v0.31.0-extras-rocm7.14.0`). ROCm 7.14 / torch 2.12 / Triton 3.7.1. Flash-Next MTP-2 (BF16 + INT4-disk) served. |
+| Hub `v0.28.0-extras` | **Historical** | Sep 18 test tag. Prefer `v0.31.0-extras`. Source now `rdna_extra/v0.28.0`. |
 | `PYTORCH_ROCM_ARCH` list | **Solid** | `vllm-rdna-docker` build |
 | Prefer `--dtype float16` | **Solid** | RDNA2 BF16 limitation |
 | Default smoke model `cyankiwi/Qwen3.8-27B-AWQ-INT4` | **Community** | `#vllm-rdna` Sep 13 2026 day-to-day 27B pick |
@@ -129,7 +130,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `#19` unquantized MTP drafter load | **Fork-source** | Merged `opengfx1030/vllm-rdna#19` (24 Sep) |
 | MTP draft unbreak `700753d9` (amdsmi + local-argmax) | **Fork-source** | `rdna_extras` HEAD 25 Sep; MTP-2 boots, **~0.73–0.85×** vs MTP-0 on author 4× host |
 | `rdna_extra/v0.30.0` Qwen4 rebase | **Needs verify** | Branch exists (`#vllm-rdna` Sep 25); tip `f87be4dc` MoE capture-buffer fix. Not the day-to-day Flash-Next line |
-| `rdna_extra/v0.31.0` port `#47` | **Needs verify** | Open `opengfx1030/vllm-rdna#47` (8 Oct). Author Flash-Next AWQ TP=4 boots. **MTP-2** greedy `1+1` → `3` regression. Old PLE sidecar flag errors; `#49` INT4 landed on `rdna_extras` first. `#vllm-rdna` Oct 9: vs 0.30 listed gain is Qwen4Exp upstream (unchecked). Oct 9–10: still aiming at 0.31 default; W4A8 “somewhat competitive”; mixed stall / CUDA-graph range / DSV4 WIP. Not day-to-day |
+| v0.31.0 extras release (`#47` closed) | **Fork-source** | `#announcements` 11 Oct 2026 + Hub `blivioniag/vllm-rdna:v0.31.0-extras` (same digest as `v0.31.0-extras-rocm7.14.0`). `rdna_extras` = upstream vLLM 0.31.0 + RDNA port. Old 0.28: `rdna_extra/v0.28.0`. Author 4× V620 TP=4 Flash-Next AWQ ~2000 PP / 45 (MTP-0) / 69 (MTP-2) TG / ~205 agg @ 8 users. PP3 still Needs verify. |
 | Swift 1.5 Flash-Next AWQ / AutoRound | **Community** | `#vllm-rdna` Sep 25–27 — public HF packs; 3× ~1300 PP / ~45 TG **Needs verify**; AutoRound is 50-iter light, ~5% faster / more quantized; Sep 27 **looping** on one host |
 | GLM-5.3-Flash org `#2` vs community 8× | **Needs verify** | `#2` side branch runtime-unverified; `#vllm-rdna` Sep 30 local 0.30 fork ~32 t/s / 320–500 PP on 8× |
 | Host-venv TP=2 cyankiwi 27B AWQ | **Needs verify** | `#vllm-rdna` Sep 26 — one source-build host; 29.5 t/s single / 46.9 t/s ×4 |
@@ -215,7 +216,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
 | Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. Hub lags |
 | MoE expert DRAM cache `#37` | **Needs verify** | Draft `opengfx1030/vllm-rdna#37`; `#vllm-rdna` Oct 4; no gfx1030 tok/s |
-| v0.31.0 extras port `#47` | **Needs verify** | Open 8 Oct; `#vllm-rdna` Oct 8–11. MTP-2 correctness regression; vs 0.30 = Qwen4Exp upstream (unchecked). W4A8 / mixed-stall CUDA-graph range / DSV4 WIP. INT4 PLE landed on `rdna_extras` `#49` first — v0.31 cherry-pick unchecked. Not a serve recipe |
+| v0.31.0 extras release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras`. Three PLE modes tested. Author Flash-Next benches above. |
 
 ### `host-venv.md`
 
@@ -242,7 +243,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
 | Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env` |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
-| Flash-Next `#49` INT4 PLE on upstream path | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#49` (11 Oct) into `rdna_extras`. `VLLM_PLE_QUANT_DIR` INT4 group-16; unset = BF16. Author 4× V620: speed at parity, host RAM −65–70 GB. `#vllm-rdna` Oct 11: on-disk mmap still WIP. v0.31 cherry-pick + Hub **Needs verify** |
+| Flash-Next PLE `bf16` / `int4` / `int4-disk` | **Fork-source** | `#announcements` 11 Oct + `serve_rdna.sh` `PLE=`. INT4 table ~30 GB; `#vllm-rdna` Oct 11 corrected inflated ~90 GB host-RAM figure (~35 GB working set). Disk mmap via `VLLM_PLE_CPU_OFFLOAD=1`. Speed at parity on author 4× V620. |
 | Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
 | `PRINT=1` prints env, command, and TunableOp profile and does not launch | **Fork-source** | `serve_rdna.sh` header; `RECIPE` is an argument, `MODEL` and `VENV` stay required |
 | TunableOp auto-select by `librocblas.so.5` hash; `TUNABLEOP_PROFILE` mismatch aborts | **Fork-source** | `tunableop/README.md` + `profiles.json` + `tools/rdna2_028/tunableop_env.sh`: `rocm7.14-rocblas5.5` (783 rows, `f30bb442e9b5`), `rocm10-rocblas5.6` (70, `c27e2252cc7a`) |
@@ -380,14 +381,17 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` prefix cache 0% / `e45dd5cb` | **Fork-source** | `#vllm-rdna` Sep 17 + org extras commit |
 | `troubleshooting/vllm-flash-next.md` `--enable-prompt-tokens-details` | **Community** | `#vllm-rdna` Oct 7 — DeepSeek / Pi harness 0% is missing metadata, not a dead cache |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
-| `vllm/fork.md` v0.31.0 port `#47` | **Needs verify** | `#vllm-rdna` Oct 8–11 + public `opengfx1030/vllm-rdna#47`. MTP-2 `1+1`→`3`; vs 0.30 = Qwen4Exp upstream (unchecked). Oct 9–10 W4A8 / CUDA-graph range / DSV4 WIP. INT4 PLE is `#49` on `rdna_extras` first |
-| `vllm/fork.md` INT4 PLE `#49` | **Fork-source / Needs verify** | `#vllm-rdna` Oct 11 + merged `opengfx1030/vllm-rdna#49`. Upstream-path INT4 via `VLLM_PLE_QUANT_DIR`. On-disk mmap still WIP. Not Hub |
+| `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 Needs verify. |
+| `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
 | `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line; still not a Hub recipe |
 | `troubleshooting/vllm.md` mixed stall / CUDA-graph range | **Needs verify** | `#vllm-rdna` Oct 9–10 — no public flag; DSV4 expected after |
 | `vllm/flash-next-serve.md` DSV4 on extras WIP | **Needs verify** | `#vllm-rdna` Oct 10 — will work after stall fix; stay on yiminyuan tree |
 | `llama-cpp/rdna2-serving.md` froggeric tool calls | **Needs verify** | `#general` Oct 9 — OG Qwen3.8 + Open WebUI |
 | `troubleshooting/llama-cpp.md` Windows Unsloth Vulkan | **Needs verify** | `#general` Oct 10 — 2× V620 Q8 ~12–13 t/s; check both GPUs / Q4_0 |
+| `troubleshooting/llama-cpp.md` V620 not in WSL / Windows P2P CPU fallback | **Needs verify** | `#general` Oct 11 — silent CPU path for GPU↔GPU; install Linux |
+| `vllm/serve-scripts.md` launcher `P2P=0` | **Fork-source** | `serve_rdna.sh` on `rdna_extras` + `#vllm-rdna` Oct 11 |
+| `vllm/flash-next-serve.md` cyankiwi Flash-Next AWQ incoherent | **Community** | `#vllm-rdna` Oct 11 — prefer `wtdcode` AWQ-W4A16 + primitive-ai PLE |
 | `vllm/recipes.md` TP vs PP llama.cpp mapping | **Community** | `#vllm-rdna` Oct 8 — PP≈layer split, TP≈tensor split; can combine |
 | `troubleshooting/general.md` unused V620 fan pads | **Community** | `#general` Oct 7 — 4-pad footprint; do not use as PWM (100% / no curve) |
 | `vllm/quantization.md` MTP `draft_sample_method` | **Community** | `#vllm-rdna` Oct 8 — `probabilistic` when temperature > 0 |

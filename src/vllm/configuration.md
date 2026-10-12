@@ -106,7 +106,7 @@ To disable graphs entirely (debugging only):
 ```
 
 If graph capture still crashes, fall back to `--enforce-eager` — but try the updated image first
-(`docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0`). See
+(`docker pull blivioniag/vllm-rdna:v0.31.0-extras`). See
 [vLLM troubleshooting](../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
 **Flash-Next on `rdna_extras` (Sep 16–25):** on **current HEAD**, prefer
@@ -168,7 +168,7 @@ forces the RDNA2 quant path:
 ```yaml
 services:
   server:
-    image: blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0
+    image: blivioniag/vllm-rdna:v0.31.0-extras
     network_mode: host
     ipc: host
     devices: [/dev/kfd, /dev/dri]

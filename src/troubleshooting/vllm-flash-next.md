@@ -256,6 +256,6 @@ mismatches:
 
 | Symptom | What to try |
 |---|---|
-| Custom all-reduce / PIX recipe **fails to load** or logs **PYNCCL** | Host has **no GPU↔GPU P2P**. Drop `VLLM_FORCE_CUSTOM_ALL_REDUCE` and the PIX/RCCL P2P block — those are **env flags**, not a different tree. Use `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` — [Configuration](../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks). |
+| Custom all-reduce / PIX recipe **fails to load** or logs **PYNCCL** | Host has **no GPU↔GPU P2P**. Drop `VLLM_FORCE_CUSTOM_ALL_REDUCE` and the PIX/RCCL P2P block — those are **env flags**, not a different tree. Use `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` — [Configuration](../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks). `#vllm-rdna` (Oct 11): launcher `P2P=0` (or `VLLM_RDNA_AR=0`) on the v0.31 serve script. |
 | Bench ~800 PP / ~50 t/s, then Open WebUI / Hermes ~14 t/s | Client / harness, **or** MTP on while PLE fused decode is required. Community: **MTP off** recovered **~38 t/s** decode and **~95%** prefix reuse on a no-P2P host (plus `--enable-prefix-caching`). Treat tok/s as **Community**. |
 | GDN decode on Triton, gfx1030 FP16 | Expected fallback when the HIP GDN path is not selected — confirm `VLLM_RDNA_FORCE_FP16=1` and native GDN in logs before chasing P2P. |

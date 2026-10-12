@@ -10,7 +10,7 @@ Symptom: crash at `GDN _output_projection all-reduce` / `_SimpleCData.__new__`, 
 **First, pull the latest image:**
 
 ```bash
-docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0
+docker pull blivioniag/vllm-rdna:v0.31.0-extras
 ```
 
 Then try CUDA graphs (fast path):
