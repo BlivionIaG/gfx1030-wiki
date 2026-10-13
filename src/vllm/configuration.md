@@ -48,6 +48,8 @@ Prefer **`--attention-backend RDNA_ATTN`** (or `VLLM_USE_RDNA2_FA=1`) over **`RO
 `#vllm-rdna` reports `ROCM_ATTN` sitting in AMD Triton flash-attention compile for **hours** (RCCL and
 Triton also fight each other). `FA_RDNA2` may not show up on older `-extras` images or GPTQ models that
 still auto-select `ROCM_ATTN` — that is expected on hybrid GDN; see [fork](fork.md#attention-backends).
+On **Flash-Next**, QSA full-attention layers **ignore** these flags (Triton QSA path) —
+[partial FA](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial).
 
 For **multi-GPU TP** on current `-extras` images, if AOT compile cache replay causes device-bound
 errors, add:
@@ -106,7 +108,7 @@ To disable graphs entirely (debugging only):
 ```
 
 If graph capture still crashes, fall back to `--enforce-eager` — but try the updated image first
-(`docker pull blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0`). See
+(`docker pull blivioniag/vllm-rdna:v0.31.0-extras`). See
 [vLLM troubleshooting](../troubleshooting/vllm.md#cuda-graph-capture-crashes).
 
 **Flash-Next on `rdna_extras` (Sep 16–25):** on **current HEAD**, prefer
@@ -168,7 +170,7 @@ forces the RDNA2 quant path:
 ```yaml
 services:
   server:
-    image: blivioniag/vllm-rdna:v0.27.1-extras-rocm7.14.0
+    image: blivioniag/vllm-rdna:v0.31.0-extras
     network_mode: host
     ipc: host
     devices: [/dev/kfd, /dev/dri]

@@ -4,7 +4,8 @@
 > Knobs below are the in-tree launcher on
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
 > (`tools/rdna/serve_rdna.sh`, `tools/rdna/recipes/*.env`, `tunableop/README.md`).
-> Same path on `rdna_extras` and [`rdna_extra/v0.31.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.31.0).
+> Same path on `rdna_extras` (v0.31.0 as of 11 Oct 2026). The old 0.28 line is
+> [`rdna_extra/v0.28.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.28.0).
 > Build the venv first: [Host venv](host-venv.md). Card-count picks stay on
 > [Recipes](recipes.md). Flash-Next graph history stays on
 > [Serve lines](flash-next-serve.md).
@@ -14,8 +15,8 @@ The fork ships **one** serve entry point under `tools/rdna/` (moved from the old
 the venv, ROCm library path, TunableOp profile, GPU selection, cache roots,
 stale-worker teardown, and the `vllm serve` argv.
 
-Run it from a checkout of the branch you built (day-to-day Flash-Next / HEAD
-work is often on `rdna_extra/v0.31.0` while Hub `-extras` still lags):
+Run it from a checkout of the branch you built (`rdna_extras` is the v0.31.0
+line). Hub **`v0.31.0-extras`** already includes this launcher’s PLE / P2P knobs:
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/venv \
@@ -51,13 +52,20 @@ Copy one and change only the deltas to add a config.
 
 ### PLE / n-gram on current recipes
 
-On the **v0.31** line, Flash-Next recipes rely on **upstream** `EngramConfig.cpu_offload`
-(pinned host / UVA) for the n-gram table. The fork’s older INT4 PLE sidecar
-(`VLLM_PLE_CPU_OFFLOAD` / `VLLM_PLE_QUANT_DIR`) is **not wired** on that branch —
-`#vllm-rdna` (Oct 11): maintainer skipped it when upstream PLE landed, and is
-**reintroducing INT4** support. Do not copy a stale `VLLM_PLE_QUANT_DIR=…/ples_int4`
-requirement from older wiki lines onto a fresh `tools/rdna/recipes/flashnext*.env`.
-Expect large **host DRAM** either way. See [Flash-Next serve lines](flash-next-serve.md).
+`#announcements` (11 Oct 2026): three PLE modes are **tested** on 4× V620 (speed at
+parity under coding-agent load at 1k / 16k / 32k). The launcher knob is `PLE=`:
+
+| `PLE=` | What it does | Host RAM (launcher comments) |
+|---|---|---|
+| `bf16` (default if no quant dir) | Upstream pinned BF16 n-gram table | ~**95 GB** class |
+| `int4` | INT4 table from `PLE_QUANT_DIR` in pinned RAM | ~**30 GB** table; `#vllm-rdna` (Oct 11) corrected an inflated **~90 GB** host-RAM figure — INT4 sidecar working set is closer to **~35 GB** |
+| `int4-disk` | Same INT4 table **mmap**’d from disk via the CPU sidecar (`VLLM_PLE_CPU_OFFLOAD=1`) | page cache only |
+
+`PLE_QUANT_DIR` (or `VLLM_PLE_QUANT_DIR`) must point at a `ples_int4` directory
+that contains `META.json`, from
+[`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant).
+Docker: `-v /path/to/ples_int4:/ples_int4 -e VLLM_PLE_QUANT_DIR=/ples_int4` and,
+for disk mode, `-e VLLM_PLE_CPU_OFFLOAD=1`. See [Flash-Next serve lines](flash-next-serve.md).
 
 ### Do not paste these onto Flash-Next
 
@@ -67,7 +75,7 @@ Expect large **host DRAM** either way. See [Flash-Next serve lines](flash-next-s
 |---|---|---|
 | `VLLM_USE_BREAKABLE_CUDAGRAPH=1` | **Remove** | Turns compile off / wrong path on current recipes. Only `dsv4-flash` sets it on purpose. |
 | `VLLM_RDNA_FUSED_HC=0` | **Do not set** | Fused hyper-connection is a small win now; leave the default on. |
-| Gemini / Hub Docker as Flash-Next | **No** | Hub images **lag**. Bare-metal / [host venv](host-venv.md) + this launcher until a validated bake lands (`#vllm-rdna` Oct 10: next image aims at **ROCm 7.14**). |
+| Gemini / old Hub Docker as Flash-Next | **No** | Use **`v0.31.0-extras`** (11 Oct bake) or [host venv](host-venv.md) + this launcher. Do not treat `v0.27.1-extras*` / leapdragon GHCR as current Flash-Next. |
 
 Recipes that omit `HIP_VISIBLE_DEVICES` use the harness default **`0,1,2,3`**
 (override with `GPUIDS` or `HIP_VISIBLE_DEVICES`).
@@ -91,7 +99,18 @@ note says MTP=2 wins:
 
 ```sh
 MODEL=/path/to/flash-next VENV=/path/to/venv \
-  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-mtp2
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-mtp2 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
+```
+
+No PCIe P2P on the host (`#vllm-rdna` Oct 11): add `P2P=0` (sets `VLLM_RDNA_AR=0`
+and `NCCL_P2P_DISABLE=1`; RCCL uses host shared memory). Also try
+`VLLM_RDNA_AR=0` by itself when output is garbage on a no-P2P box.
+
+```sh
+MODEL=/path/to/flash-next VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-mtp2 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4 P2P=0
 ```
 
 27B AWQ at MTP=2, with port and KV overrides:
@@ -141,6 +160,9 @@ MODEL=/path/to/flash-next VENV=/path/to/venv \
 | `TUNED_CONFIG` | `1` points `VLLM_TUNED_CONFIG_FOLDER` at `<tree>/tuned-moe`. |
 | `W4A8` | Maps to `VLLM_RDNA2_W4A8_SDOT4` (`27b-awq` default `0`). |
 | `RDNA_AR` | Maps to `VLLM_RDNA_AR`. |
+| `PLE` | `bf16` / `int4` / `int4-disk`. `int4*` needs `PLE_QUANT_DIR` (a `ples_int4` dir with `META.json`). |
+| `PLE_QUANT_DIR` | Path to INT4 PLE shards. Alias: `VLLM_PLE_QUANT_DIR`. |
+| `P2P` | `1` (default) leaves topology alone. `0` forces `VLLM_RDNA_AR=0` and `NCCL_P2P_DISABLE=1`. |
 | `HIP_VISIBLE_DEVICES` | GPU set. Alias: `GPUIDS`. |
 | `TUNABLEOP` | `1` (default) loads a profile. `0` sets `PYTORCH_TUNABLEOP_ENABLED=0`. |
 | `FEATURES` | Space-separated tokens (table below). |

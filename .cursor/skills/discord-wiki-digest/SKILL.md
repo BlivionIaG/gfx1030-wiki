@@ -2,9 +2,9 @@
 name: discord-wiki-digest
 description: >-
   Daily (or on-demand) pass: read gfx1030 Discord via MCP, update the mdBook wiki
-  with durable technical knowledge, open a draft PR. Use when asked to sync
-  Discord into the wiki, run the daily digest, or harvest #wiki / #vllm-rdna /
-  #llamacpp into docs.
+  with durable technical knowledge, open a ready-for-review PR (automerge).
+  Use when asked to sync Discord into the wiki, run the daily digest, or harvest
+  #wiki / #vllm-rdna / #llamacpp into docs.
 ---
 
 # Discord → wiki digest
@@ -121,7 +121,9 @@ Must exit 0. That is the lint. Do not commit `book/`.
   `cursor/<name>-…` — keep that.
 - Commits: `Docs: Discord digest YYYY-MM-DD` (or a more specific docs message if
   the change is one topic).
-- **Do not merge.** Leave a **draft** PR for a human.
+- Open a **ready-for-review** (non-draft) PR so repo **automerge** can land it.
+  Do **not** click merge yourself; do not enable automerge from the agent unless
+  the run’s tools require it — GitHub/Cursor automerge on the PR is the path.
 - Title: `wiki: discord digest YYYY-MM-DD`
 - Body must include:
   - UTC window scanned
@@ -137,4 +139,4 @@ Must exit 0. That is the lint. Do not commit `book/`.
 - At least one durable technical finding that is not already in `src/`.
 - `mdbook build` succeeded.
 - Privacy table passed.
-- Diff is wiki-shaped (pages a human would merge), not a chat transcript.
+- Diff is wiki-shaped (safe to automerge), not a chat transcript.

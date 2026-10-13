@@ -109,6 +109,11 @@ Check, in order:
 This wiki’s day-to-day path is **Linux ROCm**, not Windows Vulkan. Unofficial Windows vLLM:
 [resources](../meta/resources.md). **Needs verify.**
 
+`#general` (Oct 11): **V620s do not work in WSL**. On native Windows, llama.cpp was reported to
+**silently fall back to CPU** for GPU↔GPU traffic (DMA mappings exist but AMD→other-vendor
+direction failed). Community fix: install a Linux distro (Ubuntu / Fedora are the usual
+documented hosts). **Needs verify.**
+
 ## DFlash2 / sidecar crashes {#dflash2--sidecar-crashes}
 
 Symptoms (`#llamacpp` Sep 2026):

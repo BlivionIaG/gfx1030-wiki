@@ -18,11 +18,12 @@ working `torch` on a Radeon card.
 
 | Tag | vLLM | Base | Variant |
 |---|---|---|---|
+| `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` | v0.31.0 | ROCm **7.14** (same digest) | [`rdna_extras` fork](fork.md) — **current** extras bake. `#announcements` (11 Oct 2026): torch **2.12**, Triton **3.7.1**. Flash-Next MTP-2 (BF16 + INT4-disk) served from this image. |
+| `v0.28.0-extras` / `v0.28.0-extras-rocm7.14.0` | v0.28.0 | ROCm 7.14 | Historical extras. Source now [`rdna_extra/v0.28.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.28.0). Prefer `v0.31.0-extras` unless you need the old line. |
 | `v0.27.1` | v0.27.1 | rocm-rdna:7.2.0 | upstream |
 | `v0.27.1-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | upstream — `#vllm-rdna` Sep 24: **can remove**; prefer `-extras` or host build |
-| `v0.27.1-extras` | v0.27.1 | rocm-rdna:7.2.0 | [`rdna_extras` fork](fork.md) |
-| `v0.27.1-extras-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | [`rdna_extras` fork](fork.md) |
-| `v0.28.0-extras` | v0.28.0 | **Needs verify** | [`rdna_extras` fork](fork.md) — `#vllm-rdna` Sep 18 **test** tag. `#vllm-rdna` Sep 26: Hub is **not auto-rebuilt** (no runner yet); this tag is **not** HEAD. Prefer `v0.27.1-extras*` for Docker, or [host venv](host-venv.md) for latest kernels. |
+| `v0.27.1-extras` | v0.27.1 | rocm-rdna:7.2.0 | Older [`rdna_extras`](fork.md) bake (Aug 2026). Keep only for A/B. |
+| `v0.27.1-extras-rocm7.14.0` | v0.27.1 | rocm-rdna:7.14.0 | Same as `v0.27.1-extras` (same digest). |
 | `v0.26.0` | v0.26.0 | rocm-rdna:7.2.0 | upstream |
 | `v0.22.1` | v0.22.1 | — | upstream |
 
@@ -32,10 +33,10 @@ kernels (FlashAttention, quantized GEMM, MoE, GDN, …). Check
 [Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list. Tags are
 refreshed in place — `docker pull` before debugging.
 
-`#vllm-rdna` (Sep 24): published **`vllm-rdna` Hub tags are not tracking** current `rdna_extras`
-HEAD (`#17`, `#19`, `#20`, …). For Flash-Next / latest kernels, **clone the org repo and follow
-[Host venv](host-venv.md)** (or rebuild an image yourself). Use Hub `-extras` for a known-good
-day-to-day 27B path; use `rocm-rdna:7.14.0` if you only need a ROCm packaging base.
+`#announcements` (11 Oct 2026): **`v0.31.0-extras`** is the current extras image — `rdna_extras`
+is now the **v0.31.0** port, and that bake served Flash-Next MTP-2. Older Hub tags (`v0.27.1-extras*`,
+`v0.28.0-extras*`) do **not** track HEAD. For kernels newer than the bake, **clone the org repo
+and follow [Host venv](host-venv.md)**. Use `rocm-rdna:7.14.0` if you only need a ROCm packaging base.
 
 **Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
 those in-between releases is reported broken with more than one card — see
@@ -54,7 +55,7 @@ docker run -it --rm \
   --ipc host \
   -p 8000:8000 \
   -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
-  docker.io/blivioniag/vllm-rdna:v0.27.1-extras \
+  docker.io/blivioniag/vllm-rdna:v0.31.0-extras \
   vllm serve cyankiwi/Qwen3.8-27B-AWQ-INT4 \
     --dtype float16 \
     --max-model-len 8192 \

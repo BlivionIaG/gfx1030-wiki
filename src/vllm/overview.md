@@ -31,9 +31,9 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 
 | Variant | When to use |
 |---|---|
+| `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` | Official extras on **vLLM 0.31.0** — [`rdna_extras`](./fork.md#the-rdna_extras-fork). `#announcements` (11 Oct 2026): **recommended** day-to-day Docker path (ROCm 7.14). Flash-Next MTP-2 (BF16 + INT4-disk) served from this tag. Same digest under both names. |
+| `v0.28.0-extras` / `v0.27.1-extras*` | Historical extras bakes. Source for 0.28 is [`rdna_extra/v0.28.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.28.0). Keep for A/B only. |
 | `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. `#vllm-rdna` Sep 24: plain **`v0.27.1-rocm7.14.0`** is **stale / removable**; prefer `-extras` or [host venv](./host-venv.md). |
-| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Official extras kernels — [`rdna_extras`](./fork.md#the-rdna_extras-fork) lineage; **recommended** day-to-day Docker path on gfx1030. **Lags HEAD** (`#17` / `#20`) — clone + [host venv](./host-venv.md) for Flash-Next fast stack. |
-| `v0.28.0-extras` | `#vllm-rdna` Sep 18 **test** bake of the 0.28 extras line. **Needs verify** — Hub CI is not fully tracked; `#vllm-rdna` Sep 26: **no auto-build runner**, tag is **not** HEAD. A/B against `v0.27.1-extras` or use [host venv](./host-venv.md). |
 
 Image tags are **refreshed in place** when fixes land — always `docker pull` before debugging. Confirm your
 `-extras` image includes the latest extras commits (AWQ dispatch, GDN HIP, TP graph fix).
@@ -41,12 +41,12 @@ Image tags are **refreshed in place** when fixes land — always `docker pull` b
 you already had that tag.
 
 > **Official source moved.** Kernel work lives in
-> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`). Day-to-day serving
-> is still Hub **`blivioniag/vllm-rdna:*-extras`** (`v0.27.1-extras*` day-to-day; `v0.28.0-extras` is a
-> Sep 18 **test** tag). Published bake still clones the historical
-> personal fork. `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = **v0.31.0** as of
+> 11 Oct 2026). Day-to-day serving is Hub **`blivioniag/vllm-rdna:v0.31.0-extras`**. Older
+> `v0.27.1-extras*` / `v0.28.0-extras*` tags stay on Hub for A/B. `#vllm-rdna` Sep 14–15: Flash-Next
+> commits are **in `rdna_extras`**; the standalone
 > [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is no longer
-> the moving target. Published Flash-Next **containers** may still be the older leapdragon image.
+> the moving target. Prefer the 0.31 Hub tag or a [host venv](./host-venv.md) over the old leapdragon image.
 > Details: [Fork landscape](./fork.md#fork-landscape).
 >
 > **Upstream vLLM 0.28.x:** Official GPU docs still omit Navi 21 / gfx1030. Keep community forks until

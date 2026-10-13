@@ -78,8 +78,9 @@ Read-only Discord tools live in `tools/discord-mcp`. They only read the **gfx103
 
 ### Daily Discord → wiki automation
 
-A Cursor Automation can run that Discord pass on a schedule and open a **draft**
-PR instead of waiting for a manual “update the wiki from Discord” prompt.
+A Cursor Automation can run that Discord pass on a schedule and open a
+**ready-for-review** PR (repo **automerge** lands it) instead of waiting for a
+manual “update the wiki from Discord” prompt.
 
 1. Create it at [cursor.com/automations/new](https://cursor.com/automations/new)
    (cloud agents cannot enable the schedule for you).
@@ -91,4 +92,4 @@ PR instead of waiting for a manual “update the wiki from Discord” prompt.
 
 Attach **this repo** on the automation (scheduled jobs default to no repo) and
 leave Discord MCP + `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID` Secrets as for other
-Cloud Agents. Merge digest PRs only after a human check.
+Cloud Agents. Digest PRs are non-draft so automerge can run after checks.
