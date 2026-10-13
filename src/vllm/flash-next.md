@@ -194,6 +194,11 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 - The PR is huge and **dirty** against `rdna_extras` — wait for a cleaned cherry-pick / image
   before calling it production. Day-to-day Flash-Next remains
   [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen).
+- `#vllm-rdna` (12 Oct): **latest `rdna_extras`** can reject this Intel pack at startup even when
+  PLE is unquantized (`INCConfig` / `Qwen4Exp PLE embedding`). Upstream
+  [vLLM #59990](https://github.com/vllm-project/vllm/pull/59990) is merged; the fork cherry-pick
+  was still in queue. Prefer `wtdcode` AWQ + `primitive-ai` PLE-quant until that lands — see
+  [troubleshooting](../troubleshooting/vllm-flash-next.md#autoround-ple-incconfig).
 
 Also watch [TheRock ROCR idle-CPU spin](../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714)
 on ROCm 7.14 hosts.

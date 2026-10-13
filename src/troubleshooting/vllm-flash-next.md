@@ -249,6 +249,35 @@ than falling back. Two independent gates:
 
 Stay on **fp16 KV**. See [Quantization — KV-cache dtype](../vllm/quantization.md#kv-cache-dtype).
 
+## AutoRound Flash-Next rejected: `INCConfig` / PLE embedding {#autoround-ple-incconfig}
+
+Symptom (`#vllm-rdna`, 12 Oct 2026): **latest `rdna_extras`** fails to start
+[`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound)
+even when the PLE table is **unquantized**. Typical raise:
+
+```text
+NotImplementedError: Qwen4Exp PLE embedding does not support quantization config INCConfig
+```
+
+vLLM loads that AutoRound checkpoint as `INCConfig`. Upstream
+[vLLM #59990](https://github.com/vllm-project/vllm/pull/59990) (merged 5 Oct) asks INC whether the
+PLE layer is quantized and then uses the unquantized PLE method. `#vllm-rdna`: a cherry-pick of that
+fix is **in the fork queue** — not confirmed on Hub `v0.31.0-extras` yet. Community also warned that
+the upstream patch **alone** can store the BF16 PLE table as **FP16** with this model config; wait
+for the fork cherry-pick rather than applying the PR blindly.
+
+**What to do today:**
+
+1. Prefer the day-to-day Flash-Next path: `wtdcode` AWQ +
+   [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
+   and `PLE=bf16|int4|int4-disk` — [serve lines](../vllm/flash-next-serve.md).
+2. If you need the Intel AutoRound pack, stay on a known-good older pin / draft `#5` until the
+   cherry-pick lands, or watch `rdna_extras` after that merge.
+3. Do **not** treat “AutoRound PLE is quantized” as the cause — the checkpoint marks `.*ple.*` as
+   16-bit float.
+
+**Needs verify** on gfx1030 after the cherry-pick.
+
 ## Flash-Next: no P2P, or MTP blocks PLE {#flash-next-no-p2p-or-mtp-blocks-ple}
 
 Two `#vllm-rdna` (Sep 18) reports that look like “this image is slow” but are env / feature

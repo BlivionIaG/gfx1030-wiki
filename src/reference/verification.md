@@ -260,6 +260,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | Fedora + ROCm 7.2.0 build | **Solid** | Standard recipe |
+| Ubuntu + ROCm 7.14 stock HIP cmake (`GGML_HIP_RCCL` / `GRAPHS` / `NO_VMM`) | **Community** | `#llamacpp` / `#general` Oct 13 — 2× V620 Precision 5820; ~3–6% vs default mainline |
 | `--spec-draft-device` on TP2+ | **Community** | Discord pattern |
 
 ### `rdna2-benchmarks.md`
@@ -380,6 +381,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` hybrid KV overstated / livelock | **Needs verify** | `#vllm-rdna` Sep 17 |
 | `troubleshooting/vllm.md` prefix cache 0% / `e45dd5cb` | **Fork-source** | `#vllm-rdna` Sep 17 + org extras commit |
 | `troubleshooting/vllm-flash-next.md` `--enable-prompt-tokens-details` | **Community** | `#vllm-rdna` Oct 7 — DeepSeek / Pi harness 0% is missing metadata, not a dead cache |
+| `troubleshooting/vllm-flash-next.md` AutoRound `INCConfig` PLE reject | **Needs verify** | `#vllm-rdna` Oct 12 — latest `rdna_extras`; upstream vLLM #59990 merged; fork cherry-pick queued |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 Needs verify. |
 | `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
