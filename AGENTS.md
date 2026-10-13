@@ -81,6 +81,7 @@ https://cursor.com/automations/new :
 5. Same Cloud environment and Secrets as other gfx1030-wiki agents.
 
 When you are that automation (or a human asked for a Discord wiki pass): follow
-the skill. Open a **draft** PR only if there is durable new knowledge;
-`mdbook build` must succeed; never merge; never invent Discord content if MCP
-fails. Empty days are a successful no-op (no empty PR).
+the skill. Open a **ready-for-review** (non-draft) PR only if there is durable
+new knowledge; `mdbook build` must succeed; do not merge by hand (repo
+**automerge** lands it); never invent Discord content if MCP fails. Empty days
+are a successful no-op (no empty PR).

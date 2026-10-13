@@ -7,9 +7,9 @@ Live discussion happens on the **gfx1030 club** Discord:
 [https://discord.gg/mESex2aBp](https://discord.gg/mESex2aBp). Propose wiki fixes there (`#wiki`) or
 open a GitHub PR — both are fine. See [Useful resources](./resources.md#community-discord).
 
-A **daily Cursor Automation** (when enabled) reads Discord and opens draft PRs titled
-`wiki: discord digest YYYY-MM-DD`. Treat those like any other contribution: review
-privacy and accuracy before merging. Setup lives in the repo at
+A **daily Cursor Automation** (when enabled) reads Discord and opens ready PRs titled
+`wiki: discord digest YYYY-MM-DD`. Repo **automerge** lands them after checks; the
+agent still must pass the privacy table before opening. Setup lives in the repo at
 `.cursor/automations/daily-discord-wiki.md` (not loaded by Cursor automatically —
 activate once at [cursor.com/automations/new](https://cursor.com/automations/new)).
 
@@ -87,12 +87,12 @@ channels. Cloud Agents should set token + guild ID in **Secrets** only (see repo
 
 ### Automated Discord digest PRs
 
-When the daily digest automation is active, expect occasional draft PRs that
-only touch `src/` (and `SUMMARY.md` if a page was added). Review them like a
-human patch:
+When the daily digest automation is active, expect occasional ready-for-review PRs
+that only touch `src/` (and `SUMMARY.md` if a page was added). They are meant to
+**automerge** after CI; still watch for:
 
-- Reject transcripts, `@mentions`, message links, and personal host/path leaks.
-- Keep unconfirmed tok/s and one-off anecdotes in
+- Transcripts, `@mentions`, message links, and personal host/path leaks (close/revert).
+- Unconfirmed tok/s and one-off anecdotes that should stay in
   [Verification status](../reference/verification.md) as **Community** / **Needs verify**.
 - Empty calendar days should produce **no** PR; do not “fill” the wiki from stale chat.
 
