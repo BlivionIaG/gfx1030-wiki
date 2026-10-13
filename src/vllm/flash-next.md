@@ -19,12 +19,14 @@ When something fails, use [Flash-Next troubleshooting](../troubleshooting/vllm-f
 ## Qwen3.8 Flash-Next on vLLM {#qwen38-flash-next-on-vllm}
 
 llama.cpp still struggles with Flash-Next on gfx1030 (upstream gaps). On **4× V620**, community
-production is the Flash-Next vLLM stack — **not** Hub `-extras`. `#vllm-rdna` Sep 14–15: that work
-now lives on [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`;
+production is the Flash-Next vLLM stack on **`rdna_extras` (v0.31.0)** — not the old
+`v0.27.1-extras*` Hub tags. `#announcements` (11 Oct 2026): Hub
+**`blivioniag/vllm-rdna:v0.31.0-extras`** served Flash-Next MTP-2 (BF16 + INT4-disk).
+`#vllm-rdna` Sep 14–15: that work lives on [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
+`rdna_extras`;
 [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
 is the older published container / docs tree and is **not being updated**. Prefer latest `rdna_extras`
-(or the last known-good leapdragon image if you need a container today) over llama.cpp until the
-RDNA2 llama.cpp fork catches up.
+or the 0.31 Hub tag over llama.cpp until the RDNA2 llama.cpp fork catches up.
 
 **2× V620 / RAM offload:** vLLM is a poor fit when weights or MoE experts must spill to host RAM.
 `#vllm-rdna` (Sep 14): use [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4)
@@ -151,6 +153,13 @@ measured peak — size `--max-model-len` from a real request, not the banner
 before repeat prompts actually hit
 ([zero hits](../troubleshooting/vllm-flash-next.md#flash-next-prefix-cache-zero)).
 
+**FA-RDNA2 vs QSA (`#vllm-rdna` 13 Oct):** FA-RDNA2 is attention for **any** model that uses the
+normal backend selector — it is **not** dense-only. Flash-Next **QSA** full-attention layers bypass
+that selector (Triton QSA owner), so `--attention-backend` / `VLLM_USE_RDNA2_FA` only apply
+**partially**. Details:
+[fork attention backends](./fork.md#attention-backends),
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial).
+
 ## Intel AutoRound Flash-Next (draft, `#vllm-rdna` Sep 10–11 2026) {#intel-autoround-flash-next}
 
 A second Flash-Next track is the Intel **W4A16 AutoRound** checkpoint
@@ -179,9 +188,12 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 
 **Gotchas** (do not treat as a drop-in Hub image):
 
-- Known-good PLE is the **embedded BF16** n-gram table (~**95 GiB** tensor data) with
-  `--engram-config '{"cpu_offload":true}'`. **Quantized CPU PLE** (group-16 INT4 sidecar) is **not**
-  end-to-end validated; `#vllm-rdna` saw **incoherent** generation on that path.
+- Default PLE is still the **embedded BF16** n-gram table (~**95 GiB** tensor data) with
+  `--engram-config '{"cpu_offload":true}'`. The historical **group-16 INT4 sidecar** was **not**
+  end-to-end validated (`#vllm-rdna` saw **incoherent** generation on that older path). Merged
+  [`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) (11 Oct, `rdna_extras`) plus the
+  v0.31.0 launcher `PLE=int4|int4-disk` path. `#announcements` (11 Oct): all three PLE modes
+  tested; speed at parity. Hub **`v0.31.0-extras`** includes this.
 - `--max-num-batched-tokens 2048` + chunked prefill was the suspected cause of the **128k PP cliff**.
   Raise to **4096** (or see [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-128k-prefill-cliff)).
 - Concurrent varlen GDN prefill still has a fork kernel addressing bug
@@ -189,6 +201,11 @@ offload**, and **`--max-num-batched-tokens 4096`**. Published short-run figures 
 - The PR is huge and **dirty** against `rdna_extras` — wait for a cleaned cherry-pick / image
   before calling it production. Day-to-day Flash-Next remains
   [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen).
+- `#vllm-rdna` (12 Oct): **latest `rdna_extras`** can reject this Intel pack at startup even when
+  PLE is unquantized (`INCConfig` / `Qwen4Exp PLE embedding`). Upstream
+  [vLLM #59990](https://github.com/vllm-project/vllm/pull/59990) is merged; the fork cherry-pick
+  was still in queue. Prefer `wtdcode` AWQ + `primitive-ai` PLE-quant until that lands — see
+  [troubleshooting](../troubleshooting/vllm-flash-next.md#autoround-ple-incconfig).
 
 Also watch [TheRock ROCR idle-CPU spin](../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714)
 on ROCm 7.14 hosts.

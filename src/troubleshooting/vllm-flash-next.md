@@ -50,8 +50,10 @@ KV, CPU PLE offload). See [overview](../vllm/flash-next.md#intel-autoround-flash
 If output is **wrong** rather than just slow, stay on **2048** and switch graphs to **PIECEWISE**
 first — [FULL-graph corruption](#flash-next-full-graph-corruption).
 
-If 128k is still slow after 4096, A/B [V2 runner](#flash-next-long-prompt-stalls) and confirm you
-are not on quantized PLE (known-good is the embedded BF16 n-gram table).
+If 128k is still slow after 4096, A/B [V2 runner](#flash-next-long-prompt-stalls). Default PLE is
+the embedded **BF16** n-gram table. Historical INT4 **sidecar** paths were the incoherent ones;
+merged [`#49`](https://github.com/opengfx1030/vllm-rdna/pull/49) INT4 on the upstream path is
+opt-in via `VLLM_PLE_QUANT_DIR` (`rdna_extras` HEAD, not Hub).
 
 ## Flash-Next PP3 output corruption on `rdna_extras` {#flash-next-pp3-output-corruption}
 
@@ -247,6 +249,57 @@ than falling back. Two independent gates:
 
 Stay on **fp16 KV**. See [Quantization — KV-cache dtype](../vllm/quantization.md#kv-cache-dtype).
 
+## FA-RDNA2 only partial on Flash-Next / QSA {#flash-next-fa-rdna2-partial}
+
+Symptom (`#vllm-rdna`, 13 Oct 2026): startup or profiler shows **Triton** on Flash-Next
+full-attention layers even with `--attention-backend RDNA_ATTN` / `VLLM_USE_RDNA2_FA=1`. Community
+also asked whether FA-RDNA2 is “dense only”.
+
+**What is going on:**
+
+1. FA-RDNA2 is **general attention** (not dense-only). Dense / non-QSA models can use the normal
+   backend selector.
+2. Flash-Next **QSA** full-attention layers set their backend to the Qwen4Exp QSA Triton owner
+   (`amd/qsa.py`) and **do not** call the `--attention-backend` selector. Those flags have **no
+   effect** on QSA layers. Triton in the path is expected.
+3. Maintainer: a **full** FA/HIP switch needs QSA **split-K** attention and **INT4 PLE n-gram**
+   lookup in HIP (still open; community pointed at fork backlog work around `#64`). Until then,
+   FA coverage on Flash-Next stays **partial**.
+
+**What to do:** do not A/B FA flags expecting Flash-Next QSA speedups. Keep day-to-day Flash-Next
+recipes (PLE modes, graphs, TunableOp). Optional FA knobs
+(`VLLM_FA_RDNA2_GQA_MODE`, `VLLM_FA_RDNA2_SPLIT_DECODE`) only matter on layers that actually select
+FA-RDNA2 — [env vars](../reference/env-vars.md), [fork](../vllm/fork.md#attention-backends).
+
+## AutoRound Flash-Next rejected: `INCConfig` / PLE embedding {#autoround-ple-incconfig}
+
+Symptom (`#vllm-rdna`, 12 Oct 2026): **latest `rdna_extras`** fails to start
+[`Intel/Qwen3.8-Flash-Next-W4A16-AutoRound`](https://huggingface.co/Intel/Qwen3.8-Flash-Next-W4A16-AutoRound)
+even when the PLE table is **unquantized**. Typical raise:
+
+```text
+NotImplementedError: Qwen4Exp PLE embedding does not support quantization config INCConfig
+```
+
+vLLM loads that AutoRound checkpoint as `INCConfig`. Upstream
+[vLLM #59990](https://github.com/vllm-project/vllm/pull/59990) (merged 5 Oct) asks INC whether the
+PLE layer is quantized and then uses the unquantized PLE method. `#vllm-rdna`: a cherry-pick of that
+fix is **in the fork queue** — not confirmed on Hub `v0.31.0-extras` yet. Community also warned that
+the upstream patch **alone** can store the BF16 PLE table as **FP16** with this model config; wait
+for the fork cherry-pick rather than applying the PR blindly.
+
+**What to do today:**
+
+1. Prefer the day-to-day Flash-Next path: `wtdcode` AWQ +
+   [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)
+   and `PLE=bf16|int4|int4-disk` — [serve lines](../vllm/flash-next-serve.md).
+2. If you need the Intel AutoRound pack, stay on a known-good older pin / draft `#5` until the
+   cherry-pick lands, or watch `rdna_extras` after that merge.
+3. Do **not** treat “AutoRound PLE is quantized” as the cause — the checkpoint marks `.*ple.*` as
+   16-bit float.
+
+**Needs verify** on gfx1030 after the cherry-pick.
+
 ## Flash-Next: no P2P, or MTP blocks PLE {#flash-next-no-p2p-or-mtp-blocks-ple}
 
 Two `#vllm-rdna` (Sep 18) reports that look like “this image is slow” but are env / feature
@@ -254,6 +307,6 @@ mismatches:
 
 | Symptom | What to try |
 |---|---|
-| Custom all-reduce / PIX recipe **fails to load** or logs **PYNCCL** | Host has **no GPU↔GPU P2P**. Drop `VLLM_FORCE_CUSTOM_ALL_REDUCE` and the PIX/RCCL P2P block — those are **env flags**, not a different tree. Use `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` — [Configuration](../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks). |
+| Custom all-reduce / PIX recipe **fails to load** or logs **PYNCCL** | Host has **no GPU↔GPU P2P**. Drop `VLLM_FORCE_CUSTOM_ALL_REDUCE` and the PIX/RCCL P2P block — those are **env flags**, not a different tree. Use `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` — [Configuration](../vllm/configuration.md#custom-all-reduce--p2p-two-community-stacks). `#vllm-rdna` (Oct 11): launcher `P2P=0` (or `VLLM_RDNA_AR=0`) on the v0.31 serve script. |
 | Bench ~800 PP / ~50 t/s, then Open WebUI / Hermes ~14 t/s | Client / harness, **or** MTP on while PLE fused decode is required. Community: **MTP off** recovered **~38 t/s** decode and **~95%** prefix reuse on a no-P2P host (plus `--enable-prefix-caching`). Treat tok/s as **Community**. |
 | GDN decode on Triton, gfx1030 FP16 | Expected fallback when the HIP GDN path is not selected — confirm `VLLM_RDNA_FORCE_FP16=1` and native GDN in logs before chasing P2P. |

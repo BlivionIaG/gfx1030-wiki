@@ -4,12 +4,12 @@
 > [Verification status](../reference/verification.md#llama-cpp).
 
 [llama.cpp](https://github.com/ggml-org/llama.cpp) is a fast, low-dependency way to run GGUF LLMs on
-gfx1030. This page is a build-from-source recipe validated by the gfx1030 community (the `#llamacpp`
-Discord channel), on **Fedora** with **ROCm 7.2.0** targeting `gfx1030`. A **Vulkan** path is included
-as an alternative that doesn't require ROCm.
+gfx1030. This page has two stock HIP recipes from `#llamacpp`: **Fedora + ROCm 7.2.0**, and
+**Ubuntu + ROCm 7.14** (`/opt/rocm/core-7.14`). A **Vulkan** path is included as an alternative that
+doesn't require ROCm.
 
-> Commands are shown as used on Fedora. Adjust package names for your distro and tweak versions/paths as
-> needed.
+> Adjust package names and ROCm prefixes for your distro. The Fedora block uses `/opt/rocm` +
+> `hipconfig`; the Ubuntu block uses TheRock-style `/opt/rocm/core-7.14`.
 
 > Looking for heavy multi-GPU tuning? See the [RDNA2-optimized fork](./rdna2-overview.md)
 > (`edwinbrowwn/llama.cpp-rdna2`) with RDNA2/V620 tensor-parallel and MMQ optimizations.
@@ -69,6 +69,66 @@ HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
 
 `-DGPU_TARGETS=gfx1030` targets Navi 21. For a non-Navi-21 RDNA2 card, build for its real target (e.g.
 `gfx1031`/`gfx1032`) or add it to the list; see [HSA_OVERRIDE for RDNA2 Cousins](../setup/hsa-override.md).
+
+### Ubuntu + ROCm 7.14 (community, Oct 2026) {#ubuntu-rocm-714-stock-hip}
+
+`#llamacpp` (13 Oct) and `#general`: stock `ggml-org/llama.cpp` on **Ubuntu** with **ROCm 7.14**.
+Community: llama.cpp's default HIP cmake flags are **not enough** on gfx1030 — this extra set was
+reported **~3–6%** faster than a default mainline build on **2× V620**. The
+[RDNA2 fork](./rdna2-overview.md) is still faster than even this tuned stock build.
+
+Community host class: **Dell Precision 5820**, Xeon W-2155, 128 GB quad-channel, each GPU
+**PCIe 3.0 x16**, Proxmox passthrough into a dedicated Ubuntu VM.
+
+```sh
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+
+export HSA_OVERRIDE_GFX_VERSION=10.3.0
+export HIP_PATH=/opt/rocm/core-7.14
+export HIPCXX=/opt/rocm/core-7.14/lib/llvm/bin/clang
+export LD_LIBRARY_PATH=/opt/rocm/core-7.14/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=/usr/bin/cc \
+  -DCMAKE_CXX_COMPILER=/usr/bin/c++ \
+  -DCMAKE_HIP_COMPILER=/opt/rocm/core-7.14/lib/llvm/bin/clang \
+  -DCMAKE_HIP_PLATFORM=amd \
+  -DCMAKE_PREFIX_PATH=/opt/rocm/core-7.14 \
+  -DAMDGPU_TARGETS=gfx1030 \
+  -DCMAKE_HIP_ARCHITECTURES=gfx1030 \
+  -DGGML_HIP=ON \
+  -DGGML_HIP_RCCL=ON \
+  -DGGML_HIP_GRAPHS=ON \
+  -DGGML_HIP_NO_VMM=ON \
+  -DGGML_NATIVE=ON \
+  -DGGML_AVX2=OFF \
+  -DGGML_AVX512=OFF \
+  -DGGML_CUDA=OFF \
+  -DLLAMA_BUILD_SERVER=ON \
+  -DLLAMA_BUILD_TESTS=OFF
+
+cmake --build build --config Release -- -j$(nproc)
+```
+
+Serve with the same [short env stack](./rdna2-serving.md#recommended-env-stack) the fork uses (this
+report applied it to stock HIP):
+
+```sh
+HSA_OVERRIDE_GFX_VERSION=10.3.0 \
+HSA_NO_SCRATCH_RECLAIM=1 \
+GGML_HIP_RDNA2_AUTO=1 \
+GGML_HIP_SAFE_STATE_IO=1 \
+GGML_TP_SHARDED_OUTPUT=1 \
+HIP_VISIBLE_DEVICES=0,1 \
+./build/bin/llama-server \
+  -m /path/to/model.gguf
+```
+
+`GGML_TP_SHARDED_OUTPUT=1` is TP2+ only. `GGML_AVX2=OFF` / `GGML_AVX512=OFF` were part of this
+Skylake-W recipe — A/B if your CPU is newer. If your 7.14 install is not under
+`/opt/rocm/core-7.14`, see [Installing ROCm](../setup/installing-rocm.md).
 
 ## Vulkan (alternative)
 

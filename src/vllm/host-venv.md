@@ -7,9 +7,9 @@
 > See [Verification status](../reference/verification.md#host-venvmd).
 
 Stable day-to-day Docker is Hub **`v0.31.0-extras`** — [Onboard](onboarding.md) /
-[Running (Docker)](running.md). Use this page when you want a host Python 3.12 `uv` venv (HEAD of
-`rdna_extras`, custom kernels, or [`serve_rdna.sh`](serve-scripts.md) without rebuilding the image).
-You need a ROCm toolchain with `hipcc`. For more than one GPU, pin **ROCm 7.2.0 or 7.14.0** —
+[Running (Docker)](running.md). Use this page when you want kernels **newer than that bake**,
+[`serve_rdna.sh`](serve-scripts.md), or a host Python 3.12 `uv` venv with no image rebuild. You
+need a ROCm toolchain with `hipcc`. For more than one GPU, pin **ROCm 7.2.0 or 7.14.0** —
 [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.
