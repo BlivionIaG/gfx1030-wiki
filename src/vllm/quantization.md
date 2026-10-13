@@ -72,8 +72,8 @@ NCCL), and Qwen4Exp MTP uses **local-argmax** draft sampling when
 (27 Sep) captures the **draft** decode graph at `max_num_reqs` (MTP-2 **c=8** was eager).
 Author-host: **+18%** at 8×1k / **+5%** at 8×16k; still **~0.87× vs MTP-0** at 16k. One later
 host with a matching TunableOp table reported MTP **above** MTP-0 — treat that as **Needs
-verify**, not a retraction of the 0.73–0.87× class. Hub `-extras` lags — clone +
-[host venv](host-venv.md).
+verify**, not a retraction of the 0.73–0.87× class. Present in Hub **`v0.31.0-extras`**;
+commits after the bake pin still want clone + [host venv](host-venv.md).
 
 Merged [`#26`](https://github.com/opengfx1030/vllm-rdna/pull/26): concurrent MTP-2 (9–16 rows)
 can stay on HIP MoE with `VLLM_ROCM_MOE_SKINNY_MAX_M=16`. Default remains **8**. See
@@ -89,7 +89,7 @@ community-reported miss. Example:
 ```
 
 Same thread: day-to-day `rdna_extras` MTP-2 was **~60–90 t/s** on one host (community; not a
-recipe). Hub `-extras` still lags.
+recipe). Hub **`v0.31.0-extras`** includes the MTP=2 path; A/B acceptance on your host.
 
 ## INT4 on gfx1030 (no native int4 ALUs)
 
@@ -111,11 +111,12 @@ graphs (1024/512), **~331 total tok/s** at 8 concurrent requests (16k/512), and 
 - Don't force `--attention-backend` or `--quantization` — let vLLM auto-select unless A/B testing.
 - Mount Triton and torch-compile caches (see [Configuration](configuration.md#cache-volumes-first-boot-is-slow)).
 
-## Experimental: EXL3 and Quark (`#vllm-rdna`, Sep 2026)
+## Experimental: EXL3 and Quark (`#vllm-rdna`, Sep–Oct 2026)
 
-These paths are **not** in the published v0.27.1 `-extras` image matrix yet. EXL3 HIP kernels **are**
-in [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` HEAD — track Discord
-and rebuild from that branch, or wait for a tagged image.
+`#announcements` (11 Oct 2026): **EXL3** is listed among the **v0.31.0** extras features, and
+the launcher ships `RECIPE=27b-exl3`. Older Hub tags (`v0.27.1-extras*`, `v0.28.0-extras*`) do
+**not** have that bake. Treat EXL3 as **experimental** even on 0.31 — mul1-tested path; A/B
+before production. **AMD Quark** is still not a drop-in on current `-extras`.
 
 | Format | Status | Notes |
 |---|---|---|

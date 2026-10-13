@@ -40,7 +40,8 @@ Host firmware (the machine never POSTs) and Flash-Next serve lines are specialis
   [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base), how they are
   built with [`opengfx1030/vllm-rdna-docker`](https://github.com/opengfx1030/vllm-rdna-docker), and
   the **official** vLLM extras fork [`opengfx1030/vllm-rdna`](./vllm/fork.md) (`rdna_extras`, now
-  including Flash-Next cherry-picks). Published Hub `-extras` tags still lag HEAD.
+  including Flash-Next cherry-picks). Hub **`v0.31.0-extras`** tracks the 11 Oct 2026 bake pin;
+  commits after that pin still want a [host venv](./vllm/host-venv.md) clone.
 
 New here? Start with [Getting Started](./setup/getting-started.md). Card identity is on [Supported Hardware](./setup/hardware.md).
 

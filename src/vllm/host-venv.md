@@ -44,11 +44,12 @@ packages. `triton==3.7.1` on that index is a wheel (`triton-3.7.1+git….rocm7.1
 source build. gfx103X still has no aotriton, so PyTorch's SDPA flash path stays off; that is
 separate from the Triton package.
 
-`docker-bake.hcl` currently pins torch `2.12.0+rocm7.14.0`. The repo README and the
-[image matrix](running.md#image-matrix) still describe the published `7.14.0` tag as PyTorch
-2.13.0. Recreate the bake with the pins below; if you are matching an image you already pulled,
-use whatever `torch.__version__` that container prints (2.13 pairs with `torchvision==0.28.0+rocm7.14.0`
-and `amd-torch-device-gfx1030==2.13.0+rocm7.14.0` on the same index).
+`docker-bake.hcl` pins torch `2.12.0+rocm7.14.0` for `base-rocm714`. The docker-repo README
+still claims PyTorch **2.13.0** for published `7.14.0` — that README cell is **stale**; the
+[image matrix](running.md#image-matrix) matches the bake (**2.12.0**). Recreate with the pins
+below; if you are matching an image you already pulled, use whatever `torch.__version__` that
+container prints (a true 2.13 wheel would pair with `torchvision==0.28.0+rocm7.14.0` and
+`amd-torch-device-gfx1030==2.13.0+rocm7.14.0` on the same index).
 
 ```sh
 uv venv --python 3.12 venv-7.14.0

@@ -60,6 +60,6 @@ Maintainer helper for gfx1030 / ROCm 7.14: `scripts/build-rdna2-rocm.sh` (defaul
 
 ## Next steps
 
-- [Benchmarks](rdna2-benchmarks.md) — author-reported numbers and PR #10 status.
+- [Benchmarks](rdna2-benchmarks.md) — author-reported numbers (PR #10 / #12 merged).
 - [Serving](rdna2-serving.md) — launch commands and Docker.
 - [Speculative decoding](rdna2-speculative.md) — DFlash2, MTP, ngram configs.

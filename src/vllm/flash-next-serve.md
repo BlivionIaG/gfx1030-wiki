@@ -3,10 +3,10 @@
 > **WIP / community.** Copy from here only after you have read [Flash-Next status](./flash-next.md)
 > (which card count, which graph mode). Failures: [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md).
 
-## Path C — Flash-Next (`vllm-rdna2-qwen`)
+## Path C — Flash-Next (`rdna_extras` / Hub 0.31)
 
 For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM stack — not the
-27B recipe presets and **not** the old `v0.27.1-extras*` Hub tags:
+27B recipe presets and **not** the old `v0.27.1-extras*` / `v0.28.0-extras*` Hub tags:
 
 - **Source of truth:** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`
   is the **v0.31.0** line (`#announcements` 11 Oct 2026). The old 0.28 aggregation lives at
@@ -15,7 +15,7 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 - **In-tree launcher:** [`tools/rdna/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext` (production tools/reasoning) or `RECIPE=flashnext-mtp2` / `flashnext-mtp0`. The old `tools/rdna/serve_gfx1030_flashnext.sh` name is a thin alias of `RECIPE=flashnext`. `#vllm-rdna` Sep 21 pointed 2-card / GPTQ questions at that file. Do **not** copy host paths out of the tree. Prefer the recipe over agent-generated env dumps — drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` and do **not** force `VLLM_RDNA_FUSED_HC=0` on Flash-Next (`#vllm-rdna` Oct 10).
 - **Published container:** prefer Hub **`v0.31.0-extras`**. The older
   [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
-  tree is **not being updated**.
+  tree remains for legacy GHCR / `docs/rdna2` (occasional commits through 11 Oct 2026).
 - Weights: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16).
   `#vllm-rdna` (Oct 11): [`cyankiwi/Qwen3.8-Flash-Next-AWQ-INT4`](https://huggingface.co/cyankiwi/Qwen3.8-Flash-Next-AWQ-INT4)
   produced **incoherent** output on one 4× host; switching to the `wtdcode` AWQ + primitive-ai PLE
@@ -155,8 +155,8 @@ Do not trust the logged hybrid KV token count — [overstated pool](../troublesh
 - custom all-reduce / PIX is **optional** — hosts without GPU↔GPU P2P should drop that block
   (vLLM falls back to PYNCCL) — [no P2P](../troubleshooting/vllm-flash-next.md#flash-next-no-p2p-or-mtp-blocks-ple)
 
-Hub **`v0.28.0-extras`** is the container to A/B against this host-venv line; it is **not** yet the
-wiki default.
+Prefer Hub **`v0.31.0-extras`** (or a matching host-venv clone of `rdna_extras`) for this
+serve line. Hub **`v0.28.0-extras`** is only for historical A/B against older Sep 2026 pastes.
 
 ```bash
 MODEL="wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16"
@@ -257,8 +257,8 @@ Operational facts that are safe to copy:
 - Serve knobs on that host: `--enforce-eager`, context **32768**, `--max-num-seqs 4`,
   `--max-num-batched-tokens 2048`.
 - Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (MTP under pipeline
-  parallel on the V2 runner) merged days earlier — expect it in a **future** vLLM release, not Hub
-  `-extras` 0.27.1.
+  parallel on the V2 runner) merged Sep 2026 — was absent from Hub **0.27.1** `-extras`; re-check
+  on Hub **`v0.31.0-extras`** / HEAD (PP3 + MTP still **Needs verify**).
 
 Community also rewrote `VLLM_RDNA_DENSE_INT8` shadow quant to **row blocks** so a 2.4 GiB fp32
 temporary would not OOM a nearly full card, then `VLLM_RDNA_DENSE_INT8_ONLY=1` to drop fp16 copies

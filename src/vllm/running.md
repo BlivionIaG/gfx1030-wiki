@@ -9,7 +9,11 @@
 | Tag | ROCm | PyTorch | Triton |
 |---|---|---|---|
 | `7.2.0` | 7.2.0 | 2.12.0 | 3.5.1 |
-| `7.14.0` | 7.14.0 | 2.13.0 | 3.7.1 |
+| `7.14.0` | 7.14.0 | **2.12.0** | 3.7.1 |
+
+Bake target `base-rocm714` pins torch **`2.12.0+rocm7.14.0`**. The docker-repo README still
+says 2.13.0 for this tag — treat that README cell as stale; confirm with
+`python -c "import torch; print(torch.__version__)"` inside a pulled container.
 
 These are a general-purpose **ROCm PyTorch base for RDNA** — useful on their own if you just want a
 working `torch` on a Radeon card.

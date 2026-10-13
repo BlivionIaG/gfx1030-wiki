@@ -35,7 +35,7 @@ MTP-4 TP4 on a pelican prompt:
 | Q8_0 + MTP-4@Q4_0 | 75 | 105 |
 
 DFlash2 on TP2: ~52 t/s coding at 0–31k context, ~40 t/s at 64k. Checkpoint fix in
-[PR #12](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/12) (in review).
+[PR #12](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/12) (**merged** 17 Aug 2026).
 
 ## Stock llama.cpp vs this fork (community A/B)
 
@@ -82,10 +82,10 @@ for multi-GPU RCCL unless you are deliberately lab-testing TheRock/10.x.
 Reproduce long-context benches with fixed non-repeating prompts (16/32/64/128k) and full command +
 commit — community tool: [`GeorgeMA-Strong/llm-context-bench`](https://github.com/GeorgeMA-Strong/llm-context-bench).
 
-## Upcoming optimizations (PR #10)
+## MMVQ / GDN optimizations (PR #10)
 
-> **Status:** in review — [PR #10](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/10). Env vars
-> below will be consolidated post-merge.
+> **Status:** **merged** 13 Aug 2026 — [PR #10](https://github.com/edwinbrowwn/llama.cpp-rdna2/pull/10).
+> Env vars below were the PR-head recipe; confirm defaults on current fork tip.
 
 Reported improvements: 15.9–61.2% lower MMVQ latency, up to 17.7% faster GDN prefill, +4.39% tgen from
 DeltaNet sibling fusion. MTP works up to 6 with minimal hit on low acceptance.
