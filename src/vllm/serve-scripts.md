@@ -4,9 +4,9 @@
 > Knobs below are the in-tree launcher on
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
 > (`tools/rdna/serve_rdna.sh`, `tools/rdna/recipes/*.env`, `tunableop/README.md`).
-> Same path on `rdna_extras` and [`rdna_extra/v0.31.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.31.0).
-> Build the venv first: [Host venv](host-venv.md). Card-count picks stay on
-> [Recipes](recipes.md). Flash-Next graph history stays on
+> Same path on `rdna_extras` (now **vLLM 0.31.0**). Build the venv first:
+> [Host venv](host-venv.md). First-time V620 path: [Onboard](onboarding.md).
+> Card-count picks stay on [Recipes](recipes.md). Flash-Next graph history stays on
 > [Serve lines](flash-next-serve.md).
 
 The fork ships **one** serve entry point under `tools/rdna/` (moved from the old
@@ -14,8 +14,8 @@ The fork ships **one** serve entry point under `tools/rdna/` (moved from the old
 the venv, ROCm library path, TunableOp profile, GPU selection, cache roots,
 stale-worker teardown, and the `vllm serve` argv.
 
-Run it from a checkout of the branch you built (day-to-day Flash-Next / HEAD
-work is often on `rdna_extra/v0.31.0` while Hub `-extras` still lags):
+Run it from a checkout of the branch you built (`rdna_extras` = 0.31; Hub
+**`v0.31.0-extras`** is the matching Docker bake):
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/venv \
@@ -51,13 +51,13 @@ Copy one and change only the deltas to add a config.
 
 ### PLE / n-gram on current recipes
 
-On the **v0.31** line, Flash-Next recipes rely on **upstream** `EngramConfig.cpu_offload`
-(pinned host / UVA) for the n-gram table. The fork’s older INT4 PLE sidecar
-(`VLLM_PLE_CPU_OFFLOAD` / `VLLM_PLE_QUANT_DIR`) is **not wired** on that branch —
-`#vllm-rdna` (Oct 11): maintainer skipped it when upstream PLE landed, and is
-**reintroducing INT4** support. Do not copy a stale `VLLM_PLE_QUANT_DIR=…/ples_int4`
-requirement from older wiki lines onto a fresh `tools/rdna/recipes/flashnext*.env`.
-Expect large **host DRAM** either way. See [Flash-Next serve lines](flash-next-serve.md).
+`#announcements` (11 Oct 2026): Flash-Next **PLE** on 0.31 supports three modes via the
+launcher — `PLE=bf16` (upstream pinned BF16), `PLE=int4` (INT4 table in pinned RAM),
+`PLE=int4-disk` (INT4 via CPU sidecar; sets `VLLM_PLE_CPU_OFFLOAD=1`). Pass
+`PLE_QUANT_DIR=/path/to/ples_int4` for the INT4 modes (table:
+[`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant)).
+Expect large **host DRAM** for `bf16` / `int4`. See [Onboard](onboarding.md) and
+[Flash-Next serve lines](flash-next-serve.md).
 
 ### Do not paste these onto Flash-Next
 

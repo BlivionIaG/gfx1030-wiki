@@ -6,10 +6,10 @@
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` tree.
 > See [Verification status](../reference/verification.md#host-venvmd).
 
-Stable day-to-day Docker can stay on Hub **`v0.27.1-extras*`** — [Running (Docker)](running.md).
-`#vllm-rdna` (Sep 24–26): Hub tags **lag HEAD** and are **not auto-rebuilt**. Use this page for
-`#17` / `#24` / Flash-Next kernels in a host Python 3.12 `uv` venv (no image rebuild). You need
-a ROCm toolchain with `hipcc`. For more than one GPU, pin **ROCm 7.2.0 or 7.14.0** —
+Stable day-to-day Docker is Hub **`v0.31.0-extras`** — [Onboard](onboarding.md) /
+[Running (Docker)](running.md). Use this page when you want a host Python 3.12 `uv` venv (HEAD of
+`rdna_extras`, custom kernels, or [`serve_rdna.sh`](serve-scripts.md) without rebuilding the image).
+You need a ROCm toolchain with `hipcc`. For more than one GPU, pin **ROCm 7.2.0 or 7.14.0** —
 [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.

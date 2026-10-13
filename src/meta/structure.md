@@ -25,6 +25,7 @@ src/
 
   vllm/                    # vLLM serving on RDNA
     overview.md            # Section hub — start here
+    onboarding.md          # Simple V620 happy path (Docker + fork launcher)
     running.md             # Images, docker run, quick start
     recipes.md             # Hub -extras and recipe-container presets
     flash-next.md          # Flash-Next status, card counts, AutoRound
@@ -97,6 +98,7 @@ src/
 | BIOS / MMIO High / SR-IOV so 4× V620 POSTs | `setup/host-firmware.md` |
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
+| First V620 vLLM serve (Docker or fork) | `vllm/onboarding.md` |
 | Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`) |
 | Fork `tools/rdna/serve_rdna.sh` recipes | `vllm/serve-scripts.md` |
 | llama.cpp vs vLLM | `choose-a-stack.md` |

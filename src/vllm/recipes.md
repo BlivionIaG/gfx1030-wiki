@@ -12,8 +12,8 @@ on [Configuration](configuration.md); fork history on [vLLM forks](fork.md).
 
 | Goal | Use | Image / repo |
 |---|---|---|
-| Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.27.1-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Running](running.md). `#vllm-rdna` Sep 18 also posted **`v0.28.0-extras`** as a **test** pull (`docker.io/blivioniag/vllm-rdna:v0.28.0-extras`); A/B before replacing 0.27.1. |
-| Latest Flash-Next / `#17`+ / `#24` / **v0.31** | Host **venv** build | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extra/v0.31.0` for current Flash-Next bring-up) + [Host venv](host-venv.md), then [`tools/rdna/serve_rdna.sh`](serve-scripts.md). Hub tags **lag** (`#vllm-rdna` Sep 24–26, Oct 10). |
+| Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.31.0-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (or `-extras-rocm7.14.0`) — [Onboard](onboarding.md) / [Running](running.md). `#announcements` 11 Oct 2026. Older `v0.27.1-extras` / `v0.28.0-extras` stay for A/B. |
+| Flash-Next / HEAD / tuned launcher | Host **venv** or Hub 0.31 | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = **0.31.0**) + [Host venv](host-venv.md), then [`tools/rdna/serve_rdna.sh`](serve-scripts.md). Hub **`v0.31.0-extras`** also serves Flash-Next with PLE mounts — [Onboard](onboarding.md#flash-next-in-docker-4-v620). |
 | Tuned **27B / 122B** presets, host needs only `amdgpu` + Docker | Recipe book container | [`ghcr.io/leapdragon/vllm-rdna2-recipe:0.27.1-rocm7.2.3-gfx1030`](https://github.com/leapdragon/vllm-rdna2-recipe) (`preset:…`) — mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) |
 | **Qwen3.8 Flash-Next** on **4×** V620 | Host venv + launcher | [`tools/rdna/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext-mtp2` (or `flashnext` / `flashnext-mtp0`). Prefer [`rdna_extra/v0.31.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.31.0). Published containers lag — [overview](flash-next.md#qwen38-flash-next-on-vllm) |
 
@@ -72,7 +72,7 @@ Small-VRAM experiment: Ornith **9B** EXL3 (~6.8 GB) vs AWQ (~9 GB) — **experim
 ## Path A — Hub `-extras` (recommended default)
 
 ```bash
-docker pull docker.io/blivioniag/vllm-rdna:v0.27.1-extras
+docker pull docker.io/blivioniag/vllm-rdna:v0.31.0-extras
 
 docker run -it --rm \
   --device /dev/kfd --device /dev/dri \
@@ -81,12 +81,14 @@ docker run -it --rm \
   --ipc host \
   -p 8000:8000 \
   -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
-  docker.io/blivioniag/vllm-rdna:v0.27.1-extras \
+  docker.io/blivioniag/vllm-rdna:v0.31.0-extras \
   vllm serve cyankiwi/Qwen3.8-27B-AWQ-INT4 \
     --dtype float16 \
     --max-model-len 8192 \
     --language-model-only --skip-mm-profiling --trust-remote-code
 ```
+
+Short V620 walkthrough: [Onboard on V620](onboarding.md).
 
 - Add `--tensor-parallel-size N` for multi-GPU. Enable [PCIe P2P](../tuning/p2p.md) when possible.
 - Prefer `--dtype float16`. Mount Triton / torch-compile caches for faster restarts —

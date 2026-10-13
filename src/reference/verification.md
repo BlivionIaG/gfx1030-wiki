@@ -33,12 +33,23 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 
 
+### `onboarding.md`
+
+| Statement | Status | Verify how |
+|---|---|---|
+| Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct |
+| `rdna_extras` = upstream vLLM 0.31.0 + RDNA port | **Fork-source** | `#announcements` 11 Oct; org default branch `rdna_extras` |
+| Path A 27B AWQ docker run | **Community** | Same announcement + prior `#vllm-rdna` day-to-day model pick |
+| Path B `serve_rdna.sh` + `PLE=int4` Flash-Next | **Community** | `#announcements` + `#vllm-rdna` Oct 11 launcher example |
+| `P2P=0` for hosts without PCIe P2P | **Fork-source** | `tools/rdna/serve_rdna.sh` + `#vllm-rdna` Oct 11 |
+
 ### `running.md`
 
 | Statement | Status | Verify how |
 |---|---|---|
 | Image tag matrix | **Needs verify** | [Docker Hub tags](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) |
-| Hub `v0.28.0-extras` | **Needs verify** | `#vllm-rdna` Sep 18 test tag; Sep 26: **no auto-build runner**, tag is **not** HEAD — A/B vs `v0.27.1-extras` or host venv |
+| Hub `v0.31.0-extras` | **Community** | `#announcements` 11 Oct 2026; Hub last_updated 11 Oct |
+| Hub `v0.28.0-extras` | **Needs verify** | `#vllm-rdna` Sep 18 test tag — superseded by 0.31 for day-to-day |
 | `PYTORCH_ROCM_ARCH` list | **Solid** | `vllm-rdna-docker` build |
 | Prefer `--dtype float16` | **Solid** | RDNA2 BF16 limitation |
 | Default smoke model `cyankiwi/Qwen3.8-27B-AWQ-INT4` | **Community** | `#vllm-rdna` Sep 13 2026 day-to-day 27B pick |

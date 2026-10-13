@@ -19,7 +19,7 @@ kernels) takes a bit of extra work. That's what this wiki documents.
 
 1. [Getting started](./setup/getting-started.md) — hardware check, ROCm, optional V620 tuning, first container.
 2. [llama.cpp or vLLM](./choose-a-stack.md) — which stack matches the model and card count.
-3. The matching section: [vLLM](./vllm/overview.md) or [llama.cpp](./llama-cpp/overview.md).
+3. The matching section: [vLLM onboard (V620)](./vllm/onboarding.md) / [vLLM overview](./vllm/overview.md), or [llama.cpp](./llama-cpp/overview.md).
 4. [Troubleshooting](./troubleshooting/index.md) when a command fails. [Verification status](./reference/verification.md) says which numbers are solid.
 
 Host firmware (the machine never POSTs) and Flash-Next serve lines are specialist pages. Skip them until you need them.

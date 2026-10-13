@@ -14,6 +14,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 
 | Goal | Page |
 |---|---|
+| **First serve on a V620** (Docker or fork + launcher) | [Onboard on V620](./onboarding.md) |
 | Pull an image and run your first model | [Running (Docker)](./running.md) |
 | Which image / model / card count (27B, presets) | [Recipes](./recipes.md) |
 | GLM-5.3-Flash on 8× (local 0.30 fork) | [Recipes — GLM-5.3-Flash](./recipes.md#glm-53-flash) |
@@ -31,25 +32,23 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 
 | Variant | When to use |
 |---|---|
-| `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. `#vllm-rdna` Sep 24: plain **`v0.27.1-rocm7.14.0`** is **stale / removable**; prefer `-extras` or [host venv](./host-venv.md). |
-| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Official extras kernels — [`rdna_extras`](./fork.md#the-rdna_extras-fork) lineage; **recommended** day-to-day Docker path on gfx1030. **Lags HEAD** (`#17` / `#20`) — clone + [host venv](./host-venv.md) for Flash-Next fast stack. |
-| `v0.28.0-extras` | `#vllm-rdna` Sep 18 **test** bake of the 0.28 extras line. **Needs verify** — Hub CI is not fully tracked; `#vllm-rdna` Sep 26: **no auto-build runner**, tag is **not** HEAD. A/B against `v0.27.1-extras` or use [host venv](./host-venv.md). |
+| `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` | **Current** day-to-day Docker — `#announcements` 11 Oct 2026 (ROCm 7.14, torch 2.12, Triton 3.7.1). Matches `rdna_extras` = upstream **vLLM 0.31.0**. Start at [Onboard](./onboarding.md). |
+| `v0.27.1` / `v0.27.1-rocm7.14.0` | Stock upstream vLLM — baseline or comparison. `#vllm-rdna` Sep 24: plain **`v0.27.1-rocm7.14.0`** is **stale / removable**. |
+| `v0.27.1-extras` / `v0.27.1-extras-rocm7.14.0` | Older extras bake — keep for A/B only. Prefer **`v0.31.0-extras`**. |
+| `v0.28.0-extras` | Sep 18 **test** bake of the 0.28 extras line. Superseded by **0.31** for day-to-day. |
 
 Image tags are **refreshed in place** when fixes land — always `docker pull` before debugging. Confirm your
 `-extras` image includes the latest extras commits (AWQ dispatch, GDN HIP, TP graph fix).
 `#vllm-rdna` (Aug 31 2026): `blivioniag/vllm-rdna:v0.27.1-extras` was refreshed again — re-pull even if
 you already had that tag.
 
-> **Official source moved.** Kernel work lives in
-> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras`). Day-to-day serving
-> is still Hub **`blivioniag/vllm-rdna:*-extras`** (`v0.27.1-extras*` day-to-day; `v0.28.0-extras` is a
-> Sep 18 **test** tag). Published bake still clones the historical
-> personal fork. `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
-> [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is no longer
-> the moving target. Published Flash-Next **containers** may still be the older leapdragon image.
+> **Official source:** [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
+> (`rdna_extras` = upstream **vLLM 0.31.0** + RDNA port; older 0.28 line:
+> `rdna_extra/v0.28.0`). Day-to-day Docker:
+> Hub **`blivioniag/vllm-rdna:v0.31.0-extras`**. First-time path: [Onboard on V620](./onboarding.md).
 > Details: [Fork landscape](./fork.md#fork-landscape).
 >
-> **Upstream vLLM 0.28.x:** Official GPU docs still omit Navi 21 / gfx1030. Keep community forks until
+> **Upstream vLLM:** Official GPU docs still omit Navi 21 / gfx1030. Keep the community fork until
 > upstream documents it.
 
 ## Related

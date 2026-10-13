@@ -20,6 +20,7 @@
 # vLLM on RDNA
 
 - [Overview](./vllm/overview.md)
+- [Onboard on V620](./vllm/onboarding.md)
 - [Running (Docker)](./vllm/running.md)
 - [Recipes (Hub and presets)](./vllm/recipes.md)
 - [Flash-Next](./vllm/flash-next.md)
