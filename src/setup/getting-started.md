@@ -50,6 +50,8 @@ repo.
 
 The fastest path is the prebuilt images — no local ROCm/PyTorch/vLLM build required:
 
+- [Onboard vLLM on V620](../vllm/onboarding.md) — short happy path for Hub **`v0.31.0-extras`** or the
+  fork launcher (`serve_rdna.sh`).
 - [Running vLLM (Docker)](../vllm/running.md) — [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna)
   on a [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) PyTorch base.
 - [vLLM recipes](../vllm/recipes.md) — Hub `-extras` vs recipe container vs Flash-Next by card count.

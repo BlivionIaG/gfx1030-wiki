@@ -27,16 +27,17 @@ working `torch` on a Radeon card.
 | `v0.26.0` | v0.26.0 | rocm-rdna:7.2.0 | upstream |
 | `v0.22.1` | v0.22.1 | — | upstream |
 
-The **`-extras`** tags use the [`rdna_extras` fork](fork.md) lineage (historical bake still clones
-`blivioniag/vllm` `rdna2_extras`), which adds hand-written RDNA2 HIP
-kernels (FlashAttention, quantized GEMM, MoE, GDN, …). Check
+The **`-extras`** tags ship the [`rdna_extras` fork](fork.md) (hand-written RDNA2 HIP kernels:
+FlashAttention, quantized GEMM, MoE, GDN, …). Check
 [Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list. Tags are
 refreshed in place — `docker pull` before debugging.
 
 `#announcements` (11 Oct 2026): **`v0.31.0-extras`** is the current extras image — `rdna_extras`
-is now the **v0.31.0** port, and that bake served Flash-Next MTP-2. Older Hub tags (`v0.27.1-extras*`,
-`v0.28.0-extras*`) do **not** track HEAD. For kernels newer than the bake, **clone the org repo
-and follow [Host venv](host-venv.md)**. Use `rocm-rdna:7.14.0` if you only need a ROCm packaging base.
+is now the **v0.31.0** port, and that bake served Flash-Next MTP-2. First-time path:
+[Onboard on V620](onboarding.md). Older Hub tags (`v0.27.1-extras*`, `v0.28.0-extras*`) do **not**
+track HEAD. For kernels newer than the bake, **clone the org repo and follow
+[Host venv](host-venv.md)** + [`serve_rdna.sh`](serve-scripts.md). Use `rocm-rdna:7.14.0` if you
+only need a ROCm packaging base.
 
 **Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
 those in-between releases is reported broken with more than one card — see
@@ -61,6 +62,8 @@ docker run -it --rm \
     --max-model-len 8192 \
     --language-model-only --skip-mm-profiling --trust-remote-code
 ```
+
+First-time V620 walkthrough (Docker + fork launcher): [Onboard on V620](onboarding.md).
 
 - Give the container the GPU with `--device /dev/kfd --device /dev/dri` and the `video` **and**
   `render` groups. Missing `render` is a common `#vllm-rdna` cause of

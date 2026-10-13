@@ -12,8 +12,8 @@ on [Configuration](configuration.md); fork history on [vLLM forks](fork.md).
 
 | Goal | Use | Image / repo |
 |---|---|---|
-| Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.31.0-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (same digest as `v0.31.0-extras-rocm7.14.0`) — [Running](running.md). `#announcements` (11 Oct 2026). Older `v0.27.1-extras*` / `v0.28.0-extras*` stay on Hub for A/B. |
-| Latest Flash-Next / kernels newer than the bake | Host **venv** **or** Hub 0.31 | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = v0.31.0) + [Host venv](host-venv.md), then [`tools/rdna/serve_rdna.sh`](serve-scripts.md). The 0.31 Hub tag already served Flash-Next MTP-2 (BF16 + INT4-disk). |
+| Day-to-day serving with RDNA HIP kernels | Hub **`-extras`** | [`blivioniag/vllm-rdna:v0.31.0-extras`](https://hub.docker.com/r/blivioniag/vllm-rdna) (same digest as `v0.31.0-extras-rocm7.14.0`) — [Onboard](onboarding.md) / [Running](running.md). `#announcements` (11 Oct 2026). Older `v0.27.1-extras*` / `v0.28.0-extras*` stay on Hub for A/B. |
+| Latest Flash-Next / kernels newer than the bake | Host **venv** **or** Hub 0.31 | Clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = v0.31.0) + [Host venv](host-venv.md), then [`tools/rdna/serve_rdna.sh`](serve-scripts.md). The 0.31 Hub tag already served Flash-Next MTP-2 (BF16 + INT4-disk) — [Onboard](onboarding.md#flash-next-in-docker-4-v620). |
 | Tuned **27B / 122B** presets, host needs only `amdgpu` + Docker | Recipe book container | [`ghcr.io/leapdragon/vllm-rdna2-recipe:0.27.1-rocm7.2.3-gfx1030`](https://github.com/leapdragon/vllm-rdna2-recipe) (`preset:…`) — mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe) |
 | **Qwen3.8 Flash-Next** on **4×** V620 | Hub 0.31 **or** host venv + launcher | [`tools/rdna/serve_rdna.sh`](serve-scripts.md) `RECIPE=flashnext-mtp2` (or `flashnext` / `flashnext-mtp0`). Default branch is [`rdna_extras`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras) (v0.31.0). Docker: `blivioniag/vllm-rdna:v0.31.0-extras` — [overview](flash-next.md#qwen38-flash-next-on-vllm) |
 
@@ -87,6 +87,8 @@ docker run -it --rm \
     --max-model-len 8192 \
     --language-model-only --skip-mm-profiling --trust-remote-code
 ```
+
+Short V620 walkthrough: [Onboard on V620](onboarding.md).
 
 - Add `--tensor-parallel-size N` for multi-GPU. Enable [PCIe P2P](../tuning/p2p.md) when possible.
 - Prefer `--dtype float16`. Mount Triton / torch-compile caches for faster restarts —

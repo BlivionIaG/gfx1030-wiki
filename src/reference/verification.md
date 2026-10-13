@@ -33,6 +33,16 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 
 
+### `onboarding.md`
+
+| Statement | Status | Verify how |
+|---|---|---|
+| Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct |
+| `rdna_extras` = upstream vLLM 0.31.0 + RDNA port | **Fork-source** | `#announcements` 11 Oct; org default branch `rdna_extras` |
+| Path A 27B AWQ docker run | **Community** | Same announcement + prior `#vllm-rdna` day-to-day model pick |
+| Path B `serve_rdna.sh` + `PLE=int4` Flash-Next | **Community** | `#announcements` + `#vllm-rdna` Oct 11 launcher example |
+| `P2P=0` for hosts without PCIe P2P | **Fork-source** | `tools/rdna/serve_rdna.sh` + `#vllm-rdna` Oct 11 |
+
 ### `running.md`
 
 | Statement | Status | Verify how |

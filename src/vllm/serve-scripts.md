@@ -6,8 +6,9 @@
 > (`tools/rdna/serve_rdna.sh`, `tools/rdna/recipes/*.env`, `tunableop/README.md`).
 > Same path on `rdna_extras` (v0.31.0 as of 11 Oct 2026). The old 0.28 line is
 > [`rdna_extra/v0.28.0`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extra/v0.28.0).
-> Build the venv first: [Host venv](host-venv.md). Card-count picks stay on
-> [Recipes](recipes.md). Flash-Next graph history stays on
+> Build the venv first: [Host venv](host-venv.md). First-time V620 path:
+> [Onboard](onboarding.md). Card-count picks stay on [Recipes](recipes.md). Flash-Next graph
+> history stays on
 > [Serve lines](flash-next-serve.md).
 
 The fork ships **one** serve entry point under `tools/rdna/` (moved from the old
@@ -16,7 +17,8 @@ the venv, ROCm library path, TunableOp profile, GPU selection, cache roots,
 stale-worker teardown, and the `vllm serve` argv.
 
 Run it from a checkout of the branch you built (`rdna_extras` is the v0.31.0
-line). Hub **`v0.31.0-extras`** already includes this launcher’s PLE / P2P knobs:
+line). Hub **`v0.31.0-extras`** is the matching Docker bake and already includes this
+launcher’s PLE / P2P knobs:
 
 ```sh
 MODEL=/path/to/checkpoint VENV=/path/to/venv \
@@ -65,7 +67,8 @@ parity under coding-agent load at 1k / 16k / 32k). The launcher knob is `PLE=`:
 that contains `META.json`, from
 [`primitive-ai/Qwen3.8-Flash-Next-PLE-quant`](https://huggingface.co/primitive-ai/Qwen3.8-Flash-Next-PLE-quant).
 Docker: `-v /path/to/ples_int4:/ples_int4 -e VLLM_PLE_QUANT_DIR=/ples_int4` and,
-for disk mode, `-e VLLM_PLE_CPU_OFFLOAD=1`. See [Flash-Next serve lines](flash-next-serve.md).
+for disk mode, `-e VLLM_PLE_CPU_OFFLOAD=1`. First-time path: [Onboard](onboarding.md).
+See [Flash-Next serve lines](flash-next-serve.md).
 
 ### Do not paste these onto Flash-Next
 
