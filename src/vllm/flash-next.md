@@ -153,6 +153,13 @@ measured peak — size `--max-model-len` from a real request, not the banner
 before repeat prompts actually hit
 ([zero hits](../troubleshooting/vllm-flash-next.md#flash-next-prefix-cache-zero)).
 
+**FA-RDNA2 vs QSA (`#vllm-rdna` 13 Oct):** FA-RDNA2 is attention for **any** model that uses the
+normal backend selector — it is **not** dense-only. Flash-Next **QSA** full-attention layers bypass
+that selector (Triton QSA owner), so `--attention-backend` / `VLLM_USE_RDNA2_FA` only apply
+**partially**. Details:
+[fork attention backends](./fork.md#attention-backends),
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial).
+
 ## Intel AutoRound Flash-Next (draft, `#vllm-rdna` Sep 10–11 2026) {#intel-autoround-flash-next}
 
 A second Flash-Next track is the Intel **W4A16 AutoRound** checkpoint

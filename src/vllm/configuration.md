@@ -48,6 +48,8 @@ Prefer **`--attention-backend RDNA_ATTN`** (or `VLLM_USE_RDNA2_FA=1`) over **`RO
 `#vllm-rdna` reports `ROCM_ATTN` sitting in AMD Triton flash-attention compile for **hours** (RCCL and
 Triton also fight each other). `FA_RDNA2` may not show up on older `-extras` images or GPTQ models that
 still auto-select `ROCM_ATTN` — that is expected on hybrid GDN; see [fork](fork.md#attention-backends).
+On **Flash-Next**, QSA full-attention layers **ignore** these flags (Triton QSA path) —
+[partial FA](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial).
 
 For **multi-GPU TP** on current `-extras` images, if AOT compile cache replay causes device-bound
 errors, add:

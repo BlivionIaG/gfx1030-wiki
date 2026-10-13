@@ -249,6 +249,28 @@ than falling back. Two independent gates:
 
 Stay on **fp16 KV**. See [Quantization — KV-cache dtype](../vllm/quantization.md#kv-cache-dtype).
 
+## FA-RDNA2 only partial on Flash-Next / QSA {#flash-next-fa-rdna2-partial}
+
+Symptom (`#vllm-rdna`, 13 Oct 2026): startup or profiler shows **Triton** on Flash-Next
+full-attention layers even with `--attention-backend RDNA_ATTN` / `VLLM_USE_RDNA2_FA=1`. Community
+also asked whether FA-RDNA2 is “dense only”.
+
+**What is going on:**
+
+1. FA-RDNA2 is **general attention** (not dense-only). Dense / non-QSA models can use the normal
+   backend selector.
+2. Flash-Next **QSA** full-attention layers set their backend to the Qwen4Exp QSA Triton owner
+   (`amd/qsa.py`) and **do not** call the `--attention-backend` selector. Those flags have **no
+   effect** on QSA layers. Triton in the path is expected.
+3. Maintainer: a **full** FA/HIP switch needs QSA **split-K** attention and **INT4 PLE n-gram**
+   lookup in HIP (still open; community pointed at fork backlog work around `#64`). Until then,
+   FA coverage on Flash-Next stays **partial**.
+
+**What to do:** do not A/B FA flags expecting Flash-Next QSA speedups. Keep day-to-day Flash-Next
+recipes (PLE modes, graphs, TunableOp). Optional FA knobs
+(`VLLM_FA_RDNA2_GQA_MODE`, `VLLM_FA_RDNA2_SPLIT_DECODE`) only matter on layers that actually select
+FA-RDNA2 — [env vars](../reference/env-vars.md), [fork](../vllm/fork.md#attention-backends).
+
 ## AutoRound Flash-Next rejected: `INCConfig` / PLE embedding {#autoround-ple-incconfig}
 
 Symptom (`#vllm-rdna`, 12 Oct 2026): **latest `rdna_extras`** fails to start

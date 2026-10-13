@@ -26,7 +26,9 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_ROCM_USE_AITER` | `0` | Disable aiter fused kernels (CDNA-oriented; community default on RDNA2). |
 | `VLLM_ROCM_USE_AITER_MOE` | `0` | Disable AITER MoE (same reason). |
 | `VLLM_RDNA_FORCE_FP16` | `1` | Force FP16 compute paths — avoids slow BF16 emulation on RDNA2. |
-| `VLLM_USE_RDNA2_FA` | `1` / `0` | Enable native RDNA2 FlashAttention on Hub `-extras`. Flash-Next / `rdna_extras` HEAD: community treated FA as **WIP** and A/B'd `0` (`#vllm-rdna` Sep 15). |
+| `VLLM_USE_RDNA2_FA` | `1` / `0` | Enable native RDNA2 FlashAttention on Hub `-extras`. Flash-Next / `rdna_extras` HEAD: community treated FA as **WIP** and A/B'd `0` (`#vllm-rdna` Sep 15). Flash-Next **QSA** layers ignore this — [partial FA](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial). |
+| `VLLM_FA_RDNA2_GQA_MODE` | `subgroup` | FA-RDNA2 prefill GQA path on `rdna_extras` (`rdna_attn.py`). Default `subgroup` uses `fa_rdna2_prefill_paged_varlen_gqa`; other values fall back. A/B only. |
+| `VLLM_FA_RDNA2_SPLIT_DECODE` | `1` | FA-RDNA2 split-K decode (default on in `rdna_attn.py`). A/B only — not a Flash-Next QSA lever. |
 | `VLLM_GDN_HIP_PREFILL` | `0` | Disable HIP GDN prefill (falls back to Triton/FLA). Used while chasing Flash-Next PP3 corruption — did **not** fix it. |
 | `VLLM_PP_LAYER_PARTITION` | `17,18,13` | Uneven pipeline-parallel layer split. Community 3× Flash-Next + MTP (48 layers) left the last stage light for the drafter. **Unset** this in the PLE worker or it refuses (`pp_size=1`). |
 | `VLLM_ROCM_MOE_PADDING` | `0` | Do not pad routed-expert weights (3× MTP VRAM squeeze). |

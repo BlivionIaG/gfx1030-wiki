@@ -217,6 +217,16 @@ Check startup logs for lines like `Using RDNA2W4A16LinearKernel for AutoGPTQLine
 - `--attention-backend RDNA_ATTN` — alternative RDNA-tuned attention path (useful for Qwen models with
   head size 256 where generic AMD Triton FA is slow or broken).
 - `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE` — enables AMD Triton FA as a fallback; often slower on gfx1030.
+- Optional FA-RDNA2 knobs on `rdna_extras` (`rdna_attn.py`, Oct 2026): `VLLM_FA_RDNA2_GQA_MODE`
+  (default `subgroup`), `VLLM_FA_RDNA2_SPLIT_DECODE` (default `1`). A/B only — not a serve recipe.
+
+`#vllm-rdna` (13 Oct): FA-RDNA2 is **general attention**, not “dense models only”. On **Flash-Next**,
+full-attention layers are owned by the **QSA** path (`Qwen4ExpQSA*`), which picks its Triton backend
+directly and **does not** consult `--attention-backend` / `VLLM_USE_RDNA2_FA`. Seeing Triton in the
+stack for those layers is expected. A full switch would need HIP **QSA split-K** attention plus
+**INT4 PLE n-gram** lookup — still open work (community cited fork backlog around `#64`). Prefer
+not treating FA flags as a Flash-Next speed lever until that lands —
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial).
 
 On v0.27.1, hybrid GDN models may still auto-select `ROCM_ATTN` even with `VLLM_USE_RDNA2_FA=1` for the
 attention layers — that's expected. The GDN linear-attention layers now use the native HIP kernels above
