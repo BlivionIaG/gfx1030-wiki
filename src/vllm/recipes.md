@@ -34,7 +34,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | **3× V620** | vLLM **tensor parallel needs an even world size**. `#vllm-rdna` (Sep 14–15): use **pipeline parallel 3** (`PP=3`, `TP=1`) on vLLM. Older `rdna_extras` pins corrupted PP3 output — [corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror). MTP on 3 cards is **Needs verify** — [PP3 + MTP](./flash-next-serve.md#flash-next-3x-pp3-mtp). llama.cpp can still report TP across three cards (TP3 has [crash notes](../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub **`v0.31.0-extras`** is the current extras bake. **Needs verify** on a second host. Same **gfx1030** class: `#benchmarks` (Oct 10) **4× W6800X Duo**, vLLM **0.30.0** TP4, Qwen3.8-27B **fp16**, ALU **0.9.4**, **MTP-2** — [community table](../troubleshooting/vllm.md#w6800x-duo-alu-093). Not a V620 serve line. |
 | **6× V620** | Flash-Next **minimum is 3** cards. `#vllm-rdna` (Sep 24): start with **`PP=3` + `TP=2`** or **`PP=6`**; keep **TP power-of-2** (avoid `PP=2` + `TP=3` as the first try). Clone HEAD + [host venv](host-venv.md) — Hub tags lag. Disagg prefill/decode across switches is open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) (**Needs verify**). |
-| **8× V620** | Not a Flash-Next recipe. `#vllm-rdna` (Sep 30): community **GLM-5.3-Flash** AWQ on a **local vLLM 0.30 fork**, **TP=8**, **P2P off**, **150 W** — [GLM-5.3-Flash](#glm-53-flash). Org extras stay **0.28**; **Needs verify**. |
+| **8× V620** | Not a Flash-Next recipe. `#vllm-rdna` (Sep 30): community **GLM-5.3-Flash** AWQ on a **local vLLM 0.30 fork**, **TP=8**, **P2P off**, **150 W** — [GLM-5.3-Flash](#glm-53-flash). Day-to-day org extras are now Hub **`v0.31.0-extras`** (11 Oct); that GLM serve was still a **local 0.30 fork**, not Hub — **Needs verify**. |
 
 Also see [What fits well on V620](../choose-a-stack.md#what-fits-well-on-v620).
 
@@ -216,9 +216,11 @@ Hub `-extras` and **not** `rdna_extras` HEAD.
 
 Org draft [`opengfx1030/vllm-rdna#2`](https://github.com/opengfx1030/vllm-rdna/pull/2) is a
 **runtime-unverified** Glm5Next load path on a **side branch** (`later/glm53-flash-awq`); HIP
-gates default **off**. `#vllm-rdna` (Sep 30): day-to-day extras stay on **0.28**; the
-maintainer **paused** the 0.30 rebase and invited a PR of the community 0.30 work. V2 model
-runner **can** work on that line.
+gates default **off**. `#vllm-rdna` (Sep 30): at that time day-to-day extras were still
+**0.28** and the maintainer **paused** the 0.30 rebase, inviting a PR of the community 0.30
+work. `#announcements` (11 Oct 2026): day-to-day is now Hub **`v0.31.0-extras`** — re-check
+GLM on that line before treating the Sep 30 pause as current. V2 model runner **can** work on
+the local-fork line.
 
 Community snapshot (one host — **Needs verify**):
 

@@ -9,7 +9,7 @@
 | Status | Meaning |
 |---|---|
 | **Solid** | Hardware fact, upstream/ROCm docs, or fork source code confirms the behavior exists. |
-| **Fork-source** | Confirmed in `opengfx1030/vllm-rdna` `rdna_extras` (and historical `blivioniag/vllm` `rdna2_extras`) commits; may still need a fresh `-extras` image build. |
+| **Fork-source** | Confirmed in `opengfx1030/vllm-rdna` `rdna_extras` commits (and historical personal-fork SHAs where noted); may still need a fresh `-extras` image build. |
 | **Community** | Reported in Discord or by a fork author; plausible but not wiki-verified on our hardware. |
 | **Needs verify** | Should be re-tested before treating as guidance (image lag, single-host bench, or opinion). |
 | **Opinion** | Subjective quality/speed trade-off from community testing. |
@@ -18,7 +18,7 @@
 
 | Topic | Status | Notes |
 |---|---|---|
-| Docker `-extras` images vs extras HEAD | **Needs verify** | Wiki documents Aug 2026 fork commits. Hub bake still clones historical `blivioniag/vllm` `rdna2_extras`. Re-pull and check logs. Official HEAD is `opengfx1030/vllm-rdna` `rdna_extras`. |
+| Docker `-extras` images vs extras HEAD | **Needs verify** | Hub **`v0.31.0-extras`** (11 Oct 2026) bakes from `opengfx1030/vllm-rdna` @ `rdna_extras` (commit pin in `docker-bake.hcl`). HEAD after that pin still wants clone + [host venv](../vllm/host-venv.md). Older `v0.27.1-extras*` targets named the removed personal `BlivionIaG/vllm` clone. |
 | Performance numbers (tok/s, × speedups) | **Community** | Unless marked **Solid**, treat throughput tables as single-host snapshots. |
 | Env-var recipes | **Community** | Common stacks from Discord; A/B on your topology. |
 | ROCm 7.2.1+ multi-card RCCL bug | **Community** | `#vllm-rdna` (fork author): stay on **7.2.0** or **7.14.0** |
@@ -98,18 +98,18 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Quantized group-16 INT4 PLE incoherent | **Needs verify** | Historical `#vllm-rdna` sidecar path — not `#49`. Known-good AutoRound benches used BF16 PLE |
 | GDN varlen second-seq output bug | **Fork-source** | `gdn_prefill_o_rdna2.cu` in draft PR #5; concurrent prefill |
 | Recipe ports / Hybrid gfx10 opt-in | **Needs verify** | Draft `opengfx1030/vllm-rdna#6` — RDNA2 stays auto default |
-| vLLM 0.29 defaults V2 runner | **Community** | `#vllm-rdna` Sep 11; Hub day-to-day still 0.27.1; Sep 18 `rdna_extra/v0.29.0` rebase |
+| vLLM 0.29 defaults V2 runner | **Community** | `#vllm-rdna` Sep 11 (when Hub day-to-day was still 0.27.1); Sep 18 `rdna_extra/v0.29.0` rebase. Day-to-day Hub is now **`v0.31.0-extras`** — re-A/B V2 on that line. |
 | No MTP on Hub `v0.28.0-extras` | **Community** | `#vllm-rdna` Sep 18 — MTP aimed at 0.29 / Qwen4Exp |
 | MTP can block int4 PLE fused decode | **Community** | `#vllm-rdna` Sep 18 — A/B MTP off on no-P2P hosts |
 | MTP-2 ~0.73–0.85× vs MTP-0 after `700753d9` | **Community** | Author-host 4× W4A16 Flash-Next; `#vllm-rdna` Sep 25 “boots, still a loss”. `30632b2` (27 Sep) lifts c=8 but stays **~0.87×** at 16k |
 | ROCR 1.21 idle CPU spin on 7.14 | **Community** | TheRock#7051; patch in Flash-Next fork `ROCR-CPU-FIX.md` |
-| EXL3 / Quark on gfx1030 | **Needs verify** | Experimental; not in published `-extras` tags yet. Sep 29–1 Oct: mul1 + v0.30 loader on `rdna_extras` HEAD **GPU-run** (215/215; 27B TP=4). Oct 2: mul1-tested only; 3inst untested — still not Hub |
+| EXL3 / Quark on gfx1030 | **Needs verify** | `#announcements` 11 Oct: **EXL3** listed on **v0.31.0** extras / `RECIPE=27b-exl3` — still experimental. Sep 29–1 Oct: mul1 + v0.30 loader on `rdna_extras` HEAD **GPU-run** (215/215; 27B TP=4). Oct 2: mul1-tested only; 3inst untested. Quark still not Hub |
 | Intel AutoRound W4A16 Flash-Next | **Community** | `#vllm-rdna` Sep 10–11 — draft PR #5; not in Hub `-extras` |
-| Official extras source is `opengfx1030/vllm-rdna` `rdna_extras` | **Solid** | `#vllm-rdna` Sep 2026 move; default branch `rdna_extras`; PRs go to the org. Hub `-extras` still from historical clone |
-| Draft PRs `#5` / `#6` on org extras | **Needs verify** | Flash-Next AutoRound + recipe ports; do not treat as released |
-| `opengfx1030/vllm-rdna` ready as published Docker | **Needs verify** | Bake repo is now `opengfx1030/vllm-rdna-docker`; Hub `-extras` still historical 0.27.1 |
-| Flash-Next source is `rdna_extras` | **Community** | `#vllm-rdna` Sep 14–15 — leapdragon branch not updated; published containers may lag |
-| Org 0.28 rebase / Flash-Next cherry-picks | **Community** | `#vllm-rdna` Sep 3–15: PLE load path on HEAD; older PR `#1` was first `rdna_ar` pass |
+| Official extras source is `opengfx1030/vllm-rdna` `rdna_extras` | **Solid** | `#vllm-rdna` Sep 2026 move; default branch `rdna_extras`; PRs go to the org. Current Hub extras bakes (`v0.28` / `v0.31`) clone this repo |
+| Draft PRs `#5` / `#6` on org extras | **Needs verify** | `#5` AutoRound **closed** unmerged (14 Sep); `#6` recipe ports still open/draft — do not treat as released |
+| `opengfx1030/vllm-rdna` ready as published Docker | **Fork-source** | Bake repo `opengfx1030/vllm-rdna-docker`; Hub **`v0.31.0-extras`** published 11 Oct 2026 from org `rdna_extras` |
+| Flash-Next source is `rdna_extras` | **Fork-source** | `#vllm-rdna` Sep 14–15 cherry-picks + `#announcements` 11 Oct Hub bake served Flash-Next MTP-2. leapdragon tree is legacy container / docs |
+| Org 0.28 rebase / Flash-Next cherry-picks | **Historical** | `#vllm-rdna` Sep 3–15 era; superseded by **v0.31.0** release row |
 | Flash-Next KV ~24 GiB ≈ 300k tokens | **Community** | `#vllm-rdna` Sep 14 — 4× 32 GB still tight. Sep 14 “128 GB RAM offload not enough” is the **pre-`#24`** path |
 | Flash-Next concurrency splits TG / tanks PP | **Community** | `#vllm-rdna` Sep 14 — ~70–80 t/s total vs ~70 single; PP ~500 |
 | 2× V620 Flash-Next: llama.cpp not vLLM | **Community** | `#vllm-rdna` Sep 14 — RAM offload |
@@ -158,21 +158,21 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | INT8 decode shadows excluded from `#15` | **Fork-source** | PR body; Discord ~42 → ~55 t/s without MTP is **Needs verify** / quality risk |
 | vllm-rdna-qa playbook | **Needs verify** | `#vllm-rdna` Sep 17 — public repo; maintainer QA only |
 | Flash-Next PP3 + MTP on 3× V620 | **Needs verify** | `#vllm-rdna` Sep 15 — leapdragon image; uneven `VLLM_PP_LAYER_PARTITION`; local int8 patches |
-| Upstream MTP under PP (`vllm#46994`) | **Fork-source** | Merged Sep 2026; not in Hub `-extras` 0.27.1 |
+| Upstream MTP under PP (`vllm#46994`) | **Fork-source / Needs verify** | Merged Sep 2026; absent from Hub **0.27.1** `-extras`. Re-check on Hub **`v0.31.0-extras`** / HEAD (PP3 still Needs verify) |
 | `RDNA2W4A16MoEExperts` raises concurrency | **Community** | `#vllm-rdna` Sep 15 — confirm kernel in logs |
 | Native RDNA2 FA WIP on Flash-Next HEAD | **Community** | `#vllm-rdna` Sep 15 — A/B `VLLM_USE_RDNA2_FA=0`; Hub `-extras` still uses `1` |
 | Flash-Next QSA bypasses FA / `--attention-backend` | **Community / Fork-source** | `#vllm-rdna` 13 Oct — QSA Triton owner; FA not dense-only; full HIP QSA/PLE still open (`#64` backlog). Knobs `VLLM_FA_RDNA2_GQA_MODE` / `VLLM_FA_RDNA2_SPLIT_DECODE` in `rdna_attn.py` |
 | `rdna_ar` not a recommended default | **Community** | `#vllm-rdna` Sep 15–24 — prefer simpler `RDNA_AR` over force custom AR; `#22` merged 27 Sep (still default-off); one host crash on force custom AR |
 | hippihx kernel zoo | **Needs verify** | `#hippihx` Sep 16 — public repo; not in published images |
 | Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 **broken baseline**. Superseded as the gfx1030 path by merged `#24` (next row) |
-| RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. Hub lags |
+| RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. In Hub **`v0.31.0-extras`** |
 | `--kv-offloading-size` RAM parking | **Community / Needs verify** | `#vllm-rdna` Oct 7 — community `--kv-offloading-size 64` (GiB **total** across TP). Storage tier still untested |
 | MTP `draft_sample_method=probabilistic` when temp>0 | **Community** | `#vllm-rdna` Oct 8 — required on current `rdna_extras` MTP-2; greedy/local-argmax is the default |
 | `PLE_OFFLOAD_PREFAULT=0` low-RAM | **Community / Needs verify** | `#vllm-rdna` Oct 8 — ~22–28% slower vs prefault=1 (prose). Unprefixed overlay name; ~1:2 RAM:VRAM OK; 32 GiB + 2× V620 tight |
 | Skinny HIP MoE 9–16 rows `#26` | **Fork-source / Community** | Merged 27 Sep; `VLLM_ROCM_MOE_SKINNY_MAX_M=16`; +11% concurrent regular-text. No single-chat claim |
 | MTP draft graph `30632b2` | **Fork-source** | 27 Sep; +18% / +5% at c=8 1k / 16k; still ~0.87× vs MTP-0 at 16k |
 | Mixed prefill+decode ~1–6 t/s | **Community** | `#vllm-rdna` Sep 27–29 — decode-only 2 streams OK; mixed cliff. Static `--prefill-schedule-interval` / `--long-prefill-token-threshold` trade PP for mixed decode. Sep 29: **unset** those flags for max single-stream PP |
-| Adaptive prefill `#36` (`VLLM_RDNA_DYNAMIC_PREFILL=1`) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#36` (5 Oct). Default off. `#vllm-rdna` Oct 4–5: ~25 t/s burst at 3 decode + 1 prefill; author Oct 5 recovered **below 500 → ~1100** mixed PP. Synthetic benches called a poor measure. Hub lags |
+| Adaptive prefill `#36` (`VLLM_RDNA_DYNAMIC_PREFILL=1`) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#36` (5 Oct). Default off. `#vllm-rdna` Oct 4–5: ~25 t/s burst at 3 decode + 1 prefill; author Oct 5 recovered **below 500 → ~1100** mixed PP. Synthetic benches called a poor measure. In Hub **`v0.31.0-extras`** (opt-in) |
 | wvSplitK vs stacked LLMM1 concurrency | **Community / Needs verify** | `#vllm-rdna` Oct 6 — 4× W6800X Qwen3.8-27B fp16 decode-only; C2 ~40 → ~56 t/s. Keep `VLLM_RDNA_DENSE_GEMV=1` if the Sep 17 fault still hits |
 | Qwen3.8-27B fp16 2× V620 TP=2 MTP ~40–48 t/s | **Community / Needs verify** | `#vllm-rdna` Oct 6 — no quant; Swift 1.5 27B tune ~48 single / ~70 two-instance. Not Flash-Next |
 | `VLLM_RDNA_MOE_RESIDENT=1` missing tanks Flash-Next PP | **Community** | `#vllm-rdna` Sep 29 — latest extras ~2k → ~1450 PP with resident MoE off; `1` recovered ~2k |
@@ -212,7 +212,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Flash-Next still separate; Hub still historical | **Solid** | Org repo + default branch; `#vllm-rdna` Sep 2026 |
+| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Hub **`v0.31.0-extras`** current | **Solid** | Org repo + default branch; `#announcements` 11 Oct 2026 Hub bake. leapdragon is legacy container/docs |
 | Consolidation / 0.28 gap audit | **Community** | `#vllm-rdna` Sep 3–7 channel notes; treat as WIP |
 | No WMMA on RDNA2 | **Solid** | Architecture |
 | Kernel file list | **Solid** | Fork tree (`rdna_extras`) |
@@ -225,7 +225,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | HIP MoE non-deterministic (~3.5% top-token drift) | **Needs verify** | `#vllm-rdna` Sep 19 — Triton MoE bit-identical; Sep 30 fp32 deterministic **opt-in** (perf cost); no public flag name |
 | QSA live-context prefill bound | **Fork-source** | Merged `opengfx1030/vllm-rdna#15`; Python-only scoring width change |
 | Upstream `vllm#57160` CPU KV offload pin | **Needs verify** | `#vllm-rdna` Sep 20 — mainline, not 0.29; `#24` is the gfx1030-facing follow-through |
-| Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. Hub lags |
+| Adaptive prefill `#36` | **Fork-source / Needs verify** | Merged 5 Oct; `#vllm-rdna` Oct 4 community mixed-load notes. In Hub **`v0.31.0-extras`** (opt-in) |
 | MoE expert DRAM cache `#37` | **Needs verify** | Draft `opengfx1030/vllm-rdna#37`; `#vllm-rdna` Oct 4; no gfx1030 tok/s |
 | v0.31.0 extras release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras`. Three PLE modes tested. Author Flash-Next benches above. |
 
@@ -236,7 +236,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | 7.2.0 index `download.pytorch.org/whl/rocm7.2`, torch 2.12.0, triton 3.5.1 | **Solid** | `vllm-rdna-docker` `base-rocm720` |
 | 7.2.0 host paste also had `triton-rocm==3.7.1` | **Community** | `#general` 1 Aug 2026 |
 | 7.14.0 index `repo.amd.com/rocm/whl-multi-arch/`, torch `2.12.0+rocm7.14.0`, triton 3.7.1 | **Solid** | `docker-bake.hcl` `base-rocm714` |
-| Published `7.14.0` tag described as PyTorch 2.13.0 | **Needs verify** | README + [Running](../vllm/running.md) vs current bake pin 2.12.0 |
+| Published `7.14.0` tag described as PyTorch 2.13.0 | **Solid (bake)** / **stale README** | `docker-bake.hcl` `base-rocm714` pins **2.12.0+rocm7.14.0**; wiki [Running](../vllm/running.md) matches bake. Docker-repo README 2.13.0 cell is stale |
 | `pytorch.org/whl/rocm7.14` has no cp312 x86_64 torchaudio | **Community** | `#vllm-rdna` 21 Sep 2026 |
 | Device wheels `rocm-sdk-device-gfx1030` + `amd-torch-device-gfx1030` | **Solid** | `Dockerfile.base` `INSTALL_ROCM_SDK_DEVICE=1` |
 | Missing device wheels → `hipErrorInvalidImage` on index torch | **Fork-source** | `Dockerfile.base` comment |
@@ -301,7 +301,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Swift 1.5 Flash-Next GSQ-RCO GGUF ~400 PP / ~40 TG (2×, MTP) | **Community** | `#llamacpp` Sep 30 — `ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF`; IQ3_xs + q4_0 ngrams; ~48 GB RAM; batch/ubatch 4k/1k |
 | Swift GSQ-RCO IQ3_XXS ~800→650 PP / ~35→20 TG (2×, MTP) | **Community** | `#llamacpp` Oct 2 — same pack IQ3_XXS; `-ot per_layer_token_embd=CPU`; `-c 71680`; 2k/1k; VRAM-bound |
 | Flash-Next n-gram table ~50 GB RAM | **Community** | `#llamacpp` Sep 10 — 4× V620 to avoid storage offload |
-| PR #10 / #12 status | **Needs verify** | Re-check fork PRs |
+| PR #10 / #12 status | **Solid** | Both **merged** on `edwinbrowwn/llama.cpp-rdna2` (#10 13 Aug 2026; #12 17 Aug 2026) |
 
 ### `rdna2-speculative.md`
 

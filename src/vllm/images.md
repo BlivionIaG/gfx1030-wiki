@@ -8,9 +8,10 @@ The [`blivioniag/rocm-rdna`](https://hub.docker.com/r/blivioniag/rocm-rdna) and
 deliberately small: two Dockerfiles, one bake graph, one CI workflow — no Python layer, no custom
 linter.
 
-`#vllm-rdna` (Sep 14–15 2026): a **0.28 / `rdna_extras`** bake on top of
-`docker.io/blivioniag/rocm-rdna:7.14.0` is the intended next image, but Flash-Next **PLE offload**
-is still being validated — do **not** treat that combo as a published Hub `-extras` tag yet.
+`#announcements` (11 Oct 2026): Hub **`v0.31.0-extras`** is the current published extras bake
+(ROCm 7.14 / torch 2.12 / Triton 3.7.1; Flash-Next MTP-2 served). The Sep 14–15 note about a
+pending **0.28** bake is **historical** — that line shipped as `v0.28.0-extras` and is now
+superseded by 0.31.
 
 ## Layout
 
@@ -54,7 +55,7 @@ Set per-target in `docker-bake.hcl`:
 | ARG | Purpose |
 |---|---|
 | `BASE_IMAGE` | Published base image, e.g. `blivioniag/rocm-rdna:7.2.0`. |
-| `VLLM_REPOSITORY` / `VLLM_REF` | vLLM clone URL and git ref (tag or branch). Official extras source is [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna); current bake still clones `https://github.com/BlivionIaG/vllm.git` @ `rdna2_extras`. |
+| `VLLM_REPOSITORY` / `VLLM_REF` | vLLM clone URL and git ref (tag or branch). Current extras bakes (`v0.28.0-extras`, `v0.31.0-extras`) clone [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) @ `rdna_extras`. Older `v0.26` / `v0.27.1-extras*` targets still point at the removed personal `BlivionIaG/vllm` @ `rdna2_extras` clone (404 today). |
 | `VLLM_COMMIT` | Full 40-char commit; the build fails if `HEAD` doesn't match (reproducibility). |
 | `VLLM_VARIANT` | `upstream` or `extras-fork` (recorded as an image label). |
 | `PYTORCH_ROCM_ARCH` | Semicolon-joined gfx targets. |

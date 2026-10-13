@@ -294,7 +294,8 @@ pinned CPU buffers per ROCm rank, hybrid-group index corrections, MTP/EAGLE boun
 scratch-group filters. Community: **~190k** tokens RAM→VRAM in **~0.4 s**; **three** concurrent
 sessions of **~150k** tokens each while VRAM held only **~270k**; tool-call turns **did not**
 re-prefill the parked session. Slower than fitting everything in VRAM, especially when several
-sessions prefill at once. Hub `-extras` still lags — clone + [host venv](../vllm/host-venv.md).
+sessions prefill at once. `#24` is in Hub **`v0.31.0-extras`**; commits after the bake pin still
+want clone + [host venv](../vllm/host-venv.md).
 
 PR-recorded live swap (author host, **48 GiB** RAM tier, swap off, **SSD tier not enabled**):
 
@@ -317,10 +318,11 @@ unused sessions with **`--kv-offloading-size 64`** (64 GiB **total** across TP r
 GPU — see [upstream cache config](https://github.com/vllm-project/vllm/blob/main/vllm/config/cache.py)).
 RAM-tier only; storage offload still **untested** on gfx1030. Hybrid Qwen may still need
 `--disable-hybrid-kv-cache-manager` if the connector refuses HMA — that is a **compatibility**
-trade, not a speed win. Hub `-extras` lags.
+trade, not a speed win.
 
-**Needs verify** on a second host. It is on `rdna_extras` HEAD; do **not** expect it in a Hub
-`-extras` tag yet. See [fork landscape](../vllm/fork.md#consolidation-status) and
+**Needs verify** on a second host. `#24` / `--kv-offloading-size` are in Hub
+**`v0.31.0-extras`**; commits after the bake pin still want [host venv](../vllm/host-venv.md).
+See [fork landscape](../vllm/fork.md#consolidation-status) and
 [Flash-Next KV](../vllm/flash-next.md#qwen38-flash-next-on-vllm).
 
 `#vllm-rdna` (Sep 16): public RAM-offload Flash-Next **weight** packs (example:

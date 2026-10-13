@@ -25,7 +25,8 @@ production is the Flash-Next vLLM stack on **`rdna_extras` (v0.31.0)** — not t
 `#vllm-rdna` Sep 14–15: that work lives on [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna)
 `rdna_extras`;
 [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next)
-is the older published container / docs tree and is **not being updated**. Prefer latest `rdna_extras`
+is the older published container / docs tree (still receives occasional commits; last push 11
+Oct 2026). Prefer latest `rdna_extras`
 or the 0.31 Hub tag over llama.cpp until the RDNA2 llama.cpp fork catches up.
 
 **2× V620 / RAM offload:** vLLM is a poor fit when weights or MoE experts must spill to host RAM.
@@ -85,7 +86,8 @@ Intel AutoRound INT4 experts, FP16 dense, original BF16 PLE in CPU RAM — **Com
 The PR records a **31–33%** 16k/32k prefill lift versus an immediately collected **~1529–1543 tok/s**
 baseline on that same combined stack. Community take: **near-PP4 prefill with TP4 decode**. TP2+PP2
 was not tried. Fused QSA multi-step draft decode with **MTP-3** did not help. **INT8 decode shadows
-are not in this merge.** Pull latest `rdna_extras` — Hub `-extras` tags still lag.
+are not in this merge.** Prefer Hub **`v0.31.0-extras`** or latest `rdna_extras` (commits after
+the 11 Oct bake pin still want a [host venv](host-venv.md)).
 
 `#vllm-rdna` (Sep 21): **do not treat the ~1.8–2.0k PP table as the public-merge floor.** Two other
 4× hosts on `rdna_extras` after `#15` landed **~1.07–1.45k tok/s** prefill. Decode often **did**
@@ -104,8 +106,8 @@ could land on the public branch. Treat **~1.1–1.5k PP** as the **`#15`-only** 
 PR-head 16k (same `llm-context-bench` harness): **1,957.8 / 1,982.8 tok/s** PP, decode **~69 / ~69
 t/s**. A second 4× host **confirmed** those cells (**1,983.8 / 1,985.3 tok/s** PP) after rebuilding
 TunableOp for its rocBLAS — [mismatch](../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
-The `#15` author-host **~2k** table is no longer “unpublished”; Hub `-extras` still lags. **Community
-/ Needs verify** on your topology.
+The `#15` author-host **~2k** table is no longer “unpublished”; `#17` shipped in Hub
+**`v0.31.0-extras`**. **Community / Needs verify** on your topology.
 
 `#vllm-rdna` (Sep 2026) ballpark on **4× V620** (host-dependent; fork author + community):
 
