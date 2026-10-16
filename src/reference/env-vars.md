@@ -28,6 +28,7 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_RDNA_FORCE_FP16` | `1` | Force FP16 compute paths — avoids slow BF16 emulation on RDNA2. |
 | `VLLM_USE_RDNA2_FA` | `1` / `0` | Enable native RDNA2 FlashAttention on Hub `-extras`. Flash-Next / `rdna_extras` HEAD: community treated FA as **WIP** and A/B'd `0` (`#vllm-rdna` Sep 15). Flash-Next **QSA** layers ignore this — [partial FA](../troubleshooting/vllm-flash-next.md#flash-next-fa-rdna2-partial). |
 | `VLLM_FA_RDNA2_GQA_MODE` | `subgroup` | FA-RDNA2 prefill GQA path on `rdna_extras` (`rdna_attn.py`). Default `subgroup` uses `fa_rdna2_prefill_paged_varlen_gqa`; other values fall back. A/B only. |
+| `VLLM_FA_RDNA2_GQA_DECODE` | `1` | FA-RDNA2 GQA **decode** path. `serve_rdna.sh` sets this when `ATTN=fa`. Not a Flash-Next QSA lever. |
 | `VLLM_FA_RDNA2_SPLIT_DECODE` | `1` | FA-RDNA2 split-K decode (default on in `rdna_attn.py`). A/B only — not a Flash-Next QSA lever. |
 | `VLLM_GDN_HIP_PREFILL` | `0` | Disable HIP GDN prefill (falls back to Triton/FLA). Used while chasing Flash-Next PP3 corruption — did **not** fix it. |
 | `VLLM_PP_LAYER_PARTITION` | `17,18,13` | Uneven pipeline-parallel layer split. Community 3× Flash-Next + MTP (48 layers) left the last stage light for the drafter. **Unset** this in the PLE worker or it refuses (`pp_size=1`). |
@@ -49,7 +50,8 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `NCCL_PROTO` | `Simple` | Protocol pin used in PIX custom all-reduce benches. |
 | `VLLM_WORKER_MULTIPROC_METHOD` | `spawn` | Worker spawn method — avoids fork issues with ROCm. |
 | `VLLM_BATCH_INVARIANT` | `0` | Batch-invariant mode forces hipBLASLt; keep off on gfx1030. |
-| `GPU_MAX_HW_QUEUES` | `2` | RDNA2 has 8 HQDs; cap streams to 2 per process. |
+| `GPU_MAX_HW_QUEUES` | `2` | Launcher default **2**. Merged [`#107`](https://github.com/opengfx1030/vllm-rdna/pull/107) (16 Oct): Flash-Next **TP4** recipes set **4** (neutral with fork kernels off; removes per-rank skew with `rdna_mono_*` in the graph). Other recipes keep 2 until measured. |
+| `ROCPROFILER_REGISTER_ENABLED` | `0` | Merged [`#108`](https://github.com/opengfx1030/vllm-rdna/pull/108) (16 Oct): launchers default **0** so HIP/HSA do not register a rocprofiler client on every serve process. `#vllm-rdna` (16 Oct): that registration spun **≥1 idle core per GPU**. Profiling runs set **`1`**. Distinct from [ROCR busy-spin](../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714). |
 | `HIP_FORCE_DEV_KERNARG` | `1` | HIP kernel-arg in device memory (common `#vllm-rdna` stack). |
 | `RCCL_MSCCL_ENABLE` | `0` | Disable MSCCL (stream-hungry; conflicts with Triton on some TP hosts). |
 | `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. Prefer `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` on `-extras`. |

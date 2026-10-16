@@ -72,8 +72,12 @@ on a **leapdragon** tree. Community suspected
 `gdn_decode_rdna2`) — **Needs verify**. `--max-num-seqs 4` (and later **6** with CUDA-graph capture
 sizes `[1,2,4,8]`) reduced some TP corruption while debugging; it is **not** a PP3 fix.
 
-**What to do:** if you need 3-card Flash-Next today, stay on a **known-good leapdragon image** unless
-you are on the later pin below. Do not treat an arbitrary org HEAD as a drop-in for PP3.
+**What to do:** on current `rdna_extras` HEAD, use the in-tree recipes `RECIPE=flashnext-pp3` /
+`flashnext-pp3-mtp2` (merged [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct) —
+[PP3 recipes](../vllm/flash-next-serve.md#flash-next-3x-pp3). Hub **`v0.31.0-extras`** (11 Oct bake)
+does **not** include them. Older Sep 15–16 pins and the Sep 19 `b33f9b6` KeyError stay below as
+historical. A leapdragon image is only a fallback if you cannot clone HEAD. Do not treat an
+arbitrary mid-September org pin as a drop-in for PP3.
 
 ## Flash-Next PP3 graph KeyError on small prefill (`b33f9b6`) {#flash-next-pp3-graph-keyerror}
 

@@ -44,9 +44,11 @@ Copy one and change only the deltas to add a config.
 
 | Recipe | Model / config | Defaults worth knowing |
 |---|---|---|
-| `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. |
+| `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. `#107` (16 Oct): `GPU_MAX_HW_QUEUES=4` on Flash-Next **TP4** recipes (launcher default stays **2**). |
 | `flashnext-mtp0` | Same family, **MTP=0**. Recipe note: MTP=0 wins at **8×1k / 512, c=8** (short prompts). | Same ports and graphs as `flashnext-mtp2`, with `MTP=0`. |
 | `flashnext` | Flash-Next **production** stack: tools + reasoning, six in-flight sequences. Separate from `flashnext-mtp0`. | Port **18094**, `--host 0.0.0.0`, CLI entry, KV **7000000000**, `gpu-memory-utilization 0.90`, block size **1024**, `ATTN=fa`, V2 runner. |
+| `flashnext-pp3` | Flash-Next AWQ-W4A16, **PP=3 / TP=1**, MTP=0. Merged [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96) (13 Oct). **Not** in Hub `v0.31.0-extras`. | Port **18096**, partition **16,16,16**, `MAXLEN=262144`, `KV=auto`, `GMEM=0.95`, SEQS=8, MAXBAT=2048, dense INT8 **ONLY**, text-only. [PP3](flash-next-serve.md#flash-next-3x-pp3). |
+| `flashnext-pp3-mtp2` | Same layout, **MTP=2**. Needs a W4A16 quantized drafter (`tools/rdna/quant_mtp_experts.py`). | Port **18097**, partition **17,17,14**, SEQS=4, MAXBAT=**2112**, `GMEM=0.975`. Use up to ~4 streams. |
 | `27b-awq` | Qwen3.8-27B AWQ INT4, compressed-tensors **W4A16**. `W4A8=1` opts into `VLLM_RDNA2_W4A8_SDOT4` (recipe note: prefill-heavy win on v0.31). | Port **18210**, MTP=0, KV **8000000000**, no `MAXLEN` (the checkpoint’s own context). `language-model-only`. Decode-stall cap `VLLM_RDNA_DECODE_STALL_MS=250` on. |
 | `27b-exl3` | Qwen3.8-27B EXL3 **3.00bpw mul1**. **Eager** bring-up (`EAGER=1`): no torch.compile / CUDA graphs until you turn that off. | Port **18105**, `MAXLEN=20480`, KV **6000000000**. `HIP_VISIBLE_DEVICES=4,5,6,7` (second PLX on an 8-GPU chassis). On a 4-card host set `HIP_VISIBLE_DEVICES=0,1,2,3`. |
 | `dsv4-flash` | DeepSeek-V4-Flash (K128): fp8 dense + MXFP4 experts. **Needs verify.** | Port **18300**, TP=4, `MAXLEN=32768`, KV **6000000000**, `ATTN=none`, `--kv-cache-dtype fp8`. This recipe **does** set `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (piecewise needs it on that model). |
@@ -179,7 +181,7 @@ Legacy names the entry point still accepts: `MODEL`←`MODEL_PATH`,
 
 | Token | Flag |
 |---|---|
-| `prefix-caching` | `--enable-prefix-caching` (skipped when `ENABLE_PREFIX_CACHING=0`) |
+| `prefix-caching` | `--enable-prefix-caching`. Merged [`#97`](https://github.com/opengfx1030/vllm-rdna/pull/97) (14 Oct): `ENABLE_PREFIX_CACHING=0` now passes **`--no-enable-prefix-caching`**. Omitting the flag used to leave prefix cache **on** (vLLM default) — a “cache off” run still showed hits. |
 | `language-model-only` | `--language-model-only` |
 | `skip-mm-profiling` | `--skip-mm-profiling` |
 | `mamba-align` | `--mamba-cache-mode align` |

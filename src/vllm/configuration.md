@@ -31,6 +31,12 @@ fork, long agentic prompts that stall or timeout with V2 enabled have been fixed
 setting **`VLLM_USE_V2_MODEL_RUNNER=0`** instead — see
 [Flash-Next long-prompt stalls](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 
+`GPU_MAX_HW_QUEUES=2` is the **launcher default**. Merged
+[`#107`](https://github.com/opengfx1030/vllm-rdna/pull/107) (16 Oct): Flash-Next **TP4** recipes
+(`flashnext-mtp2` / `flashnext-mtp0` / `flashnext`) set **4**. That is **not** a Hub `-extras`
+compose change — leave **2** on the 27B Docker example unless you measure TP4 Flash-Next on HEAD.
+See [env vars](../reference/env-vars.md).
+
 ### Custom all-reduce / P2P (two community stacks)
 
 Pick **one** path — do not mix both:

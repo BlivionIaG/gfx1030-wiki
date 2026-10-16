@@ -34,12 +34,14 @@ or the 0.31 Hub tag over llama.cpp until the RDNA2 llama.cpp fork catches up.
 (`--n-cpu-moe`, `-ot …=CPU`) instead. Community 2-card llama.cpp Flash-Next is still **~25 t/s**
 decode / **~150–200** PP — far below the 4-card vLLM class.
 
-**3× V620:** vLLM wants **PP=3** (even TP). `#vllm-rdna` (Sep 15–16): a leapdragon image ran Flash-Next
-PP3 without MTP; `rdna_extras` HEAD **still corrupted** decode on a fresh pull —
+**3× V620:** vLLM wants **PP=3** (even TP). Current `rdna_extras` HEAD (merged
+[`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct) ships
+`RECIPE=flashnext-pp3` / `flashnext-pp3-mtp2` — [PP3 recipes](./flash-next-serve.md#flash-next-3x-pp3).
+Hub **`v0.31.0-extras`** (11 Oct bake) **does not** include those recipes. Older Sep 15–16 pins
+corrupted PP3 decode on `rdna_extras` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption).
-Fitting MTP on 3 cards is [community / Needs verify](./flash-next-serve.md#flash-next-3x-pp3-mtp).
-Sep 17–18: a public overlay that ports org **MoE HIP** onto leapdragon reports **~1078–2493** PP /
-**~57–63** TG with MTP k=2 — [overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
+The Sep 17–18 leapdragon overlay is a **snapshot** —
+[overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
 
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer
 **`FULL_AND_PIECEWISE`** (compile `mode: 3`) — uniform decode uses the **FULL** CUDA graph (same
