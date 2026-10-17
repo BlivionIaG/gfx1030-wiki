@@ -114,6 +114,67 @@ the no-draft line yet — [MTP](quantization.md#mtp-speculative-decoding).
 The older Sep 17 PIECEWISE host-venv block below is only for checkouts **before** `#17` / the
 keep-FULL fix.
 
+### 4× V620 Flash-Next MonoKernel (`#94`, 16 Oct) {#flash-next-monokernel}
+
+**Merged** [`opengfx1030/vllm-rdna#94`](https://github.com/opengfx1030/vllm-rdna/pull/94) (16 Oct)
+into `rdna_extras`. A MonoKernel is a **persistent** HIP kernel that runs a large part of one
+Flash-Next (`qwen4_exp`) decoder layer in one launch (k1 hyper-connection preamble, GDN/QSA
+decode cores, k2 FFN). Prefill, mixed batches, the MTP drafter, and TP all-reduce stay on
+today’s path. **Off by default.** Hub **`v0.31.0-extras` lags**. Recipes do **not** pass the
+flag yet.
+
+Startup **refuses** `--monokernel` unless all of these hold: gfx10x GPU, Qwen4Exp (MTP
+drafter accepted), **V2 model runner**, **PP=1**, `_rocm_C` ops built, and MoE on
+**symmetric W4A16** (`CompressedTensorsWNA16RDNA2MoEMethod`). Asymmetric experts are a
+follow-up (open `#115`). PP3 MonoKernel is open backlog (`#116`) — do not combine this
+switch with `RECIPE=flashnext-pp3*`.
+
+```sh
+# Build the in-tree HIP bits (from an rdna_extras checkout + venv):
+bash tools/rdna/mono/build_tree.sh
+
+MODEL=/path/to/flash-next VENV=/path/to/venv \
+  EXTRA_ARGS="--monokernel" \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-mtp2 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
+```
+
+Same switch: `VLLM_ROCM_MONO_DECODE=1` (alias of `--monokernel`; backport of
+[`vllm#61082`](https://github.com/vllm-project/vllm/pull/61082)). A/B without the flag in
+the same session. Keep **`GPU_MAX_HW_QUEUES=4`** (Flash-Next TP4 recipes already set it —
+[`#107`](https://github.com/opengfx1030/vllm-rdna/pull/107)); two queues share HIP queues
+and skew ranks. In-tree notes: [`tools/rdna/mono/README.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/tools/rdna/mono/README.md)
+and [`docs/rdna/monokernel/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/docs/rdna/monokernel).
+Reproduce A/B write-up: open [`#120`](https://github.com/opengfx1030/vllm-rdna/pull/120).
+
+PR `#94` same-session A/B (4× V620, TP4, PLE int4, `FULL_AND_PIECEWISE`, temperature 0,
+`HSA_FORCE_FINE_GRAIN_PCIE=1`, `GPU_MAX_HW_QUEUES=4`) — **Fork-source**. Cells are
+prefill tok/s/req / decode tok/s/req / TTFT s / median ITL ms. For MTP-2, prefer **ITL**
+(decode tok/s moves with drafter acceptance):
+
+| Recipe / cell | off | on | ITL |
+|---|---|---|---|
+| MTP-0 1k c=1 | 2034 / 44.97 / 0.50 / 22.2 | 2205 / 50.74 / 0.46 / 19.7 | **−11.4%** |
+| MTP-0 1k c=8 | 524 / 25.84 / 1.95 / 35.1 | 574 / 28.56 / 1.78 / 31.7 | **−9.5%** |
+| MTP-0 16k c=1 | 2096 / 44.38 / 7.82 / 22.5 | 2113 / 50.03 / 7.75 / 20.0 | **−11.2%** |
+| MTP-0 16k c=8 | 1071 / 13.34 / 15.30 / 35.6 | 1083 / 13.97 / 15.13 / 32.6 | **−8.5%** |
+| MTP-2 1k c=1 | 2053 / 58.88 / 0.50 / 28.6 | 2284 / 77.66 / 0.45 / 24.8 | **−13.4%** |
+| MTP-2 1k c=8 | 905 / 29.47 / 1.13 / 61.0 | 1003 / 32.54 / 1.02 / 55.9 | **−8.3%** |
+| MTP-2 16k c=1 | 2022 / 68.37 / 8.10 / 29.1 | 2040 / 104.58 / 8.03 / 25.5 | **−12.4%** |
+| MTP-2 16k c=8 | 1397 / 13.92 / 11.73 / 62.3 | 1460 / 14.35 / 11.23 / 58.3 | **−6.4%** |
+
+`#vllm-rdna` (16 Oct) author restated the decode-side win as about **8–10%** ITL at c=1
+(with or without MTP), **5–6%** at c=8 without MTP, and **0–3%** at c=8 with MTP-2.
+Prefill / TTFT were same or better in the PR table. Serves passed probe / PPL /
+prefix / concurrency gates.
+
+**Community / Needs verify** (`#vllm-rdna` 16–17 Oct): a second 4× host called MonoKernel
+slightly **slower** than the current HIP path, with one GPU at **100% VRAM** and prefill
+under **1200** tok/s on the same cells — TunableOp mismatch suspected; author-host prefill
+stayed above **2.1k**. A mixed RDNA2/RDNA3 host saw about **5–10%** after adding the switch
+(not a V620 recipe). If PP collapses after `--monokernel`, regenerate TunableOp before
+blaming the kernel — [TunableOp](../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
+
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
 
 Sanitized from a `#vllm-rdna` (Sep 17) host-venv recipe on **4× V620**. **Community / Needs verify**
@@ -239,35 +300,75 @@ image can OOM after a clean start. `#general` (Sep 21): vision + **PP3** is espe
 
 Maintainer QA playbook (not a second wiki): [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa).
 
-### 3× V620 Flash-Next PP3 + MTP (community, Needs verify) {#flash-next-3x-pp3-mtp}
+### 3× V620 Flash-Next PP3 (`rdna_extras` HEAD) {#flash-next-3x-pp3}
 
-`#vllm-rdna` (Sep 15): one host fitted **Qwen3.8-Flash-Next + MTP** on **3× V620 32 GB** using a
-**leapdragon** image (W4A16 + PLE int4 CPU offload), `PP=3` / `TP=1`. Treat as a **single-host**
-write-up — some steps were **local source patches**, not a published tag.
+`#general` (13 Oct 2026) + merged [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96):
+**PP3 / MTP-2** is in-tree on current `rdna_extras`. Hub **`v0.31.0-extras`** (11 Oct bake) **does
+not** include these recipes — clone HEAD + [host venv](host-venv.md) +
+[serve scripts](serve-scripts.md).
 
-Operational facts that are safe to copy:
+```sh
+MODEL=/path/to/flash-next VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-pp3 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
+```
 
-- Baseline **PP3 without MTP** already sat at **~30 GiB/card** with `--gpu-memory-utilization 0.95`.
-- The MTP head (`model_mtp.safetensors`, unquantized **fp16 MoE**, ~**5 GB**) is instantiated on the
-  **last pipeline stage only**, so that stage OOMs first.
-- Uneven layers: `VLLM_PP_LAYER_PARTITION=17,18,13` (48 layers) to leave the last stage light. The
-  **PLE offload worker** can inherit that env, see `pp_size=1`, and refuse
-  (`len(partitions)=3` ≠ `pp_size=1`) — **unset** `VLLM_PP_LAYER_PARTITION` in the PLE worker process.
-- `VLLM_ROCM_MOE_PADDING=0` (do not pad routed-expert weights).
-- Serve knobs on that host: `--enforce-eager`, context **32768**, `--max-num-seqs 4`,
-  `--max-num-batched-tokens 2048`.
-- Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (MTP under pipeline
-  parallel on the V2 runner) merged Sep 2026 — was absent from Hub **0.27.1** `-extras`; re-check
-  on Hub **`v0.31.0-extras`** / HEAD (PP3 + MTP still **Needs verify**).
+MTP-2 needs a **W4A16 quantized drafter** (`tools/rdna/quant_mtp_experts.py`); bf16 draft experts
+do not fit the last stage:
 
-Community also rewrote `VLLM_RDNA_DENSE_INT8` shadow quant to **row blocks** so a 2.4 GiB fp32
-temporary would not OOM a nearly full card, then `VLLM_RDNA_DENSE_INT8_ONLY=1` to drop fp16 copies
-(~2 GB/rank). Those int8 changes were **local** — do not assume they are in `rdna_extras` HEAD.
+```sh
+MODEL=/path/to/mtpq-model VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-pp3-mtp2 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
+```
 
-If an older `rdna_extras` pin **corrupts** PP3 decode, stay on a known-good leapdragon container —
+Recipe facts (fork comments + `#general` 13 Oct maintainer paste):
+
+| Recipe | Partition | SEQS / MAXBAT / GMEM | Notes |
+|---|---|---|---|
+| `flashnext-pp3` | `16,16,16` | 8 / 2048 / 0.95 | MTP=0, text-only, 262k, `KV=auto`. Dense INT8 **ONLY** (fp16 copy next to the shadow OOMs a stage). Vision **not supported** under PP3 (encoder on stage 0). |
+| `flashnext-pp3-mtp2` | `17,17,14` | 4 / 2112 / 0.975 | Drafter on last stage. `GMEM 0.95` caps length ~188k on 30 GB cards. `MAXBAT 2048` admits only 3 of 4 at 16k. Use up to ~4 streams; beyond that MTP=0 has more aggregate. |
+
+`#vllm-rdna` (17 Oct): later HEAD merges were **not re-benched** against this 13 Oct table —
+treat the numbers as a snapshot, not a current HEAD guarantee.
+
+Author-host 16k/1k (`#general` 13 Oct, **Community** — not wiki-tested):
+
+| Recipe | c=1 PP / TG / TTFT / ITL | Concurrent |
+|---|---|---|
+| `flashnext-pp3` (MTP-0) | **1848** / **38.0** / 8.87 s / 26.4 ms | c=8: **771** (1589 agg) / **7.7** / 21.3 s / 63.4 ms |
+| `flashnext-pp3-mtp2` | **1866** / **70.9** / 8.78 s / 37.0 ms | c=4: **1071** (3088 agg) / **10.1** / 15.3 s / 122 ms (all 4 running) |
+
+Also merged [`#95`](https://github.com/opengfx1030/vllm-rdna/pull/95): int8 dense shadows are built in
+**row chunks** so load no longer allocates a ~2.4 GiB fp32 temporary. PLE still lives on **stage 0**
+— `PLE=bf16` wants ~95 GB host RAM; smaller hosts use `PLE=int4` / `int4-disk`.
+
+Older Sep 15 leapdragon / overlay notes stay below as **historical**. If an older pin still
+**corrupts** PP3 decode —
 [PP3 corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Sep 19 pin
 `b33f9b6` is a different failure (graphs boot, small prefill `KeyError`) —
 [workaround](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror).
+
+### 3× V620 Flash-Next PP3 + MTP (leapdragon era, Needs verify) {#flash-next-3x-pp3-mtp}
+
+`#vllm-rdna` (Sep 15): one host fitted **Qwen3.8-Flash-Next + MTP** on **3× V620 32 GB** using a
+**leapdragon** image (W4A16 + PLE int4 CPU offload), `PP=3` / `TP=1`. Treat as a **single-host**
+write-up — some steps were **local source patches**. Prefer the [HEAD recipes](#flash-next-3x-pp3)
+when you can clone current `rdna_extras`.
+
+Operational facts from that era that still match the HEAD recipes:
+
+- Baseline **PP3 without MTP** sat at **~30 GiB/card** with `--gpu-memory-utilization 0.95`.
+- The MTP head is instantiated on the **last pipeline stage only**, so that stage OOMs first.
+- Uneven layers leave the last stage light. The **PLE offload worker** can inherit
+  `VLLM_PP_LAYER_PARTITION`, see `pp_size=1`, and refuse (`len(partitions)=3` ≠ `pp_size=1`) —
+  **unset** that env in the PLE worker process.
+- `VLLM_ROCM_MOE_PADDING=0` (do not pad routed-expert weights).
+- Upstream [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (MTP under pipeline
+  parallel on the V2 runner) merged Sep 2026.
+
+The old **local** int8 row-chunk rewrite is now [`#95`](https://github.com/opengfx1030/vllm-rdna/pull/95)
+on HEAD. `VLLM_RDNA_DENSE_INT8_ONLY=1` is on both `flashnext-pp3*` recipes.
 
 ### 3× overlay: leapdragon + org MoE HIP (Sep 17–18) {#flash-next-3x-moe-hip-overlay}
 

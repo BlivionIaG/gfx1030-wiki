@@ -23,6 +23,20 @@ echo 180000000 | sudo tee /sys/class/hwmon/hwmonX/power1_cap
 
 The SMU firmware actually accepts values down to 120 W — only the **kernel** is in the way.
 
+`#general` (17 Oct 2026): that “Invalid argument” story is **not** universal. A **Debian 12.12 /
+kernel 6.1** host accepted `echo 180000000` to `power1_cap` **without** the toolbox patch
+(`power1_cap_min` stayed **0**, `power1_cap_max` stayed 250 W). Temps dropped vs stock 250 W.
+The same thread pointed at the public
+[r/linux_gaming report](https://www.reddit.com/r/linux_gaming/s/jtQJL5Wqt9) that AMD
+sysfs power limiting is effectively broken on Linux **6.7+**.
+Maintainer: forgot the pre-7.x behavior; the 180 W write did lower temps from 250 W on that
+report; the toolbox path still **works on 7.x**.
+
+Treat a successful write on an old kernel as a **soft cap only** — it does **not** unlock the
+120 W floor (`power1_cap_min=0` means the driver never advertised 120 W). After a 6.7+ or 7.x
+upgrade, expect the write to start failing again until you apply the patch. The supported
+unlock is still this page’s toolbox path.
+
 ## The fix
 
 A tiny patch to `sienna_cichlid_get_power_limit()` in

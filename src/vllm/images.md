@@ -11,7 +11,8 @@ linter.
 `#announcements` (11 Oct 2026): Hub **`v0.31.0-extras`** is the current published extras bake
 (ROCm 7.14 / torch 2.12 / Triton 3.7.1; Flash-Next MTP-2 served). The Sep 14–15 note about a
 pending **0.28** bake is **historical** — that line shipped as `v0.28.0-extras` and is now
-superseded by 0.31.
+superseded by 0.31. `#vllm-rdna` (17 Oct): do **not** bump the image Triton pin to **3.9+** —
+those releases drop RDNA1/RDNA2. Stay on **3.7.1** until the bake moves.
 
 ## Layout
 

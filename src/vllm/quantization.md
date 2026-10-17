@@ -19,6 +19,13 @@ stall at ~4–5 t/s on a 27B. Pull the latest `-extras` image and confirm
 
 Kernel dispatch details: [rdna_extras fork](fork.md#kernel-dispatch-on-gfx1030).
 
+`#vllm-rdna` (14 Oct) + merged [`#98`](https://github.com/opengfx1030/vllm-rdna/pull/98): RDNA2 W4A16
+**MoE** no longer synthesizes **symmetric** zero points. Asymmetric compressed-tensors checkpoints
+(e.g. `cyankiwi/*-AWQ-INT4`, group 32, int8 zeros) used to miss the native experts kernel and fall
+back to generic Triton WNA16 MoE. Asymmetric **8-bit** checkpoints still fall back. Confirm
+`RDNA2W4A16MoEExperts` (or dense `RDNA2W4A16LinearKernel`) in logs. **Not** in Hub
+`v0.31.0-extras` (11 Oct bake) — clone HEAD.
+
 ## KV-cache dtype
 
 | Dtype | When people use it | `#vllm-rdna` notes |
@@ -49,7 +56,9 @@ MTP is **not free at high concurrency**. A `#vllm-rdna` TP4 matrix on **Qwen3.6-
 `#vllm-rdna` (Sep 15): `RDNA2W4A16MoEExperts` was reported to raise **usable concurrency** on MoE
 W4A16 — confirm the kernel in logs. **Pipeline-parallel MTP** needs upstream
 [`vllm#46994`](https://github.com/vllm-project/vllm/pull/46994) (merged; next vLLM release). A 3×
-V620 Flash-Next + MTP squeeze is [community / Needs verify](flash-next-serve.md#flash-next-3x-pp3-mtp).
+V620 Flash-Next + MTP squeeze is the in-tree `flashnext-pp3-mtp2` recipe on HEAD
+([PP3](flash-next-serve.md#flash-next-3x-pp3)); the older leapdragon overlay is
+[historical](flash-next-serve.md#flash-next-3x-pp3-mtp). Hub **`v0.31.0-extras`** lags.
 
 `#vllm-rdna` (Sep 18): on Flash-Next, **MTP can block the int4 PLE fused decode path**. If logs show
 Triton GDN / PLE fallback and decode is stuck in the teens of t/s, A/B **MTP off** before blaming

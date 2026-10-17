@@ -385,6 +385,19 @@ for host builds (and note that recipe containers already bake the patch):
 in [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next).
 Pull latest recipe / container before re-debugging idle CPU.
 
+## rocprofiler register idle CPU (`#108`) {#rocprofiler-register-idle-cpu}
+
+Symptom (`#vllm-rdna` 16 Oct 2026): a multi-GPU vLLM serve holds **≥1 CPU core per GPU** even when
+the GPUs are idle. This is **not** the TheRock ROCR `AsyncEventsLoop` busy-spin
+([ROCR idle CPU](#rocr-idle-cpu-spin-therock-714)).
+
+Root cause: HIP/HSA **rocprofiler client registration** on every serve process. Merged
+[`opengfx1030/vllm-rdna#108`](https://github.com/opengfx1030/vllm-rdna/pull/108) (16 Oct):
+`tools/rdna/rdna_launcher_common.sh` defaults `ROCPROFILER_REGISTER_ENABLED=0`.
+
+**Fix:** stay on current `rdna_extras` HEAD (or export `ROCPROFILER_REGISTER_ENABLED=0` yourself).
+Hub **`v0.31.0-extras`** (11 Oct bake) **lags** this default. Profiling runs set `=1`.
+
 Flash-Next stalls, graph corruption, KV accounting, PP3, and PLE issues are on
 [Flash-Next troubleshooting](./vllm-flash-next.md).
 

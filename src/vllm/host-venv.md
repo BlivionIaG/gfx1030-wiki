@@ -51,6 +51,11 @@ below; if you are matching an image you already pulled, use whatever `torch.__ve
 container prints (a true 2.13 wheel would pair with `torchvision==0.28.0+rocm7.14.0` and
 `amd-torch-device-gfx1030==2.13.0+rocm7.14.0` on the same index).
 
+`#vllm-rdna` (17 Oct): Triton **3.9+ removes RDNA1/RDNA2**. Stay on the bake pin
+(`triton==3.7.1` here, `3.5.1` on ROCm 7.2). Do not `uv pip install -U triton`. The
+`rdna_extras` HIP path is the long-term escape; a 3.9 wheel will not grow gfx1030
+support back.
+
 ```sh
 uv venv --python 3.12 venv-7.14.0
 source venv-7.14.0/bin/activate
