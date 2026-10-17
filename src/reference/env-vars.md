@@ -50,9 +50,11 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `NCCL_PROTO` | `Simple` | Protocol pin used in PIX custom all-reduce benches. |
 | `VLLM_WORKER_MULTIPROC_METHOD` | `spawn` | Worker spawn method — avoids fork issues with ROCm. |
 | `VLLM_BATCH_INVARIANT` | `0` | Batch-invariant mode forces hipBLASLt; keep off on gfx1030. |
-| `GPU_MAX_HW_QUEUES` | `2` | Launcher default **2**. Merged [`#107`](https://github.com/opengfx1030/vllm-rdna/pull/107) (16 Oct): Flash-Next **TP4** recipes set **4** (neutral with fork kernels off; removes per-rank skew with `rdna_mono_*` in the graph). Other recipes keep 2 until measured. |
+| `GPU_MAX_HW_QUEUES` | `2` | Launcher default **2**. Merged [`#107`](https://github.com/opengfx1030/vllm-rdna/pull/107) (16 Oct): Flash-Next **TP4** recipes set **4** (neutral with fork kernels off; removes per-rank skew with `rdna_mono_*` / MonoKernel `#94` in the graph). Other recipes keep 2 until measured. |
+| `VLLM_ROCM_MONO_DECODE` | `1` | Alias of `--monokernel`. Merged [`#94`](https://github.com/opengfx1030/vllm-rdna/pull/94) (16 Oct). Opt-in Flash-Next persistent decode on gfx1030. Off by default. Needs V2 runner, PP=1, symmetric W4A16. Not Hub. [MonoKernel](../vllm/flash-next-serve.md#flash-next-monokernel). |
+| `HSA_KERNARG_POOL_SIZE` | `262144` | `#vllm-rdna` (17 Oct): community **TP=8** host reclaimed ~**14 GB** of host RAM vs the **4 MB** default (padded kernarg pool). c=8 @ 16k speed change was noise (under 1%). Maintainer: legacy; usual path is `HIP_FORCE_DEV_KERNARG=1` (already in the common stack). **Needs verify** on 4×. |
 | `ROCPROFILER_REGISTER_ENABLED` | `0` | Merged [`#108`](https://github.com/opengfx1030/vllm-rdna/pull/108) (16 Oct): launchers default **0** so HIP/HSA do not register a rocprofiler client on every serve process. `#vllm-rdna` (16 Oct): that registration spun **≥1 idle core per GPU**. Profiling runs set **`1`**. Distinct from [ROCR busy-spin](../troubleshooting/vllm.md#rocr-idle-cpu-spin-therock-714). |
-| `HIP_FORCE_DEV_KERNARG` | `1` | HIP kernel-arg in device memory (common `#vllm-rdna` stack). |
+| `HIP_FORCE_DEV_KERNARG` | `1` | HIP kernel-arg in device memory (common `#vllm-rdna` stack). `#vllm-rdna` (17 Oct): prefer this over shrinking `HSA_KERNARG_POOL_SIZE` unless you are reclaiming host RAM on a large-TP box. |
 | `RCCL_MSCCL_ENABLE` | `0` | Disable MSCCL (stream-hungry; conflicts with Triton on some TP hosts). |
 | `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enable AMD Triton FA fallback. Prefer `RDNA_ATTN` / `VLLM_USE_RDNA2_FA` on `-extras`. |
 | `PYTORCH_TUNABLEOP_ENABLED` | `0` / `1` | `0` for reproducible benches; `1` to **load** a qualified table (`TUNING=0` in the `#17` launcher). |

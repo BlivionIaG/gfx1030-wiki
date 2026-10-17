@@ -237,6 +237,13 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Asymmetric W4A16 MoE `#98` | **Fork-source** | `#98` merged 14 Oct |
 | Flash-Next TP4 HW queues `#107` | **Fork-source** | `#107` merged 16 Oct — `GPU_MAX_HW_QUEUES=4`; launcher default 2 |
 | rocprofiler register `#108` | **Fork-source / Community** | `#108` merged 16 Oct; `#vllm-rdna` idle ≥1 core/GPU. Distinct from ROCR TheRock#7051 |
+| Flash-Next MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; `--monokernel` / `VLLM_ROCM_MONO_DECODE=1`; off by default; not Hub; recipes do not enable yet |
+| `#94` same-session ITL table (4× TP4) | **Fork-source** | PR body 16 Oct — ITL −6% to −13%; MTP-2 decode tok/s follows acceptance. Use ITL |
+| MonoKernel second-host PP cliff / 100% VRAM | **Community / Needs verify** | `#vllm-rdna` 16 Oct — TunableOp suspected; author-host PP stayed >2.1k |
+| Flash-Next vLLM 2-card still does not fit | **Community** | `#vllm-rdna` 16 Oct — MonoKernel does not change that |
+| Triton 3.9+ drops RDNA1/RDNA2 | **Community** | `#vllm-rdna` 17 Oct — stay on bake 3.7.1 / 7.2 pin 3.5.1 |
+| `HSA_KERNARG_POOL_SIZE=262144` ~14 GB host RAM | **Community / Needs verify** | `#vllm-rdna` 17 Oct — TP=8; c=8 16k under 1%. Prefer `HIP_FORCE_DEV_KERNARG=1` |
+| PP3 13 Oct table not re-benched after later HEAD | **Community** | `#vllm-rdna` 17 Oct — snapshot, not a current-HEAD guarantee |
 
 ### `host-venv.md`
 
@@ -255,6 +262,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | causal-conv1d pin `4f6ae4e` + `HIP_ARCHITECTURES` | **Solid** | `Dockerfile.vllm` |
 | Do not pass `--torch-backend=rocm7.14` | **Community** | That flag selects the PyTorch index that failed on 21 Sep |
 | `_rocm_sdk_*` `LD_LIBRARY_PATH` | **Community** | `#vllm-rdna` serve blocks; same dirs as the image `ldconfig` |
+| Triton 3.9+ drops gfx1030 | **Community** | `#vllm-rdna` 17 Oct — do not bump past 3.7.1 on 7.14 / 3.5.1 on 7.2 |
 
 ### `serve-scripts.md`
 
@@ -274,6 +282,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `ENABLE_PREFIX_CACHING=0` → `--no-enable-prefix-caching` | **Fork-source** | `#97` 14 Oct |
 | Flash-Next TP4 `GPU_MAX_HW_QUEUES=4` | **Fork-source** | `#107` 16 Oct; launcher default stays 2 |
 | `ROCPROFILER_REGISTER_ENABLED=0` | **Fork-source** | `#108` 16 Oct; `rdna_launcher_common.sh` |
+| `EXTRA_ARGS="--monokernel"` / `VLLM_ROCM_MONO_DECODE` | **Fork-source** | `#94` 16 Oct; off by default |
 
 ---
 
@@ -401,6 +410,11 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm-flash-next.md` PP3 HEAD recipes `#96` | **Fork-source** | `#96` 13 Oct supersedes leapdragon-only “what to do” |
 | `reference/env-vars.md` `GPU_MAX_HW_QUEUES=4` on Flash-Next TP4 | **Fork-source** | `#107` 16 Oct |
 | `reference/env-vars.md` `ROCPROFILER_REGISTER_ENABLED` | **Fork-source / Community** | `#108` 16 Oct |
+| `reference/env-vars.md` `VLLM_ROCM_MONO_DECODE` | **Fork-source** | `#94` 16 Oct |
+| `reference/env-vars.md` `HSA_KERNARG_POOL_SIZE` | **Community / Needs verify** | `#vllm-rdna` 17 Oct — TP=8 ~14 GB; not a 4× recipe |
+| `vllm/flash-next-serve.md` MonoKernel `#94` ITL table | **Fork-source** | PR `#94` 16 Oct; Hub lags |
+| `vllm/flash-next-serve.md` MonoKernel second-host PP | **Community / Needs verify** | `#vllm-rdna` 16 Oct |
+| `vllm/host-venv.md` / `images.md` Triton 3.9 drop | **Community** | `#vllm-rdna` 17 Oct |
 | `reference/env-vars.md` `VLLM_FA_RDNA2_GQA_DECODE` | **Fork-source** | launcher `ATTN=fa` sets `1`; not a Flash-Next QSA lever |
 | `vllm/quantization.md` asymmetric W4A16 MoE `#98` | **Fork-source** | `#98` 14 Oct; not Hub |
 | `vllm/flash-next-serve.md` PP3 HEAD 16k/1k table | **Community** | `#general` 13 Oct author-host; not wiki-tested |
@@ -416,6 +430,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm-flash-next.md` FA-RDNA2 partial on QSA | **Community / Fork-source** | `#vllm-rdna` Oct 13 — QSA Triton owner ignores `--attention-backend` |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
+| `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
 | `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
 | `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line; still not a Hub recipe |
@@ -465,6 +480,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/power.md` 1600 W for 5× stock 250 W; 1200 W tight for 4× | **Community** | `#general` Sep 22–23 — 0.7 A blowers OK at 180 W; ~86 °C at 250 W |
 | `vllm/recipes.md` 3× overlay unmaintained / KV dump loops | **Community** | `#general` Sep 23 — cap ~3 agents on long ctx; ~45 t/s / ~1100 PP on one 3-card host |
 | `tuning/power.md` 180 W token-cost economics | **Community** | `#llamacpp` vs stock 250 W |
+| `tuning/power.md` 6.1 `power1_cap` write without toolbox | **Community / Needs verify** | `#general` 17 Oct — Debian 12.12 / kernel 6.1 accepted 180 W; `power1_cap_min` stayed 0; temps down. Not a 120 W floor unlock |
+| `tuning/power.md` 6.7+ sysfs power-limit ignore | **Community** | `#general` 17 Oct + r/linux_gaming share; maintainer toolbox still works on 7.x |
 | `tuning/p2p.md` SlimSAS / passive riser notes | **Community** | `#general` cabling |
 | `tuning/p2p.md` external Xpander / narrow uplink | **Community** | `#general` Sep 2026 — long-ctx collapse |
 | `tuning/p2p.md` layer vs tensor split explainer | **Community** | `#benchmarks` Sep 2026 |

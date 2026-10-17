@@ -11,7 +11,7 @@
 | [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
-| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3 |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |
 | [Serve scripts](./serve-scripts.md) | `serve_rdna.sh RECIPE=flashnext-mtp2` and siblings |
 
 When something fails, use [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md) rather than the general vLLM list.
@@ -32,7 +32,8 @@ or the 0.31 Hub tag over llama.cpp until the RDNA2 llama.cpp fork catches up.
 **2× V620 / RAM offload:** vLLM is a poor fit when weights or MoE experts must spill to host RAM.
 `#vllm-rdna` (Sep 14): use [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4)
 (`--n-cpu-moe`, `-ot …=CPU`) instead. Community 2-card llama.cpp Flash-Next is still **~25 t/s**
-decode / **~150–200** PP — far below the 4-card vLLM class.
+decode / **~150–200** PP — far below the 4-card vLLM class. `#vllm-rdna` (16 Oct): current
+Flash-Next vLLM still **does not fit on 2 cards as-is** (MonoKernel does not change that).
 
 **3× V620:** vLLM wants **PP=3** (even TP). Current `rdna_extras` HEAD (merged
 [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct) ships
@@ -42,6 +43,9 @@ corrupted PP3 decode on `rdna_extras` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption).
 The Sep 17–18 leapdragon overlay is a **snapshot** —
 [overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
+
+**4× V620 + MonoKernel (`#94`, 16 Oct):** opt-in `--monokernel` on HEAD for Flash-Next decode
+ITL — [MonoKernel](./flash-next-serve.md#flash-next-monokernel). Hub **`v0.31.0-extras` lags**.
 
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer
 **`FULL_AND_PIECEWISE`** (compile `mode: 3`) — uniform decode uses the **FULL** CUDA graph (same

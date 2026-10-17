@@ -44,7 +44,7 @@ Copy one and change only the deltas to add a config.
 
 | Recipe | Model / config | Defaults worth knowing |
 |---|---|---|
-| `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. `#107` (16 Oct): `GPU_MAX_HW_QUEUES=4` on Flash-Next **TP4** recipes (launcher default stays **2**). |
+| `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. `#107` (16 Oct): `GPU_MAX_HW_QUEUES=4` on Flash-Next **TP4** recipes (launcher default stays **2**). Opt-in MonoKernel: `EXTRA_ARGS="--monokernel"` — [serve](flash-next-serve.md#flash-next-monokernel). |
 | `flashnext-mtp0` | Same family, **MTP=0**. Recipe note: MTP=0 wins at **8×1k / 512, c=8** (short prompts). | Same ports and graphs as `flashnext-mtp2`, with `MTP=0`. |
 | `flashnext` | Flash-Next **production** stack: tools + reasoning, six in-flight sequences. Separate from `flashnext-mtp0`. | Port **18094**, `--host 0.0.0.0`, CLI entry, KV **7000000000**, `gpu-memory-utilization 0.90`, block size **1024**, `ATTN=fa`, V2 runner. |
 | `flashnext-pp3` | Flash-Next AWQ-W4A16, **PP=3 / TP=1**, MTP=0. Merged [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96) (13 Oct). **Not** in Hub `v0.31.0-extras`. | Port **18096**, partition **16,16,16**, `MAXLEN=262144`, `KV=auto`, `GMEM=0.95`, SEQS=8, MAXBAT=2048, dense INT8 **ONLY**, text-only. [PP3](flash-next-serve.md#flash-next-3x-pp3). |
@@ -171,7 +171,7 @@ MODEL=/path/to/flash-next VENV=/path/to/venv \
 | `HIP_VISIBLE_DEVICES` | GPU set. Alias: `GPUIDS`. |
 | `TUNABLEOP` | `1` (default) loads a profile. `0` sets `PYTORCH_TUNABLEOP_ENABLED=0`. |
 | `FEATURES` | Space-separated tokens (table below). |
-| `EXTRA_ARGS` | Extra words appended to the vLLM command. |
+| `EXTRA_ARGS` | Extra words appended to the vLLM command. `#vllm-rdna` (16 Oct): `EXTRA_ARGS="--monokernel"` turns on Flash-Next MonoKernel (`#94`) — same as `VLLM_ROCM_MONO_DECODE=1`. Off by default. [MonoKernel](flash-next-serve.md#flash-next-monokernel). |
 
 Legacy names the entry point still accepts: `MODEL`←`MODEL_PATH`,
 `KV`←`KVCAP`←`KV_CACHE_MEMORY`, `SEQS`←`MAX_NUM_SEQS`,
