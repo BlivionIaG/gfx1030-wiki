@@ -6,6 +6,17 @@ Hub `-extras` (CUDA graphs, AMDSMI, RCCL version pin, first-boot compile) stay o
 
 Serve lines: [Flash-Next](../vllm/flash-next.md).
 
+## Do not enable dynamic MTP schedules {#flash-next-dynamic-mtp}
+
+Merged [`#127`](https://github.com/opengfx1030/vllm-rdna/pull/127) (18 Oct) gates `#119` dynamic
+MTP graph shapes behind `num_speculative_tokens_per_batch_size`. Fixed MTP-2
+(`RECIPE=flashnext-mtp2`) is unchanged.
+
+`#vllm-rdna` (22 Oct): a community isolation matrix blamed that **opt-in schedule** for
+token-repeat loops (other flags, including `--monokernel`, passed alone). Leave the schedule
+**unset** until open [`#125`](https://github.com/opengfx1030/vllm-rdna/pull/125) lands. Do not
+copy agent-generated `draft_sample_method` / per-batch-K dumps onto a daily serve.
+
 ## Flash-Next long-prompt stalls {#flash-next-long-prompt-stalls}
 
 Symptom (Flash-Next fork / recipe containers, `#vllm-rdna` Sep 2026): short prompts decode fine, but

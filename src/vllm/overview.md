@@ -20,6 +20,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | GLM-5.3-Flash on 8× (local 0.30 fork) | [Recipes — GLM-5.3-Flash](./recipes.md#glm-53-flash) |
 | Qwen3.8 Flash-Next (benchmarks and serve lines) | [Flash-Next](./flash-next.md) |
 | Flash-Next MonoKernel (`--monokernel`, HEAD) | [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |
+| Flash-Next DFlash2 (`RECIPE=flashnext-dflash2`, HEAD) | [DFlash2](./flash-next-serve.md#flash-next-dflash2) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](./configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](./quantization.md) |
 | Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](./fork.md) |

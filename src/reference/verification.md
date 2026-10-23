@@ -244,6 +244,14 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Triton 3.9+ drops RDNA1/RDNA2 | **Community** | `#vllm-rdna` 17 Oct — stay on bake 3.7.1 / 7.2 pin 3.5.1 |
 | `HSA_KERNARG_POOL_SIZE=262144` ~14 GB host RAM | **Community / Needs verify** | `#vllm-rdna` 17 Oct — TP=8; c=8 16k under 1%. Prefer `HIP_FORCE_DEV_KERNARG=1` |
 | PP3 13 Oct table not re-benched after later HEAD | **Community** | `#vllm-rdna` 17 Oct — snapshot, not a current-HEAD guarantee |
+| MonoKernel QSA HIP `#126` | **Fork-source** | `#126` merged 18 Oct; `--monokernel` indexer in HIP; default path unchanged |
+| Dynamic MTP opt-in `#127` | **Fork-source / Community** | `#127` merged 18 Oct; `#vllm-rdna` 22 Oct leave `num_speculative_tokens_per_batch_size` unset (repeat loops) |
+| `rdna_ar` sticky abort `#128` | **Fork-source** | `#128` merged 19 Oct — WEDGED instead of silent RPC timeout |
+| HIP set default-on `#130` (closes `#99`) | **Fork-source** | `#130` merged 19 Oct; Flash-Next recipes HIP on; ITL −6 to −8% without `--monokernel`. Not Hub |
+| Non-mono graph hang `#131` | **Fork-source** | `#131` merged 19 Oct — no aux-stream SharedExperts in CUDA graphs on gfx10x |
+| Flash-Next DFlash2 `#132` | **Fork-source** | `#132` merged 21 Oct; `RECIPE=flashnext-dflash2`; MTP-2 faster in PR A/B. Not Hub |
+| DFlash2 vs MTP-2 agentic | **Community / Needs verify** | `#vllm-rdna` 22 Oct — maintainer MTP-2 still ahead; DFlash2 can win short / single-user |
+| HP Z6 G4 slot-5 PSP / fan PWM | **Community / Needs verify** | `#motherboard` 18–23 Oct — BIOS factory reset unstuck blowers; slot 5 `PSP load kdb failed!` unresolved |
 
 ### `host-venv.md`
 
@@ -269,7 +277,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
-| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env` |
+| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `flashnext-dflash2` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env`. `flashnext-dflash2` is `#132` (21 Oct); Hub lags |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
 | Flash-Next PLE `bf16` / `int4` / `int4-disk` | **Fork-source** | `#announcements` 11 Oct + `serve_rdna.sh` `PLE=`. INT4 table ~30 GB; `#vllm-rdna` Oct 11 corrected inflated ~90 GB host-RAM figure (~35 GB working set). Disk mmap via `VLLM_PLE_CPU_OFFLOAD=1`. Speed at parity on author 4× V620. |
 | Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
@@ -431,6 +439,13 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
 | `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
+| `vllm/fork.md` `#126` / `#127` / `#128` / `#130` / `#131` / `#132` | **Fork-source** | Merged 18–21 Oct; Hub `v0.31.0-extras` lags |
+| `vllm/flash-next-serve.md` HIP defaults `#130` | **Fork-source** | 19 Oct — Flash-Next HEAD recipes HIP on |
+| `vllm/flash-next-serve.md` DFlash2 `#132` | **Fork-source** | 21 Oct — MTP-2 still faster in PR A/B |
+| `troubleshooting/vllm.md` `rdna_ar` silent hang `#128` | **Fork-source** | 19 Oct |
+| `troubleshooting/vllm.md` non-mono graph hang `#131` | **Fork-source** | 19 Oct |
+| `troubleshooting/vllm-flash-next.md` dynamic MTP `#127` | **Fork-source / Community** | `#vllm-rdna` 22 Oct — leave schedule off |
+| `setup/host-firmware.md` HP Z6 G4 PSP / fans | **Community / Needs verify** | `#motherboard` 18–23 Oct |
 | `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
 | `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line; still not a Hub recipe |
@@ -509,6 +524,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | 256 GB MMIO window for 4× V620 | **Community** | `#motherboard` — 64 GB too small |
 | GpuMMIOFix OS BAR remap | **Needs verify** | `#motherboard` Sep 15–16 — typically every boot |
 | HP Z4 G4 32-bit MIMO + ReBAR + `pci=realloc=off` | **Needs verify** | `#motherboard` Sep 16 — Xeon W-2133; Linux reallocates 64 GB VRAM |
+| HP Z6 G4 blower PWM + slot-5 PSP kdb | **Needs verify** | `#motherboard` 18–23 Oct — factory reset unstuck fans; second V620 in slot 5 unresolved |
 | H12D V620 POST loop; SR-IOV off + Above 4G + CSM off + ReBAR on | **Needs verify** | `#general` Oct 6 — one host; menu-level, not Dell hidden vars |
 
 ---

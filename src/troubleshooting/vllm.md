@@ -163,6 +163,32 @@ If TP works on one image and dies after a host ROCm bump, check the **ROCm versi
 model. **7.2.1 through ~7.13** are reported to have a multi-card RCCL bug. Stay on **7.2.0** or
 **7.14.0** — see [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
 
+## Silent decode hang / `RPC call … timed out` (`rdna_ar`) {#rdna-ar-silent-hang}
+
+Symptom (`#vllm-rdna` / fork `#128`, 18–19 Oct): all ranks at **~99% GPU util** and **0% memory**
+activity, host idle, then `RPC call … timed out`. No `rdna_ar wedged` line. Seen on `rdna_extras`
+**without** `--monokernel` (MonoKernel does those all-reduces inside its FFN kernel).
+
+**Merged** [`#128`](https://github.com/opengfx1030/vllm-rdna/pull/128) (19 Oct): the one-shot
+now honors its sticky abort, fails the engine as WEDGED, and the next boot falls back to RCCL.
+Hub **`v0.31.0-extras` lags** — clone HEAD. If you still see the hang on a bake older than `#128`,
+A/B `VLLM_RDNA_AR=0` (RCCL) or `P2P=0`.
+
+A **different** non-mono hang (workers silent, same RPC timeout, `#128` never reported WEDGED)
+was the CUDA-graph shared-experts aux-stream — next section.
+
+## Non-mono engine hang after ~minutes (CUDA-graph aux stream) {#non-mono-graph-hang}
+
+Symptom: serve looks healthy, then workers stop answering (~300 s RPC timeout) **without**
+`--monokernel`. `#vllm-rdna` (19 Oct) + merged
+[`#131`](https://github.com/opengfx1030/vllm-rdna/pull/131): gfx10x `SharedExperts` forked to
+a second HIP queue inside **captured** FULL/PIECEWISE graphs; ROCm 7.14 could decrement a
+barrier signal twice and wait forever. Eager steps keep the overlap.
+
+Fix is on HEAD (`#131`). Cost in the PR matrix was ~0 at c=1; MTP-0 c=8 up to **~1.5%**
+slower. If you cannot pull HEAD, `--monokernel` avoided the hang in ~40 author-host serves
+(far fewer captured fork/joins per step) — not a substitute for the patch.
+
 ## Prefill blocks decode / MTP stalls under concurrency {#prefill-blocks-decode}
 
 Symptom: with speculative decode (MTP) and multiple in-flight requests, generation stalls while

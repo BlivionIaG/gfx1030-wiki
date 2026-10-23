@@ -6,8 +6,8 @@ Common errors on gfx1030 / RDNA2 and how to fix them. Pick the section that matc
 |---|---|
 | ROCm install, hipBLASLt, BF16, iGPU, Secure Boot, CPU governor, V620 cooling | [General](./general.md) |
 | Host never POSTs with 4× V620 / PLX (Dell Precision, H12D) | [Host firmware](../setup/host-firmware.md) |
-| vLLM Docker, CUDA graphs, TunableOp / rocBLAS mismatch, Inductor cache, GLM vision compile, AMDSMI, RCCL, rocprofiler idle CPU | [vLLM](./vllm.md) |
-| Flash-Next stalls, PP3 / FULL graphs, hybrid KV, PLE, QSA vs FA-RDNA2, AutoRound `INCConfig`, vision OOM, wvSplitK | [vLLM Flash-Next](./vllm-flash-next.md) |
+| vLLM Docker, CUDA graphs, TunableOp / rocBLAS mismatch, Inductor cache, GLM vision compile, AMDSMI, RCCL, rocprofiler idle CPU, `rdna_ar` / non-mono hangs | [vLLM](./vllm.md) |
+| Flash-Next stalls, PP3 / FULL graphs, hybrid KV, PLE, QSA vs FA-RDNA2, AutoRound `INCConfig`, vision OOM, wvSplitK, dynamic MTP loops | [vLLM Flash-Next](./vllm-flash-next.md) |
 | llama.cpp RCCL, KV checkpoints, FA occupancy abort, DAX mmap, tensor split, PSU, Vulkan ICD, Windows Unsloth / WSL | [llama.cpp](./llama-cpp.md) |
 
 > **WIP:** Fixes involving latest `-extras` images assume a current image pull — see

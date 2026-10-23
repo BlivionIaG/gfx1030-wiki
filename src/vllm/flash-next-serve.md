@@ -175,6 +175,50 @@ stayed above **2.1k**. A mixed RDNA2/RDNA3 host saw about **5–10%** after addi
 (not a V620 recipe). If PP collapses after `--monokernel`, regenerate TunableOp before
 blaming the kernel — [TunableOp](../troubleshooting/vllm.md#tunableop-rocblas-mismatch).
 
+Merged [`#126`](https://github.com/opengfx1030/vllm-rdna/pull/126) (18 Oct) moves the
+MonoKernel QSA indexer (store / epilogue / scoring) to HIP. That is **on** with
+`--monokernel` on HEAD; it does not change the default path by itself.
+
+### HEAD HIP defaults (`#130`, 19 Oct) {#flash-next-hip-defaults}
+
+**Merged** [`#130`](https://github.com/opengfx1030/vllm-rdna/pull/130) (19 Oct) into
+`rdna_extras` (closes `#99`). Flash-Next recipes on **HEAD** now default the HIP set
+**on**: `VLLM_RDNA_ALL_HIP`, `VLLM_RDNA_QSA_HIP`, `VLLM_RDNA_HC_PREFILL_HIP`, and
+`VLLM_GDN_HIP_PREFILL=1`. EXL3 recipes are unchanged. Hub **`v0.31.0-extras` lags**.
+Set those vars to **0** to get the older Triton paths back.
+
+Author-host 4× TP4 (Flash-Next AWQ, PLE int4): HIP-on ITL **−6 to −8%** and prefill
+**+3–7%** vs the previous default (no `--monokernel`). With `--monokernel`, MTP-2 ITL
+was **−2 to −4%**. Clone HEAD — do not expect this from the 11 Oct Hub bake.
+
+Do **not** pass `num_speculative_tokens_per_batch_size` (merged `#127` opt-in).
+`#vllm-rdna` (22 Oct): that schedule caused token-repeat loops. Fixed MTP-2
+(`RECIPE=flashnext-mtp2`) stays the daily path.
+
+### 4× V620 Flash-Next DFlash2 (`#132`, 21 Oct) {#flash-next-dflash2}
+
+**Merged** [`#132`](https://github.com/opengfx1030/vllm-rdna/pull/132) (21 Oct). Opt-in
+drafter path, **not** a replacement for MTP-2.
+
+```sh
+MODEL=/path/to/flash-next VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-dflash2 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
+```
+
+- Target: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16).
+- Draft: [`incoai/Qwen3.8-Flash-Next-DFlash2`](https://huggingface.co/incoai/Qwen3.8-Flash-Next-DFlash2)
+  (**BF16** — FP16 draft produced NaNs / near-zero acceptance).
+- Draft attention is FA-RDNA2 `BLHNC` (noncausal sliding window). Target stays HIP QSA.
+- Default **3** draft tokens (`[4,8,16,32]` capture). For the measured **16k / 1k c=8**
+  ladder: `DFLASH_TOKENS=2` (`[3,6,12,24]`). `PRINT=1` shows the argv before launch.
+
+PR paired A/B (4× V620, TP4, same boot): **native MTP-2 faster in all four cells**
+(tuned DFlash2 aggregate output **−29 / −12 / −24 / −7%** at 1k c=1 / c=8 and 16k
+c=1 / c=8). `#vllm-rdna` (22 Oct): maintainer still has MTP-2 ahead on agentic load;
+community: DFlash2 can win short / single-user, MTP-2 under concurrency. **Fork-source**
+for the recipe; community contrast **Needs verify**. Not Hub.
+
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
 
 Sanitized from a `#vllm-rdna` (Sep 17) host-venv recipe on **4× V620**. **Community / Needs verify**
