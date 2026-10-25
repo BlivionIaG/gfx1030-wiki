@@ -461,6 +461,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/quantization.md` MTP `draft_sample_method` | **Community** | `#vllm-rdna` Oct 8 — `probabilistic` when temperature > 0 |
 | `reference/env-vars.md` `PLE_OFFLOAD_PREFAULT` | **Community / Needs verify** | `#vllm-rdna` Oct 8 — overlay/sidecar name; ~25% slower off; not org extras HEAD |
 | `choose-a-stack.md` / `meta/resources.md` Strata HIP | **Community / Needs verify** | `#general` Oct 7–8 + public `Niko1221/Strata`. 2× V620 0.1.39+#835/#849 PP jump; 3-card behind vLLM. No serve recipe |
+| `choose-a-stack.md` GLM-5.3-Flash not 1-card | **Community / Needs verify** | `#general` Oct 25 — 1× V620 + RAM offload poor fit; Maya ~200/13 stale; public 320B/18B active. 8× recipe already on `recipes.md` |
+| `choose-a-stack.md` / `meta/resources.md` Strata 0.1.49.2 DeepSeek engine | **Community** | `#strata` Oct 25 — signed feed has no gfx1030 HIP DeepSeek engine (gfx1200/gfx1201 + CUDA) |
 | `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates`; `#general` Oct 9 tool calls |
 | `vllm/recipes.md` 3× MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — public temp repo |
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |

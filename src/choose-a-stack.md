@@ -12,7 +12,7 @@ Numbers below are **community** snapshots — see [Verification status](./refere
 | Qwen3.8 **Flash-Next** on 4× V620 (weights in VRAM) | **vLLM** Flash-Next / `rdna_extras` — see [Flash-Next](./vllm/flash-next.md). llama.cpp on the same job is typically much slower |
 | Flash-Next on **2×** V620, or any host that **must RAM/CPU-offload** | **llama.cpp** (`--n-cpu-moe`, `-ot …=CPU`). Community 2-card IQ4_XS ~**25 t/s** / **150–200** PP — [recipe](./llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) |
 | MoE / lighter agentic (Qwen3.6 35B-A3B, Ornith-class) | **Either** — the sweet spot on these cards |
-| Curious about [Strata](https://github.com/Niko1221/Strata) (HIP, not llama.cpp) | **Experimental.** `#general` Oct 7–8: 2× V620 prompt jumped after gfx103x PRs **#835 / #849** + `STRATA_HIP_PROMPT_F16=1`; 3-card hosts still could not match vLLM prefill and decode sagged under concurrency. Not a wiki default — [resources](./meta/resources.md) |
+| Curious about [Strata](https://github.com/Niko1221/Strata) (HIP, not llama.cpp) | **Experimental.** `#general` Oct 7–8: 2× V620 prompt jumped after gfx103x PRs **#835 / #849** + `STRATA_HIP_PROMPT_F16=1`; 3-card hosts still could not match vLLM prefill and decode sagged under concurrency. `#strata` (25 Oct): Strata **0.1.49.2** signed **DeepSeek engine** feed has **no gfx1030** HIP package (HIP build lists gfx1200/gfx1201). Not a wiki default — [resources](./meta/resources.md) |
 
 New to the cards? Start with [RDNA2 serving](./llama-cpp/rdna2-serving.md), then [vLLM onboard](./vllm/onboarding.md) when you need concurrency. Multi-GPU tensor parallel benefits from [PCIe P2P](./tuning/p2p.md).
 
@@ -27,6 +27,7 @@ looks fine):
 | **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) | Sweet spot on 1–4× V620 |
 | Dense **27B** | Usable; expect mediocre PP vs newer silicon |
 | **Flash-Next** | Promising on **4×** V620 via [vLLM Flash-Next](./vllm/flash-next.md); not a 1-card path |
+| **GLM-5.3-Flash** / DeepSeek-class large MoE | **Not 1–2 cards.** Public [`zai-org/GLM-5.3-Flash`](https://huggingface.co/zai-org/GLM-5.3-Flash) is **320B / 18B active**. `#general` (25 Oct): 1× V620 + host-RAM offload is a poor fit (community Maya snapshot ~200 PP / ~13 TG — **Needs verify**). Community vLLM path is **8×** — [recipes](./vllm/recipes.md#glm-53-flash). |
 | Dense agentic on 1–2 cards | Often disappointing TTFT / PP — prefer MoE or more cards |
 | ComfyUI image / video | Poor fit — many workflows default to **bf16** (emulated on V620). See [hardware](./setup/hardware.md) |
 
