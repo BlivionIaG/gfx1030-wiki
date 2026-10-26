@@ -28,7 +28,7 @@ Both kernels can be installed on the same host simultaneously; toggle the defaul
 `#vllm-rdna` / `#general` (Sep 24): **Ubuntu 26** may ship a **7.0-class** kernel that sits in the
 gap between these two validated paths. Do **not** assume the Fedora Post-7 recipe applies unchanged
 — rebuild with the toolbox options (or stay on a Pre-7 / ≥7.1 build), then add **`iommu=pt`**,
-confirm **ACS off**, **ReBAR / Above 4G on**, **CSM off**. Power-cap helpers for Ubuntu 26 live under
+confirm **ACS off** ([bit-level caveat](#acs-bits)), **ReBAR / Above 4G on**, **CSM off**. Power-cap helpers for Ubuntu 26 live under
 [`ubuntu_powertuning/`](https://github.com/blivioniag/v620_toolbox/tree/master/ubuntu_powertuning);
 P2P itself remains Fedora-validated.
 
@@ -75,6 +75,45 @@ For the full recipe (kernel config deltas, BIOS/IOMMU settings, what can go wron
 [`pcie_p2p/README.md`](https://github.com/blivioniag/v620_toolbox/blob/master/pcie_p2p/README.md) and the
 knowledge base
 [`powertuning/docs/AMD_P2P.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/AMD_P2P.md).
+
+## ACS is several bits, not one switch {#acs-bits}
+
+Wiki and toolbox prose still say **“ACS off”**. `#general` (25 Oct 2026): that is **not** a
+single enable bit. PCIe **Access Control Services** is a per-port control word (`ACSCtl`).
+Clearing **every** bit is a different recipe from “P2P Request Redirect is off.”
+
+Community host that **passed** V620↔V620 after the toolbox readiness script still reported
+**`ACSCtl = 0x0019`** on the relevant switch / root ports (nine ports on that machine):
+
+| Bit | ACS control | That host | Why it matters |
+|---:|---|:---:|---|
+| 0 | Source Validation | **On** | Checks requester IDs against the port’s bus hierarchy. |
+| 1 | Translation Blocking | Off | Blocks translated / ATS-related requests when enabled. |
+| 2 | P2P Request Redirect | **Off** | When **on**, peer requests go **upstream** instead of local switch routing. Community: the **principal P2P obstacle**. |
+| 3 | P2P Completion Redirect | **On** | Redirects peer completions upstream. |
+| 4 | Upstream Forwarding | **On** | Enables upstream forwarding under ACS routing rules. |
+| 5 | P2P Egress Control | Off | Extra peer-destination permissions. |
+| 6 | Direct Translated P2P | Off | Lets already-translated requests skip peer-request redirection. Not required for ordinary P2P. |
+
+Same thread, two recipes — **do not pick a winner** without a second host +
+`verify-p2p.sh`:
+
+| Recipe | Who / when | Result |
+|---|---|---|
+| **All ACS bits off** plus the rest of the toolbox path | Maintainer, `#general` 25 Oct | Works on the **Fedora + AMD CPU** wiki-validated host. “ACS off is one thing; the rest is in the toolbox.” |
+| **Leave `0x0019`** (bits 0 / 3 / 4 on; bit 2 off) | Community, `#general` 25 Oct | Toolbox readiness said **ACS off** while those three bits stayed on. Clearing **all remaining** bits **broke** V620↔V620 on that host. |
+
+Inspect without copying a personal BDF. Replace `00:00.0` with **your** switch or CPU
+root port (not the GPU):
+
+```sh
+sudo setpci -s 00:00.0 ECAP_ACS+0x06.w
+# 0019 = the community-passing mask above
+```
+
+Then run `v620-p2p-readiness.sh` and `verify-p2p.sh`. Treat a readiness “ACS off” line as
+**incomplete** until you have `amd-smi topology` **P2P ENABLED** and a working TP serve.
+**Needs verify** on a second topology.
 
 ## When P2P helps — and when it does not
 

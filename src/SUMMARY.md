@@ -28,6 +28,7 @@
 - [Configuration](./vllm/configuration.md)
 - [Quantization](./vllm/quantization.md)
 - [vLLM forks (rdna_extras + landscape)](./vllm/fork.md)
+    - [Fork progress](./vllm/fork-progress.md)
 - [Host venv (no Docker)](./vllm/host-venv.md)
 - [Serve scripts (`serve_rdna.sh`)](./vllm/serve-scripts.md)
 - [Building images](./vllm/images.md)

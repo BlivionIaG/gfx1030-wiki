@@ -57,12 +57,14 @@ Try in order:
 1. Confirm [PCIe P2P](../tuning/p2p.md) is working.
 2. Set `NCCL_P2P_LEVEL=PHB` or `NCCL_P2P_DISABLE=1`.
 3. On the RDNA2 fork: `GGML_HIP_GFX1030_P2P_ALLREDUCE=off` or `GGML_CUDA_ALLREDUCE=none`.
-4. Check ACS — CPU root-port ACS can block GPU-direct P2P.
+4. Check ACS — CPU root-port ACS can block GPU-direct P2P. “ACS off” is **several
+   bits**, not one switch; clearing every bit has **broken** V620↔V620 on one host —
+   [ACS bits](../tuning/p2p.md#acs-bits).
 
 ## P2P enabled but slower inference
 
 Bandwidth tests can pass while inference regresses on gen3 x4 or ACS-blocked topologies. A/B with
-`NCCL_P2P_DISABLE=1`. See [When P2P hurts](../tuning/p2p.md#when-p2p-is-enabled-but-inference-is-slower).
+`NCCL_P2P_DISABLE=1`. See [When P2P helps — and when it does not](../tuning/p2p.md#when-p2p-helps--and-when-it-does-not).
 
 ## PSU dies the moment tensor-split prefill starts
 

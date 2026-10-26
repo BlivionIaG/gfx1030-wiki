@@ -32,7 +32,8 @@ src/
     flash-next-serve.md    # Flash-Next serve lines (FULL_AND_PIECEWISE, #17, PP3)
     configuration.md       # Env vars, CUDA graphs, compose
     quantization.md        # GPTQ/AWQ, KV, MTP, INT4
-    fork.md                # rdna_extras kernels
+    fork.md                # rdna_extras kernels + chronicle
+    fork-progress.md       # Hub vs HEAD vs backlog snapshot
     host-venv.md           # Host uv venv (ROCm 7.2.0 / 7.14.0)
     serve-scripts.md       # tools/rdna/serve_rdna.sh recipes (fork checkout)
     images.md              # Building Docker images
@@ -99,10 +100,11 @@ src/
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
 | First V620 vLLM serve (Docker or fork) | `vllm/onboarding.md` |
-| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`) |
+| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`; MonoKernel: `#flash-next-monokernel`) |
 | Fork `tools/rdna/serve_rdna.sh` recipes | `vllm/serve-scripts.md` |
 | llama.cpp vs vLLM | `choose-a-stack.md` |
 | Kernel source, fork branches | `vllm/fork.md` |
+| Hub vs HEAD vs backlog progress | `vllm/fork-progress.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |
 | Stock llama.cpp cmake build | `llama-cpp/building.md` |
 | Fork benchmarks, DFlash2, TP serve | `llama-cpp/rdna2-*.md` |
