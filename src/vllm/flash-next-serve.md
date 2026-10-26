@@ -193,7 +193,10 @@ was **−2 to −4%**. Clone HEAD — do not expect this from the 11 Oct Hub bak
 
 Do **not** pass `num_speculative_tokens_per_batch_size` (merged `#127` opt-in).
 `#vllm-rdna` (22 Oct): that schedule caused token-repeat loops. Fixed MTP-2
-(`RECIPE=flashnext-mtp2`) stays the daily path.
+(`RECIPE=flashnext-mtp2`) stays the daily path. `#vllm-rdna` (25–26 Oct): loops can
+**survive MTP off** if **CPU / disk KV offload** is restoring sessions — disable
+`--kv-offloading-size` while isolating —
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-dynamic-mtp).
 
 ### 4× V620 Flash-Next DFlash2 (`#132`, 21 Oct) {#flash-next-dflash2}
 

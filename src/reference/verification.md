@@ -170,6 +170,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Upstream vLLM KV CPU/SSD offload ~1 t/s | **Community** | `#vllm-rdna` Sep 15 **broken baseline**. Superseded as the gfx1030 path by merged `#24` (next row) |
 | RAM KV offload `#24` (~0.4 s / ~190k; ~2.1 s reload) | **Fork-source / Needs verify** | Merged `opengfx1030/vllm-rdna#24` (27 Sep); `#vllm-rdna` Sep 26–27. SSD tier untested. 8 GiB ≈ ~100k **Needs verify**. In Hub **`v0.31.0-extras`** |
 | `--kv-offloading-size` RAM parking | **Community / Needs verify** | `#vllm-rdna` Oct 7 — community `--kv-offloading-size 64` (GiB **total** across TP). Storage tier still untested |
+| KV offload restore token-repeat loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — loops survived MTP off; 4 h+ clean after KV offload disabled |
 | MTP `draft_sample_method=probabilistic` when temp>0 | **Community** | `#vllm-rdna` Oct 8 — required on current `rdna_extras` MTP-2; greedy/local-argmax is the default |
 | `PLE_OFFLOAD_PREFAULT=0` low-RAM | **Community / Needs verify** | `#vllm-rdna` Oct 8 — ~22–28% slower vs prefault=1 (prose). Unprefixed overlay name; ~1:2 RAM:VRAM OK; 32 GiB + 2× V620 tight |
 | Skinny HIP MoE 9–16 rows `#26` | **Fork-source / Community** | Merged 27 Sep; `VLLM_ROCM_MOE_SKINNY_MAX_M=16`; +11% concurrent regular-text. No single-chat claim |
@@ -399,6 +400,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 | `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Ice Lake 4× V620 host — llama.cpp + vLLM |
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
+| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
 | `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
@@ -437,6 +439,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm-flash-next.md` AutoRound `INCConfig` PLE reject | **Needs verify** | `#vllm-rdna` Oct 12 — latest `rdna_extras`; upstream vLLM #59990 merged; fork cherry-pick queued |
 | `troubleshooting/vllm-flash-next.md` FA-RDNA2 partial on QSA | **Community / Fork-source** | `#vllm-rdna` Oct 13 — QSA Triton owner ignores `--attention-backend` |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
+| `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; disable KV offload to A/B |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
 | `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
 | `vllm/fork.md` `#126` / `#127` / `#128` / `#130` / `#131` / `#132` | **Fork-source** | Merged 18–21 Oct; Hub `v0.31.0-extras` lags |
@@ -444,7 +447,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/flash-next-serve.md` DFlash2 `#132` | **Fork-source** | 21 Oct — MTP-2 still faster in PR A/B |
 | `troubleshooting/vllm.md` `rdna_ar` silent hang `#128` | **Fork-source** | 19 Oct |
 | `troubleshooting/vllm.md` non-mono graph hang `#131` | **Fork-source** | 19 Oct |
-| `troubleshooting/vllm-flash-next.md` dynamic MTP `#127` | **Fork-source / Community** | `#vllm-rdna` 22 Oct — leave schedule off |
+| `troubleshooting/vllm-flash-next.md` dynamic MTP `#127` | **Fork-source / Community** | `#vllm-rdna` 22 Oct — leave schedule off. 25–26 Oct: loops can continue with MTP off if KV offload restore is on |
 | `setup/host-firmware.md` HP Z6 G4 PSP / fans | **Community / Needs verify** | `#motherboard` 18–23 Oct |
 | `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |

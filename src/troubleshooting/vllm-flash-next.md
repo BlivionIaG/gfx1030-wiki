@@ -17,6 +17,12 @@ token-repeat loops (other flags, including `--monokernel`, passed alone). Leave 
 **unset** until open [`#125`](https://github.com/opengfx1030/vllm-rdna/pull/125) lands. Do not
 copy agent-generated `draft_sample_method` / per-batch-K dumps onto a daily serve.
 
+`#vllm-rdna` (25–26 Oct): the **same** token-repeat symptom **continued** after the schedule
+was off, and still looped with **MTP off**. Isolation then pointed at **CPU / disk KV
+restore**, not MTP. One host: **4 h+** without a loop after **KV cache offloading disabled**
+(`--kv-offloading-size` unset; no RAM/disk KV tier). **Needs verify** — see
+[KV offload](./vllm.md#upstream-kv-offload-tanks-decode).
+
 ## Flash-Next long-prompt stalls {#flash-next-long-prompt-stalls}
 
 Symptom (Flash-Next fork / recipe containers, `#vllm-rdna` Sep 2026): short prompts decode fine, but

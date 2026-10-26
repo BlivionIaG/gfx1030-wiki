@@ -351,6 +351,14 @@ trade, not a speed win.
 See [fork landscape](../vllm/fork.md#consolidation-status) and
 [Flash-Next KV](../vllm/flash-next.md#qwen38-flash-next-on-vllm).
 
+`#vllm-rdna` (25–26 Oct): a community isolation that **already** left the `#127` dynamic MTP
+schedule unset still **token-repeated** with **MTP-2** and then with **MTP off**. Strongest
+suspect was **CPU-memory / disk KV cache restoration**. After **KV offloading disabled**
+(no `--kv-offloading-size`, no disk KV tier), the same host ran **4 h+** without a loop
+(`VLLM_FA_RDNA2_GQA_DECODE=1` stayed on). Treat RAM/disk KV restore as a **loop A/B** when
+dynamic MTP is already off — **Needs verify**. Details:
+[dynamic MTP](./vllm-flash-next.md#flash-next-dynamic-mtp).
+
 `#vllm-rdna` (Sep 16): public RAM-offload Flash-Next **weight** packs (example:
 [`Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound`](https://huggingface.co/Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound))
 are a different topic. Recipes that need **`--no-enable-prefix-caching`** remain a **non-starter**
