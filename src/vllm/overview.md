@@ -24,6 +24,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | Env vars, CUDA graphs, Docker Compose | [Configuration](./configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](./quantization.md) |
 | Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](./fork.md) |
+| What shipped vs HEAD vs backlog | [Fork progress](./fork-progress.md) |
 | Which fork is official vs historical | [Fork landscape](./fork.md#fork-landscape) |
 | Host `uv` venv (7.2.0 or 7.14.0) | [Host venv](./host-venv.md) |
 | One launcher for Flash-Next / 27B / EXL3 (`serve_rdna.sh`) | [Serve scripts](./serve-scripts.md) |

@@ -201,7 +201,7 @@ Do **not** pass `num_speculative_tokens_per_batch_size` (merged `#127` opt-in).
 ### 4× V620 Flash-Next DFlash2 (`#132`, 21 Oct) {#flash-next-dflash2}
 
 **Merged** [`#132`](https://github.com/opengfx1030/vllm-rdna/pull/132) (21 Oct). Opt-in
-drafter path, **not** a replacement for MTP-2.
+drafter path, **not** a replacement for MTP-2. Recipe enables `--monokernel`.
 
 ```sh
 MODEL=/path/to/flash-next VENV=/path/to/venv \
@@ -221,6 +221,22 @@ PR paired A/B (4× V620, TP4, same boot): **native MTP-2 faster in all four cell
 c=1 / c=8). `#vllm-rdna` (22 Oct): maintainer still has MTP-2 ahead on agentic load;
 community: DFlash2 can win short / single-user, MTP-2 under concurrency. **Fork-source**
 for the recipe; community contrast **Needs verify**. Not Hub.
+
+### INT4 KV cache (`#138`, 25 Oct) {#flash-next-int4-kv}
+
+**Merged** [`#138`](https://github.com/opengfx1030/vllm-rdna/pull/138) (25 Oct). Opt-in
+longer KV on the **non-MonoKernel QSA** path:
+
+```text
+--kv-cache-dtype int4_fp16_block
+```
+
+Packed INT4 + FP16 per-32-channel block scales; native QSA dequant in registers.
+Other attention backends refuse the dtype. Default FP16 KV unchanged. **Not** Hub.
+MonoKernel + this dtype **Needs verify**. `#vllm-rdna` (21 Oct): INT8 KV restore
+([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)) remains the stated
+day-to-day priority. Details: [Quantization](quantization.md#int4-kv-cache-int4_fp16_block-head),
+[Fork progress](fork-progress.md).
 
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
 

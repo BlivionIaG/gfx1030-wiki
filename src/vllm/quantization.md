@@ -182,10 +182,26 @@ Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker bui
 `#vllm-rdna` (Oct 1): W4A8 is **in `rdna_extras` HEAD** (`VLLM_RDNA2_W4A8_SDOT4` / serve-script
 `W4A8=1`) but was **not much faster** than W4A16 dequant-on-the-fly — the stated win then was
 **more context**, not decode. `#vllm-rdna` (Oct 9): a later kernel on the **v0.31.0** test line
-was called **somewhat competitive vs W4A16** (27B W4A8 on vs off still running). That is
-**Needs verify**, not a Hub recipe, and **not** a reason to leave day-to-day W4A16 / AWQ.
-EXL3 on the same line still **needs optimizations**. **W8A8** was called theoretically the
-fastest int8 layout, not a current recipe.
+was called **somewhat competitive vs W4A16**. Merged
+[`#140`](https://github.com/opengfx1030/vllm-rdna/pull/140) (26 Oct): `27b-awq` recipe defaults
+**`W4A8=1`** on HEAD (int8-activation prefill GEMMs for M≥33; decode stays W4A16). Author-host
+4× TP4: 16k c=1 PP **860 → 1075** tok/s; c=8 aggregate out **42.5 → 52.3**; paired PPL ~unchanged.
+**Fork-source** on that host; Hub **`v0.31.0-extras`** may still leave the knob off — check
+`PRINT=1`. Set `W4A8=0` to force W4A16 prefill. EXL3 still **needs optimizations**. **W8A8**
+was called theoretically the fastest int8 layout, not a current recipe.
+
+## INT4 KV cache (`int4_fp16_block`, HEAD)
+
+Merged [`#138`](https://github.com/opengfx1030/vllm-rdna/pull/138) (25 Oct): opt-in
+`--kv-cache-dtype int4_fp16_block` — packed INT4 payload + FP16 per-32-channel block scales
+(plus a 4-bit zero-point in the low nibble of each scale word). The RDNA2 QSA path
+**reads/writes natively** (dequant in registers into the same FP16 LDS tile). Backends that
+cannot pack the record **refuse** the dtype up front. Default FP16 KV is unchanged.
+
+**Not** in Hub `v0.31.0-extras`. MonoKernel + this dtype still **Needs verify**.
+`#vllm-rdna` (21 Oct): maintainer priority for longer context is still restoring the
+**INT8** KV HIP path ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)), not
+replacing day-to-day FP16 with experimental packs. Snapshot: [Fork progress](fork-progress.md).
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

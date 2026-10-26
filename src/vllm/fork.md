@@ -28,9 +28,15 @@ repo as a **parts pile** (less active new work). Day-to-day Flash-Next optimizat
 org **`rdna_extras`** (Hub **`v0.31.0-extras`**); Concurrent-MTP PRs on the recipes repo are
 still worth cherry-picking into that stack.
 
-### Consolidation status (Sep 3–24 2026) {#consolidation-status}
+### Progress snapshot {#progress-snapshot}
 
-`#vllm-rdna` snapshot — expect this to move quickly:
+For a dated **Hub vs HEAD vs backlog** table (MonoKernel, HIP defaults, PP3,
+INT4 KV, W4A8, open drafts), see **[Fork progress](fork-progress.md)** (26 Oct
+2026). The chronicle below keeps per-PR detail.
+
+### Consolidation status (Sep 3–26 2026) {#consolidation-status}
+
+`#vllm-rdna` / public merges chronicle — expect this to move quickly:
 
 | Track | Status |
 |---|---|
@@ -79,10 +85,15 @@ still worth cherry-picking into that stack.
 | **HIP set default-on (`#130`, closes `#99`)** | **Merged** [`#130`](https://github.com/opengfx1030/vllm-rdna/pull/130) (19 Oct). Ports `#99` QSA/GDN/HC HIP kernels **with** MonoKernel `#126`. Flash-Next recipes now default `VLLM_RDNA_ALL_HIP`, `VLLM_RDNA_QSA_HIP`, `VLLM_RDNA_HC_PREFILL_HIP`, and `VLLM_GDN_HIP_PREFILL=1` (EXL3 unchanged). Set those to **0** to get Triton back. Author-host ITL **−6 to −8%** without `--monokernel`. Hub **`v0.31.0-extras` lags**. Vectorized one-shot (`#129`) stayed out. |
 | **Non-mono graph hang (`#131`)** | **Merged** [`#131`](https://github.com/opengfx1030/vllm-rdna/pull/131) (19 Oct). Intermittent hang **without** `--monokernel`: workers silent, ~300 s RPC timeout. gfx10x `SharedExperts` no longer forks to an aux HIP stream inside CUDA-graph capture (ROCm 7.14 signal-reuse). Eager overlap stays. — [hang](../troubleshooting/vllm.md#non-mono-graph-hang). |
 | **Flash-Next DFlash2 (`#132`)** | **Merged** [`#132`](https://github.com/opengfx1030/vllm-rdna/pull/132) (21 Oct): `RECIPE=flashnext-dflash2` — `wtdcode` AWQ target + [`incoai/Qwen3.8-Flash-Next-DFlash2`](https://huggingface.co/incoai/Qwen3.8-Flash-Next-DFlash2) BF16 drafter, FA-RDNA2 `BLHNC` draft attention. Default **3** draft tokens; `DFLASH_TOKENS=2` is the measured 16k c=8 ladder. Paired A/B: **native MTP-2 still faster** in all four cells. `#vllm-rdna` (22 Oct): maintainer same for agentic; DFlash2 can win short / single-user. **Not** Hub. — [DFlash2](flash-next-serve.md#flash-next-dflash2). |
+| **EXL3 Flash-Next (`#117`)** | **Merged** [`#117`](https://github.com/opengfx1030/vllm-rdna/pull/117) (17 Oct): `RECIPE=flashnext-exl3` for [`turboderp/Qwen3.8-Flash-Next-exl3`](https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3) (3.05bpw). `PLE=exl3` mmaps `ngram_embedding.safetensors` via the CPU sidecar; MTP=0; expert-parallel on (EXL3 128-wide blocks do not split under TP=4 alone). Drafts `#122`/`#123`/`#124` cover MTP / vision / MoE cut. **Not** Hub. — [Serve scripts](serve-scripts.md). |
+| **MTP-2 MonoKernel (`#137`)** | **Merged** [`#137`](https://github.com/opengfx1030/vllm-rdna/pull/137) (24 Oct): MTP Mono K1/K2 sticky-fault containment + opt-in post-proposal TP status reduce before tokens return. Ordinary native MTP-2 skips that collective. Graph / eager fault qualification noted in the PR. Still opt-in via `--monokernel`. **Not** Hub. |
+| **INT4 KV `int4_fp16_block` (`#138`)** | **Merged** [`#138`](https://github.com/opengfx1030/vllm-rdna/pull/138) (25 Oct): packed INT4 + FP16 per-32-channel block scales as a real `CacheDType`. Native **write/read on the non-MonoKernel QSA path**; other backends refuse the dtype (silent corruption risk). Opt-in `--kv-cache-dtype int4_fp16_block`. Default FP16 KV unchanged. `#vllm-rdna` (21 Oct): maintainer still prioritizes restoring **INT8** KV ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)) for day-to-day. **Not** Hub. |
+| **fp16 SSM + W4A8 default (`#140`)** | **Merged** [`#140`](https://github.com/opengfx1030/vllm-rdna/pull/140) (26 Oct): GDN prefill can keep mamba state in **fp16** (page ~half → denser KV); launcher derives prefill budget from the mamba block; `27b-awq` recipe defaults **`W4A8=1`** (int8-activation prefill GEMMs for M≥33; decode stays W4A16). Author-host 4× TP4 27B: 16k c=1 PP **860 → 1075** tok/s; c=8 agg out **42.5 → 52.3**; paired PPL ~4.94 → 4.91. **Not** Hub. |
 
 Official-fork feature set called out in-channel (HIP): **MXFP4**, **AWQ INT4**, **GPTQ INT4**, GDN
 prefill/decode linear attention, FA-RDNA2, one-shot all-reduce, FULL_AND_PIECEWISE, EXL3, MTP=2.
 Treat Hub **`v0.31.0-extras`** as the current extras bake; clone HEAD for work after that tag.
+Readable snapshot: [Fork progress](fork-progress.md).
 
 ---
 

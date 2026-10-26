@@ -11,8 +11,9 @@
 | [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
-| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2) |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
 | [Serve scripts](./serve-scripts.md) | `serve_rdna.sh RECIPE=flashnext-mtp2` and siblings |
+| [Fork progress](./fork-progress.md) | Hub vs HEAD vs open drafts |
 
 When something fails, use [Flash-Next troubleshooting](../troubleshooting/vllm-flash-next.md) rather than the general vLLM list.
 

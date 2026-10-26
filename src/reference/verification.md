@@ -252,7 +252,23 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Non-mono graph hang `#131` | **Fork-source** | `#131` merged 19 Oct — no aux-stream SharedExperts in CUDA graphs on gfx10x |
 | Flash-Next DFlash2 `#132` | **Fork-source** | `#132` merged 21 Oct; `RECIPE=flashnext-dflash2`; MTP-2 faster in PR A/B. Not Hub |
 | DFlash2 vs MTP-2 agentic | **Community / Needs verify** | `#vllm-rdna` 22 Oct — maintainer MTP-2 still ahead; DFlash2 can win short / single-user |
+| EXL3 Flash-Next `#117` | **Fork-source** | `#117` merged 17 Oct; `RECIPE=flashnext-exl3` / `PLE=exl3`; MTP=0. Not Hub |
+| MTP-2 MonoKernel `#137` | **Fork-source** | `#137` merged 24 Oct — sticky-fault containment; still opt-in `--monokernel`. Not Hub |
+| INT4 KV `int4_fp16_block` `#138` | **Fork-source** | `#138` merged 25 Oct — opt-in; native QSA path; other backends refuse. Not Hub |
+| INT4 KV + MonoKernel | **Needs verify** | `#138` documents non-mono QSA; mono combo not claimed |
+| INT8 KV restore `#71` | **Needs verify** | Draft; `#vllm-rdna` 21 Oct maintainer priority |
+| fp16 SSM + W4A8 default `#140` | **Fork-source** | `#140` merged 26 Oct; `27b-awq` `W4A8=1`; author-host 860→1075 PP / 42.5→52.3 agg. Not Hub |
 | HP Z6 G4 slot-5 PSP / fan PWM | **Community / Needs verify** | `#motherboard` 18–23 Oct — BIOS factory reset unstuck blowers; slot 5 `PSP load kdb failed!` unresolved |
+| DeepSeek-V4 correctness write-up | **Community / Needs verify** | `#vllm-rdna` 21 Oct — community fork of `rdna_extras`; in-tree `dsv4-flash` still Needs verify |
+
+### `fork-progress.md`
+
+| Statement | Status | Verify how |
+|---|---|---|
+| Snapshot dated 26 Oct 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
+| Hub `v0.31.0-extras` feature set | **Fork-source** | `#announcements` 11 Oct |
+| HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
+| Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
 
 ### `host-venv.md`
 
@@ -443,6 +459,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
 | `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
 | `vllm/fork.md` `#126` / `#127` / `#128` / `#130` / `#131` / `#132` | **Fork-source** | Merged 18–21 Oct; Hub `v0.31.0-extras` lags |
+| `vllm/fork.md` `#117` / `#137` / `#138` / `#140` | **Fork-source** | Merged 17–26 Oct; EXL3 Flash-Next, MTP mono, INT4 KV, W4A8 default. Not Hub |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 26 Oct Hub vs HEAD vs backlog |
 | `vllm/flash-next-serve.md` HIP defaults `#130` | **Fork-source** | 19 Oct — Flash-Next HEAD recipes HIP on |
 | `vllm/flash-next-serve.md` DFlash2 `#132` | **Fork-source** | 21 Oct — MTP-2 still faster in PR A/B |
 | `troubleshooting/vllm.md` `rdna_ar` silent hang `#128` | **Fork-source** | 19 Oct |
@@ -451,7 +469,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/host-firmware.md` HP Z6 G4 PSP / fans | **Community / Needs verify** | `#motherboard` 18–23 Oct |
 | `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
-| `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line; still not a Hub recipe |
+| `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line |
+| `vllm/quantization.md` W4A8 `#140` author-host table | **Fork-source** | `#140` 26 Oct — 27B 860→1075 PP / 42.5→52.3 agg; Hub may lag |
+| `vllm/quantization.md` INT4 KV `#138` | **Fork-source** | `#138` 25 Oct — `int4_fp16_block`; native QSA; not Hub |
 | `troubleshooting/vllm.md` mixed stall / CUDA-graph range | **Needs verify** | `#vllm-rdna` Oct 9–10 — no public flag; DSV4 expected after |
 | `vllm/flash-next-serve.md` DSV4 on extras WIP | **Needs verify** | `#vllm-rdna` Oct 10 — will work after stall fix; stay on yiminyuan tree |
 | `llama-cpp/rdna2-serving.md` froggeric tool calls | **Needs verify** | `#general` Oct 9 — OG Qwen3.8 + Open WebUI |
