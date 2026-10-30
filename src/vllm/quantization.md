@@ -175,6 +175,13 @@ it as a stable checkpoint:
 [`BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated`](https://huggingface.co/BlivionIaG/Qwen3.8-Flash-Next-EXL3-3bpw-3inst-uncalibrated).
 The later **calibrated** 3inst repo above is still **Needs verify**.
 
+`#vllm-rdna` (27 Oct): **EXL3 vs AWQ** on current gfx1030 kernels — EXL3 wins
+**size and quality**; AWQ wins **speed and complexity**. Day-to-day testing still
+uses **AWQ**. EXL3 kernel work is **paused** in favor of a new RDNA-oriented
+weight format ([`BlivionIaG/hi2`](https://github.com/BlivionIaG/hi2),
+`rdna_hint_flex`: variable INT2/INT4/INT8 rows). That quantizer is public; there
+is **no** vLLM recipe or Hub bake yet. Do not treat hi2 as a serve path.
+
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 
 `#vllm-rdna` (Sep 29): **W4A8** started as an explore path (public

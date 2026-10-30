@@ -103,8 +103,10 @@ keep the table on fast NVMe and accept the slower path (APEX report: NVMe-reside
 fine).
 
 `#vllm-rdna` (Sep 14): if you **must** CPU/RAM-offload Flash-Next (2× V620, or 4× with a too-small
-KV pool), **llama.cpp is the better offload engine** than vLLM. vLLM still wins on **4×** when
-everything stays in VRAM.
+KV pool), **llama.cpp is the better offload engine** than Hub / resident vLLM. HEAD after
+[`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct) adds a vLLM expert-offload
+wrapper — [2× serve](../vllm/flash-next-serve.md#flash-next-2x-moe-offload). vLLM still wins on
+**4×** when everything stays in VRAM.
 
 ### 2× V620 community recipe (IQ4_XS, layer split) {#flash-next-2x-iq4}
 

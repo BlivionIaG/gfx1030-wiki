@@ -9,8 +9,15 @@
 Stable day-to-day Docker is Hub **`v0.31.0-extras`** — [Onboard](onboarding.md) /
 [Running (Docker)](running.md). Use this page when you want kernels **newer than that bake**,
 [`serve_rdna.sh`](serve-scripts.md), or a host Python 3.12 `uv` venv with no image rebuild. You
-need a ROCm toolchain with `hipcc`. For more than one GPU, pin **ROCm 7.2.0 or 7.14.0** —
+need a ROCm toolchain with `hipcc`. For more than one GPU, pin **ROCm 7.2.0 or 7.14.0**
+unless you are deliberately lab-testing **ROCm 10** —
 [Installing ROCm](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+`#vllm-rdna` (29 Oct): a fresh **Ubuntu 26.04** host can ship `/opt/rocm/core-10`
+(and `core-10.1`) with **no** `core-7.14` tree. Do not copy the 7.14 `ROCM_HOME`
+path blindly. Community: **ROCm 10 serves**; the maintainer has **not** pinned a
+Triton wheel for that userspace yet. Stay on the bake pins below unless you are
+A/B-ing 10.x. TunableOp already has a thin ROCm 10 profile —
+[serve scripts](serve-scripts.md#rocm-10-and-rocblas-56).
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.
 

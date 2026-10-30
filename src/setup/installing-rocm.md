@@ -63,8 +63,12 @@ userspace, rebuild or pull a **7.2.0** or **7.14.0** image rather than debugging
 in-between releases. **Ubuntu 26.04** can ship **ROCm/HIP 7.1** (`#llamacpp` Sep 17) — treat that as
 an A/B, not the multi-GPU pin. ROCm **10** / TheRock packaging is interesting for newer cards;
 community llama.cpp benches on Ice Lake have run ROCm **10.0** with numbers close to 7.1 on that
-host, but day-to-day advice for gfx1030 multi-GPU is still: **prefer 7.14.0** (or 7.2.0) unless you
-are deliberately lab-testing 10.x.
+host. `#vllm-rdna` (29 Oct): a fresh **Ubuntu 26.04** install can land `/opt/rocm/core-10`
+(and `core-10.1`) with **no** `core-7.14` folder — do not copy a 7.14 `ROCM_HOME` from
+[host venv](../vllm/host-venv.md) onto that tree. Same thread: **ROCm 10 serves** on at
+least one host; the Triton wheel for that userspace is **unconfirmed**. Day-to-day
+gfx1030 multi-GPU advice is still: **prefer 7.14.0** (or 7.2.0) unless you are
+deliberately lab-testing 10.x.
 
 ## Notes & gotchas
 
