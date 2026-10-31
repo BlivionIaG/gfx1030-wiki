@@ -178,6 +178,14 @@ full-power inference hit **~86 °C** on that host. Community is still unsure whe
 `rocm-smi` caps catch brief transients — size the PSU for **stock TDP** if you have not
 applied the floor yet.
 
+`#general` (31 Oct): an **8× V620** host saw **IOMMU page faults** then **fatal
+PCIe errors** during **TP8** or model load. The six cards on a **1500 W server
+PSU → breakout board** dropped from the OS; the two cards powered entirely by a
+**workstation PSU** stayed. Unresolved (power delivery vs riser/cable vs
+driver). **Needs verify.** A/B the disappearing group’s aux power and `dmesg`
+for IOMMU / AER — the first card to log the fault is not necessarily the bad
+one. See [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop).
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.

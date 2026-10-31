@@ -15,8 +15,11 @@ unless you are deliberately lab-testing **ROCm 10** —
 `#vllm-rdna` (29 Oct): a fresh **Ubuntu 26.04** host can ship `/opt/rocm/core-10`
 (and `core-10.1`) with **no** `core-7.14` tree. Do not copy the 7.14 `ROCM_HOME`
 path blindly. Community: **ROCm 10 serves**; the maintainer has **not** pinned a
-Triton wheel for that userspace yet. Stay on the bake pins below unless you are
-A/B-ing 10.x. TunableOp already has a thin ROCm 10 profile —
+Triton wheel for that userspace yet. `#vllm-rdna` (30 Oct): **ROCm 10 and 7.14**
+were called the **same** for day-to-day serving — do not reinstall just to chase
+10.x. One **10.1** host-venv attempt failed (`libnuma` / optional HIP package
+path mess) before a clean 7.14 retry — **Needs verify**. Stay on the bake pins
+below unless you are A/B-ing 10.x. TunableOp already has a thin ROCm 10 profile —
 [serve scripts](serve-scripts.md#rocm-10-and-rocblas-56).
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.

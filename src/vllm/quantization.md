@@ -178,9 +178,14 @@ The later **calibrated** 3inst repo above is still **Needs verify**.
 `#vllm-rdna` (27 Oct): **EXL3 vs AWQ** on current gfx1030 kernels — EXL3 wins
 **size and quality**; AWQ wins **speed and complexity**. Day-to-day testing still
 uses **AWQ**. EXL3 kernel work is **paused** in favor of a new RDNA-oriented
-weight format ([`BlivionIaG/hi2`](https://github.com/BlivionIaG/hi2),
-`rdna_hint_flex`: variable INT2/INT4/INT8 rows). That quantizer is public; there
-is **no** vLLM recipe or Hub bake yet. Do not treat hi2 as a serve path.
+weight format ([`BlivionIaG/hi2`](https://github.com/BlivionIaG/hi2)). Public
+README: `rdna_hint_flex` stores each row as **INT2 or INT4** (INT8 on request)
+plus block scales, an optional smoother, and an **order-16 Hadamard**; you set a
+**quality target** and the tool reports the bit rate (`--target-bpw 3.0` is the
+compact recipe). HIP kernels and the vLLM loader live in the **vLLM RDNA2 fork**,
+not in the hi2 repo. `#vllm-rdna` (30 Oct): **3 bpw** was called a bit
+aggressive; **3.5 bpw** may hold quality better but QAD is slow. There is **no**
+vLLM `RECIPE=` / Hub bake yet. Do not treat hi2 as a serve path.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 

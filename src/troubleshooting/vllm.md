@@ -361,6 +361,16 @@ was off**. Treat **disk** KV restore as the first A/B; RAM-tier parking is a wea
 on that host — **Needs verify**. Details:
 [dynamic MTP](./vllm-flash-next.md#flash-next-dynamic-mtp).
 
+`#vllm-rdna` (30 Oct): filesystem / disk KV at huge context can **write terabytes
+per day** to NVMe (one **8× V620** host with ~1M-token disk offload). Community:
+do **not** use consumer NVMe as a KV spill unless you accept that wear, or use
+**Optane**. Optane guidance from the same thread: **M.2 M10** class is slow;
+prefer **U.2 / PCIe / DIMM** Optane. LMCache still has **no working NVMe** path
+in-channel. Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148)
+adds experimental native hybrid KV paging — the PR itself says live paging
+**stalls**; that is **not** a recipe. Prefer RAM-tier `--kv-offloading-size` or
+no offload while isolating loops.
+
 ## Repeating `!!!!` tokens (clocks / undervolt) {#repeating-exclamation-tokens}
 
 `#vllm-rdna` (27 Oct): a different token-repeat (`!!!!` / `!!!!!!`) showed up while
