@@ -111,3 +111,20 @@ HSA topology init — VM passthrough or unbind is the reliable fix when mixed AM
 PCB photos for cooler compatibility: community link
 [Linus Tech Tips V620 thread](https://linustechtips.com/topic/1588645-radeon-pro-v620-but-tencent-edition-meeting-issues-with-everything/).
 W6800 waterblocks are **not** a guaranteed fit.
+
+## IOMMU faults then a PSU group of cards disappears {#iommu-psu-group-drop}
+
+`#general` (31 Oct): on an **8× V620** host, a **TP8** request or sometimes
+**model load** logged **IOMMU page faults**, then **fatal PCIe** errors, then
+**six** cards vanished from the OS. Those six shared **auxiliary power from a
+1500 W server PSU through a breakout board**. The two cards powered entirely
+from a **workstation PSU** stayed. The first GPU to report the IOMMU fault was
+**not** always the same card, and was **not** necessarily the problem card.
+
+Unresolved: power delivery vs riser/cable vs driver. **Needs verify.** A/B
+before blaming the fork:
+
+1. Confirm **dual 8-pin** on every card in the disappearing group — [power](../tuning/power.md#slot-power-and-psu-transients).
+2. Read `dmesg` for IOMMU / AER / fatal PCIe around the drop.
+3. Cap TDP and retry TP8 vs a smaller world size.
+4. Do **not** treat a mixed PSU / breakout layout as a wiki default.

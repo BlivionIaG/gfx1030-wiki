@@ -37,6 +37,10 @@ The launcher defaults `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`. Pass a
 **local checkpoint** in `MODEL`. To pull a Hub id on this run, export
 `HF_HUB_OFFLINE=0` and `TRANSFORMERS_OFFLINE=0` in the caller environment.
 
+**2× Flash-Next expert offload** is a **sibling** wrapper, not a `RECIPE=` row:
+`tools/rdna/mono/serve_offload.sh` after [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146)
+(28 Oct). Same `MODEL` / `PLE_QUANT_DIR` hygiene — [2× serve](flash-next-serve.md#flash-next-2x-moe-offload).
+
 ## Recipes
 
 Files live in [`tools/rdna/recipes/`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tools/rdna/recipes).

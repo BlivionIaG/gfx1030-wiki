@@ -21,6 +21,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | Qwen3.8 Flash-Next (benchmarks and serve lines) | [Flash-Next](./flash-next.md) |
 | Flash-Next MonoKernel (`--monokernel`, HEAD) | [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |
 | Flash-Next DFlash2 (`RECIPE=flashnext-dflash2`, HEAD) | [DFlash2](./flash-next-serve.md#flash-next-dflash2) |
+| Flash-Next **2×** expert offload (`serve_offload.sh`, HEAD `#146`) | [2× MoE offload](./flash-next-serve.md#flash-next-2x-moe-offload) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](./configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](./quantization.md) |
 | Custom RDNA2 HIP kernels (`-extras`) | [vLLM forks](./fork.md) |

@@ -73,7 +73,9 @@ on the official support matrix, but in practice they run gfx1030 kernels once yo
   (prefer `float16`). `#general` (Sep 28 2026): **ComfyUI / image-video** workflows often default
   to **bf16**. On V620 that path is HIP-emulated, so those pipelines are a poor fit — pick **fp16 /
   int8** workflows, or use a card with native bf16. Community also called video generation a
-  CUDA-world problem, not a V620 win.
+  CUDA-world problem, not a V620 win. `#general` (30 Oct): **training** on V620 is the same
+  constraint — prefer **FP32** (or a native-bf16 card); community bf16-emulation tests had
+  drawbacks.
 
 ## How to check your GPU target
 

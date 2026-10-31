@@ -222,6 +222,40 @@ c=1 / c=8). `#vllm-rdna` (22 Oct): maintainer still has MTP-2 ahead on agentic l
 community: DFlash2 can win short / single-user, MTP-2 under concurrency. **Fork-source**
 for the recipe; community contrast **Needs verify**. Not Hub.
 
+### 2× V620 Flash-Next MoE offload (`#146`, 28 Oct) {#flash-next-2x-moe-offload}
+
+**Merged** [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct). Resident
+Flash-Next experts still do not fit **2× V620**. This is the first in-tree **vLLM** spill
+path: immutable pinned-RAM expert banks, a bounded GPU slot cache, and segmented
+FULL_AND_PIECEWISE graphs around host planning. `#vllm-rdna` (28 Oct): **V1 landed**.
+
+This is **not** a `serve_rdna.sh` `RECIPE=` yet. Use the offload wrapper on **HEAD**:
+
+```sh
+PRINT=1 MODEL=/path/to/flash-next PLE_QUANT_DIR=/path/to/ples_int4 \
+  bash tools/rdna/mono/serve_offload.sh
+```
+
+- Target: [`wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16`](https://huggingface.co/wtdcode/Qwen3.8-Flash-Next-AWQ-W4A16)
+  (compressed-tensors symmetric INT4, group 128).
+- Default layout: **TP=2 / EP=2**, `--monokernel`, **96** expert slots per layer/rank,
+  native CPU KV tier (`KV_OFFLOAD_GB`; `0` disables KV offload for an expert-only A/B).
+- Slot policy knobs: `SLOTS`, `POLICY` (`lfu_lru` or `lru`), `DECAY`.
+- Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (Q32 dense
+  accumulation). Resident 4× recipes keep their existing default.
+- Design notes: [`docs/rdna2/moe-offloading-target.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/moe-offloading-target.md).
+  Do not copy host paths out of that file.
+
+Author-host **2× V620**, MTP-2, 16 GiB native CPU KV (PR + `#vllm-rdna` 28 Oct):
+16k/1024 **c=1** ~**19.8** tok/s aggregate (TTFT ~17 s, ~**30** decode);
+**c=8** ~**26.7** agg (mean TTFT ~106 s, KV pool at 100% observed occupancy);
+32k/256 c=1 ~**30** decode / TTFT ~34 s. **Fork-source** on that host. The PR
+does **not** claim a controlled resident-vs-offload speedup. **Not** Hub.
+**Needs verify** on a second host.
+
+Without HEAD, llama.cpp RAM/MoE offload is still the 2-card path —
+[llama.cpp 2×](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4).
+
 ### INT4 KV cache (`#138`, 25 Oct) {#flash-next-int4-kv}
 
 **Merged** [`#138`](https://github.com/opengfx1030/vllm-rdna/pull/138) (25 Oct). Opt-in

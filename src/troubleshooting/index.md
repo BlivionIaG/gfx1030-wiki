@@ -4,7 +4,7 @@ Common errors on gfx1030 / RDNA2 and how to fix them. Pick the section that matc
 
 | Stack | Page |
 |---|---|
-| ROCm install, hipBLASLt, BF16, iGPU, Secure Boot, CPU governor, V620 cooling | [General](./general.md) |
+| ROCm install, hipBLASLt, BF16, iGPU, Secure Boot, CPU governor, V620 cooling, multi-PSU / IOMMU card drop | [General](./general.md) |
 | Host never POSTs with 4× V620 / PLX (Dell Precision, H12D) | [Host firmware](../setup/host-firmware.md) |
 | vLLM Docker, CUDA graphs, TunableOp / rocBLAS mismatch, Inductor cache, GLM vision compile, AMDSMI, RCCL, rocprofiler idle CPU, `rdna_ar` / non-mono hangs, KV-offload loops | [vLLM](./vllm.md) |
 | Flash-Next stalls, PP3 / FULL graphs, hybrid KV, PLE, QSA vs FA-RDNA2, AutoRound `INCConfig`, vision OOM, wvSplitK, dynamic MTP / KV-restore loops | [vLLM Flash-Next](./vllm-flash-next.md) |

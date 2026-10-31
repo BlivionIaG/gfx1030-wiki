@@ -355,9 +355,32 @@ See [fork landscape](../vllm/fork.md#consolidation-status) and
 schedule unset still **token-repeated** with **MTP-2** and then with **MTP off**. Strongest
 suspect was **CPU-memory / disk KV cache restoration**. After **KV offloading disabled**
 (no `--kv-offloading-size`, no disk KV tier), the same host ran **4 h+** without a loop
-(`VLLM_FA_RDNA2_GQA_DECODE=1` stayed on). Treat RAM/disk KV restore as a **loop A/B** when
-dynamic MTP is already off — **Needs verify**. Details:
+(`VLLM_FA_RDNA2_GQA_DECODE=1` stayed on). `#vllm-rdna` (26 Oct follow-up): **prefix cache +
+CPU-memory KV offload** stayed loop-free for **6 h+** when **filesystem / disk KV offload
+was off**. Treat **disk** KV restore as the first A/B; RAM-tier parking is a weaker suspect
+on that host — **Needs verify**. Details:
 [dynamic MTP](./vllm-flash-next.md#flash-next-dynamic-mtp).
+
+`#vllm-rdna` (30 Oct): filesystem / disk KV at huge context can **write terabytes
+per day** to NVMe (one **8× V620** host with ~1M-token disk offload). Community:
+do **not** use consumer NVMe as a KV spill unless you accept that wear, or use
+**Optane**. Optane guidance from the same thread: **M.2 M10** class is slow;
+prefer **U.2 / PCIe / DIMM** Optane. LMCache still has **no working NVMe** path
+in-channel. Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148)
+adds experimental native hybrid KV paging — the PR itself says live paging
+**stalls**; that is **not** a recipe. Prefer RAM-tier `--kv-offloading-size` or
+no offload while isolating loops.
+
+## Repeating `!!!!` tokens (clocks / undervolt) {#repeating-exclamation-tokens}
+
+`#vllm-rdna` (27 Oct): a different token-repeat (`!!!!` / `!!!!!!`) showed up while
+hunting the KV-restore loop. One host could **only** reproduce it with **undervolt
+larger than ~20 mV** or **core above ~2479 MHz**. Another host at **2350 MHz** core /
+**1050 MHz** memory, **no undervolt**, stock **250 W** did not see it. A third reported
+**2400 / 1075 MHz at 160 W**. Hardware check suggested in-channel:
+[`GpuZelenograd/memtest_vulkan`](https://github.com/GpuZelenograd/memtest_vulkan)
+plus `dmesg` for ECC errors. **Community / Needs verify** — do not treat those clocks
+as a wiki default. Power caps: [Power tuning](../tuning/power.md).
 
 `#vllm-rdna` (Sep 16): public RAM-offload Flash-Next **weight** packs (example:
 [`Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound`](https://huggingface.co/Minachist/Qwen3.8-Flash-Next-INT4-Mixed-AutoRound))
