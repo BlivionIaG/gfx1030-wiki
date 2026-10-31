@@ -2,7 +2,7 @@
 
 > **WIP snapshot:** Readable status of
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`.
-> Dated **26 Oct 2026** from public merges + `#vllm-rdna` / `#announcements`.
+> Dated **31 Oct 2026** from public merges + `#vllm-rdna` / `#announcements`.
 > Kernel file lists and older chronicle rows stay on [Fork landscape](fork.md).
 > See [Verification status](../reference/verification.md#vllm-fork-progressmd).
 
@@ -34,7 +34,7 @@ Author-host 4× V620 TP=4 (probes / PPL / prefix cache / concurrency, 0 GPU faul
 Flash-Next AWQ ~**2000** PP, **45** (MTP-0) / **69** (MTP-2) TG, ~**205** agg @ 8 users —
 **Fork-source**. Details: [fork.md v0.31 row](fork.md#consolidation-status).
 
-## On HEAD since the bake (13–26 Oct)
+## On HEAD since the bake (13–28 Oct)
 
 Prefer these over Hub when you need the feature. Serve lines:
 [Flash-Next serve](flash-next-serve.md), [Serve scripts](serve-scripts.md).
@@ -66,6 +66,7 @@ Prefer these over Hub when you need the feature. Serve lines:
 |---|---|---|
 | [`#138`](https://github.com/opengfx1030/vllm-rdna/pull/138) (25 Oct) | **INT4 KV** dtype `int4_fp16_block` (FP16 per-32-channel block scales); native **QSA** read | Opt-in `--kv-cache-dtype int4_fp16_block`. Other backends refuse it. **Not** Hub. MonoKernel path still **Needs verify** for this dtype. |
 | [`#140`](https://github.com/opengfx1030/vllm-rdna/pull/140) (26 Oct) | **fp16 SSM** state (smaller mamba pages); derived prefill budget; **`W4A8=1` default** on `27b-awq` | Author-host 27B: 16k c=1 PP **860 → 1075** tok/s; c=8 agg out **42.5 → 52.3** — **Fork-source**. Quality paired PPL ~unchanged. |
+| [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct) | **TP2 AWQ MoE expert offload** — pinned-RAM expert banks + bounded GPU slots (`serve_offload.sh`) | Author-host **2× V620** Flash-Next AWQ MTP-2 — [2× serve](flash-next-serve.md#flash-next-2x-moe-offload). **Not** Hub. Supersedes draft `#37`. |
 | [`#98`](https://github.com/opengfx1030/vllm-rdna/pull/98) (14 Oct) | Asymmetric W4A16 MoE for compressed-tensors AWQ | [Quantization](quantization.md) |
 
 ### Tooling / cleanup (HEAD hygiene)
@@ -92,12 +93,13 @@ Do **not** treat drafts as recipes. Full list:
 | W8A8 sdot4 dense/MoE | Draft [`#93`](https://github.com/opengfx1030/vllm-rdna/pull/93) | Explore — not day-to-day |
 | Disagg prefill/decode | Open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) | Cross-PLX KV bridge — Needs verify |
 | GLM-5.3 / Glm5Next | Drafts [`#51`](https://github.com/opengfx1030/vllm-rdna/pull/51) / [`#133`](https://github.com/opengfx1030/vllm-rdna/pull/133) | Correctness WIP |
+| Tiered expert budgets + hybrid KV paging | Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148) | `#vllm-rdna` (30 Oct): follow-up to merged `#146`. Live paging **stalls**; PR stays **draft** until mixed-workload gaps look acceptable. **Not** a recipe. |
 
 `#vllm-rdna` (21 Oct): community DeepSeek-V4-Flash correctness write-up on a fork of
 `rdna_extras` (bf16→fp16 cast, logits all-gather, EP routing). In-tree
 `RECIPE=dsv4-flash` still **Needs verify** — [serve](flash-next-serve.md#deepseek-v4-flash).
 
-## Practical defaults (26 Oct)
+## Practical defaults (31 Oct)
 
 | Goal | Prefer |
 |---|---|
@@ -106,6 +108,7 @@ Do **not** treat drafts as recipes. Full list:
 | Faster Flash-Next decode experiment | `EXTRA_ARGS="--monokernel"` — A/B ITL; regenerate TunableOp if PP cliffs |
 | 3× Flash-Next | `RECIPE=flashnext-pp3` or `flashnext-pp3-mtp2` (HEAD only) |
 | Longer KV on QSA path | `--kv-cache-dtype int4_fp16_block` (HEAD; opt-in) |
+| 2× Flash-Next (weights do not fit) | HEAD `tools/rdna/mono/serve_offload.sh` (`#146`) — **Needs verify** on a second host. llama.cpp RAM/MoE offload remains the non-HEAD path. |
 | 27B AWQ prefill | `RECIPE=27b-awq` with HEAD `W4A8=1` (recipe default after `#140`) |
 | Spec draft A/B | Native **MTP-2** first; `flashnext-dflash2` for short/single-user experiments |
 

@@ -137,12 +137,20 @@ that. Cap at **160 / 140 W** mainly for PSU headroom, not because 180 W is slow.
 similarly calls **~120–170 W** the practical sweet spot — little gained above that for the extra watts.
 
 Undervolt experiments exist; community: about **−25 mV** was stable for one host, while more aggressive
-settings started emitting **random tokens**. Treat UV as optional and A/B carefully.
+settings started emitting **random tokens**. `#vllm-rdna` (27 Oct): looping **`!!!!`** tokens
+reproduced on one host with **undervolt larger than ~20 mV** or **core above ~2479 MHz**.
+Other community clocks that did **not** show that loop: **2350 MHz** core / **1050 MHz**
+memory at stock **250 W**, and **2400 / 1075 MHz** at **160 W**. Treat UV / high-core as
+optional and A/B carefully — [token loops](../troubleshooting/vllm.md#repeating-exclamation-tokens).
 
 ## Slot power and PSU transients
 
-Unlike many gaming cards, a **V620 reaches TDP from the PCIe slot**, not from extra 8-pin cables.
-That makes the **+12 V rail** and slot power delivery more sensitive than a 3080-class swap-in:
+Unlike many gaming cards, a **V620 can reach TDP from the PCIe slot** once it has enumerated.
+That makes the **+12 V rail** and slot power delivery more sensitive than a 3080-class swap-in.
+**Enumeration is separate:** `#general` (29 Oct): cards with only **one** 6+2 / 8-pin aux
+cable plugged can light LEDs and still **never appear in the OS**. Community: **dual 8-pin**
+(a single 8-pin from the PSU can Y-split) **and** slot power. Missing aux connectors is a
+common “I have 8 cards but `lspci` only sees 5” miss.
 
 - Prefill / tensor-split can trip old or miner PSUs even when average watts look fine — see
   [llama.cpp PSU troubleshooting](../troubleshooting/llama-cpp.md#psu-dies-the-moment-tensor-split-prefill-starts).
@@ -169,6 +177,14 @@ before CPU/board). Same thread: **0.7 A** blowers were enough at **180 W**; stoc
 full-power inference hit **~86 °C** on that host. Community is still unsure whether
 `rocm-smi` caps catch brief transients — size the PSU for **stock TDP** if you have not
 applied the floor yet.
+
+`#general` (31 Oct): an **8× V620** host saw **IOMMU page faults** then **fatal
+PCIe errors** during **TP8** or model load. The six cards on a **1500 W server
+PSU → breakout board** dropped from the OS; the two cards powered entirely by a
+**workstation PSU** stayed. Unresolved (power delivery vs riser/cable vs
+driver). **Needs verify.** A/B the disappearing group’s aux power and `dmesg`
+for IOMMU / AER — the first card to log the fault is not necessarily the bad
+one. See [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop).
 
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))

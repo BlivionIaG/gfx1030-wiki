@@ -30,11 +30,15 @@ is the older published container / docs tree (still receives occasional commits;
 Oct 2026). Prefer latest `rdna_extras`
 or the 0.31 Hub tag over llama.cpp until the RDNA2 llama.cpp fork catches up.
 
-**2× V620 / RAM offload:** vLLM is a poor fit when weights or MoE experts must spill to host RAM.
-`#vllm-rdna` (Sep 14): use [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4)
-(`--n-cpu-moe`, `-ot …=CPU`) instead. Community 2-card llama.cpp Flash-Next is still **~25 t/s**
-decode / **~150–200** PP — far below the 4-card vLLM class. `#vllm-rdna` (16 Oct): current
-Flash-Next vLLM still **does not fit on 2 cards as-is** (MonoKernel does not change that).
+**2× V620 / RAM offload:** resident Flash-Next experts still do **not** fit two V620s.
+Merged [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct) is the first
+in-tree **vLLM** path: pinned-RAM expert banks + a bounded GPU slot cache, launched with
+`tools/rdna/mono/serve_offload.sh` on **HEAD** — [2× serve](flash-next-serve.md#flash-next-2x-moe-offload).
+Hub **`v0.31.0-extras` lags**. `#vllm-rdna` (Sep 14): without that HEAD launcher, use
+[llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4) (`--n-cpu-moe`, `-ot …=CPU`).
+Community 2-card llama.cpp Flash-Next is still **~25 t/s** decode / **~150–200** PP — far
+below the 4-card vLLM class. `#vllm-rdna` (16 Oct): MonoKernel alone does **not** make
+resident Flash-Next fit 2 cards.
 
 **3× V620:** vLLM wants **PP=3** (even TP). Current `rdna_extras` HEAD (merged
 [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct) ships
