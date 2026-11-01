@@ -416,7 +416,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 | `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Ice Lake 4× V620 host — llama.cpp + vLLM |
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
-| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host |
+| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host. 31 Oct: adding GPUs in a passthrough VM flipped Request Redirect + Relaxed Ordering; restore stopped IOMMU / card-drop; TP8 still failed |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
 | `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
@@ -457,7 +457,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; 26 Oct: CPU-RAM KV + prefix cache OK when **disk** KV offload is off |
 | `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC |
-| `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive |
+| `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4; still no Hub recipe |
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify** |
 | `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620 |
 | `tuning/power.md` V620 dual 8-pin enumeration | **Community** | `#general` 29 Oct — one aux cable can light LEDs without `lspci` |
@@ -469,7 +469,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 31 Oct Hub vs HEAD vs backlog |
 | `vllm/fork-progress.md` draft `#148` | **Fork-source** | `#vllm-rdna` 30 Oct + public draft — tiered KV paging; live paging stalls; not a recipe |
 | `troubleshooting/vllm.md` disk KV write-amp / Optane | **Community / Needs verify** | `#vllm-rdna` 30 Oct — terabytes/day NVMe at huge context; prefer U.2/PCIe/DIMM Optane over M10; LMCache NVMe still unused |
-| `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed |
+| `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed. Same day: ACS Request Redirect + Relaxed Ordering flipped on after adding GPUs to a passthrough VM; restore stopped the drop; PP2/TP4 OK, TP8 still broken |
 | `vllm/flash-next-serve.md` HIP defaults `#130` | **Fork-source** | 19 Oct — Flash-Next HEAD recipes HIP on |
 | `vllm/flash-next-serve.md` DFlash2 `#132` | **Fork-source** | 21 Oct — MTP-2 still faster in PR A/B |
 | `troubleshooting/vllm.md` `rdna_ar` silent hang `#128` | **Fork-source** | 19 Oct |
@@ -495,6 +495,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `choose-a-stack.md` / `meta/resources.md` Strata HIP | **Community / Needs verify** | `#general` Oct 7–8 + public `Niko1221/Strata`. 2× V620 0.1.39+#835/#849 PP jump; 3-card behind vLLM. No serve recipe |
 | `choose-a-stack.md` GLM-5.3-Flash not 1-card | **Community / Needs verify** | `#general` Oct 25 — 1× V620 + RAM offload poor fit; Maya ~200/13 stale; public 320B/18B active. 8× recipe already on `recipes.md` |
 | `choose-a-stack.md` / `meta/resources.md` Strata 0.1.49.2 DeepSeek engine | **Community** | `#strata` Oct 25 — signed feed has no gfx1030 HIP DeepSeek engine (gfx1200/gfx1201 + CUDA) |
+| `choose-a-stack.md` / `meta/resources.md` Strata `--calibrate` / Avalon | **Community / Needs verify** | `#strata` 31 Oct–1 Nov — `--calibrate` is the A/B knob; one 4× V620 host used `--prefill-pipe 3072` + `STRATA_SH_STREAM=1`. Avalon is RDNA3-only |
 | `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates`; `#general` Oct 9 tool calls |
 | `vllm/recipes.md` 3× MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — public temp repo |
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |
