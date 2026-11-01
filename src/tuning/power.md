@@ -181,10 +181,14 @@ applied the floor yet.
 `#general` (31 Oct): an **8× V620** host saw **IOMMU page faults** then **fatal
 PCIe errors** during **TP8** or model load. The six cards on a **1500 W server
 PSU → breakout board** dropped from the OS; the two cards powered entirely by a
-**workstation PSU** stayed. Unresolved (power delivery vs riser/cable vs
-driver). **Needs verify.** A/B the disappearing group’s aux power and `dmesg`
-for IOMMU / AER — the first card to log the fault is not necessarily the bad
-one. See [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop).
+**workstation PSU** stayed. Same-day follow-up: adding GPUs into a
+**passthrough VM** flipped **ACS Request Redirect** and **Relaxed Ordering**
+**on**; restoring those controls stopped the drop. **PP2/TP4** then worked;
+**TP8** still failed. Mixed PSU / breakout is still not a wiki default.
+**Needs verify.** Re-check ACS in the guest after you add cards, then A/B aux
+power and `dmesg` — the first card to log the fault is not necessarily the bad
+one. See [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop)
+and [ACS bits](p2p.md#acs-bits).
 
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))

@@ -115,6 +115,16 @@ Then run `v620-p2p-readiness.sh` and `verify-p2p.sh`. Treat a readiness “ACS o
 **incomplete** until you have `amd-smi topology` **P2P ENABLED** and a working TP serve.
 **Needs verify** on a second topology.
 
+`#general` (31 Oct): **adding GPUs** into a **passthrough VM** flipped **P2P
+Request Redirect** and **Relaxed Ordering** **on** (community: ACS bits changed
+when the extra cards appeared). Restoring those controls stopped **IOMMU page
+faults** and a **PSU-group of cards disappearing**. **PP2/TP4** then worked;
+**TP8** still failed. Re-check ACS **inside the guest** after you add or
+passthrough cards — see
+[IOMMU / PSU-group drop](../troubleshooting/general.md#iommu-psu-group-drop).
+Relaxed Ordering is a **Device Control** bit, not an ACS bit; still A/B it if
+it flipped with the ACS word.
+
 ## When P2P helps — and when it does not
 
 `amd-smi topology` saying **P2P ENABLED** is not the same as faster tokens. Always A/B with

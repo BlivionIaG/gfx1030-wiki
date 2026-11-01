@@ -121,10 +121,19 @@ W6800 waterblocks are **not** a guaranteed fit.
 from a **workstation PSU** stayed. The first GPU to report the IOMMU fault was
 **not** always the same card, and was **not** necessarily the problem card.
 
-Unresolved: power delivery vs riser/cable vs driver. **Needs verify.** A/B
-before blaming the fork:
+Same thread later (31 Oct): after **adding GPUs** into a **passthrough VM**,
+**ACS Request Redirect** and **Relaxed Ordering** flipped **on**. Restoring
+those controls stopped the IOMMU faults and the disappearing-card group.
+**PP2/TP4** then ran; **TP8** still failed after the ACS fix. Mixed PSU /
+breakout remains a risk, not a wiki default. **Needs verify** on a second host.
 
-1. Confirm **dual 8-pin** on every card in the disappearing group — [power](../tuning/power.md#slot-power-and-psu-transients).
-2. Read `dmesg` for IOMMU / AER / fatal PCIe around the drop.
-3. Cap TDP and retry TP8 vs a smaller world size.
-4. Do **not** treat a mixed PSU / breakout layout as a wiki default.
+A/B before blaming the fork or ripping every cable:
+
+1. Re-read ACS **inside the guest** (and on the host) after you add or
+   passthrough cards — [ACS bits](../tuning/p2p.md#acs-bits). Request Redirect
+   (bit 2) is the principal P2P obstacle; community also saw Relaxed Ordering
+   flip (Device Control, not an ACS bit).
+2. Confirm **dual 8-pin** on every card in the disappearing group — [power](../tuning/power.md#slot-power-and-psu-transients).
+3. Read `dmesg` for IOMMU / AER / fatal PCIe around the drop.
+4. Cap TDP and retry TP8 vs a smaller world size (PP2/TP4 was the working split here).
+5. Do **not** treat a mixed PSU / breakout layout as a wiki default.
