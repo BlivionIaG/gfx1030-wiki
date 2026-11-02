@@ -2,7 +2,7 @@
 
 > **WIP snapshot:** Readable status of
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`.
-> Dated **31 Oct 2026** from public merges + `#vllm-rdna` / `#announcements`.
+> Dated **2 Nov 2026** from public merges + `#vllm-rdna` / `#announcements`.
 > Kernel file lists and older chronicle rows stay on [Fork landscape](fork.md).
 > See [Verification status](../reference/verification.md#vllm-fork-progressmd).
 
@@ -11,11 +11,13 @@
 | Layer | What you get |
 |---|---|
 | **Hub `v0.31.0-extras`** (11 Oct 2026) | Day-to-day Docker — [Running](running.md), [Onboard](onboarding.md) |
-| **`rdna_extras` HEAD** | Everything after that bake — clone + [host venv](host-venv.md) + [`serve_rdna.sh`](serve-scripts.md) |
+| **`rdna_extras` HEAD** | **v0.33.0** as of 1–2 Nov — clone + [host venv](host-venv.md) + [`serve_rdna.sh`](serve-scripts.md) |
+| **Org GHCR `nightly`** | Source CI snapshot of HEAD — [Running](running.md#ghcr-nightly). Not a Hub bake. |
 | **Open drafts** | Backlog / WIP — not a recipe until merged |
 
 Published Hub tags **lag HEAD**. If a row says “Not Hub”, do not expect it on
-`blivioniag/vllm-rdna:v0.31.0-extras` until a newer extras bake.
+`blivioniag/vllm-rdna:v0.31.0-extras` until a newer extras bake. Org GHCR
+`nightly` tracks `rdna_extras` tip (may need GHCR auth).
 
 ## Shipped in Hub `v0.31.0-extras` (11 Oct)
 
@@ -76,6 +78,17 @@ Prefer these over Hub when you need the feature. Serve lines:
 [`#92`](https://github.com/opengfx1030/vllm-rdna/pull/92) TunableOp grid expand;
 [`#141`](https://github.com/opengfx1030/vllm-rdna/pull/141) stale-doc / lint fixes.
 
+## On HEAD since 1–2 Nov (0.33 rebase)
+
+`#vllm-rdna` (1 Nov): `rdna_extras` rebased **0.32.0** then **0.33.0** (Qwen4
+readiness). No new Hub extras tag. Author: prefill looked better on 0.32 than
+0.33 — **Community**.
+
+| Landed | What | Notes |
+|---|---|---|
+| CI [`#151`](https://github.com/opengfx1030/vllm-rdna/pull/151) / [`#154`](https://github.com/opengfx1030/vllm-rdna/pull/154) | Source GHCR `ghcr.io/opengfx1030/vllm-rdna:nightly` (+ `:nightly-rocm7.14.0`, `:sha-<commit>`) | `--platform linux/amd64`. Day-to-day stays Hub **0.31**. |
+| 2 Nov PLE graph fix | Breakable `FULL_AND_PIECEWISE` froze PLE layout → NaN / `!!!!` / `_ple_conv_kernel` | Fixed on HEAD: PLE breaks **PIECEWISE** only. Nightly from **before** that commit is unsafe. [Troubleshooting](../troubleshooting/vllm.md#033-nightly-ple-cuda-graphs) |
+
 ## Open backlog (selected)
 
 Do **not** treat drafts as recipes. Full list:
@@ -99,11 +112,12 @@ Do **not** treat drafts as recipes. Full list:
 `rdna_extras` (bf16→fp16 cast, logits all-gather, EP routing). In-tree
 `RECIPE=dsv4-flash` still **Needs verify** — [serve](flash-next-serve.md#deepseek-v4-flash).
 
-## Practical defaults (31 Oct)
+## Practical defaults (2 Nov)
 
 | Goal | Prefer |
 |---|---|
-| Docker / least friction | Hub **`v0.31.0-extras`** |
+| Docker / least friction | Hub **`v0.31.0-extras`** (still the published bake) |
+| HEAD / 0.33 kernels in Docker | Org GHCR **`nightly`** — pull a digest **after** the 2 Nov PLE graph fix, or clone |
 | 4× Flash-Next day-to-day on HEAD | `RECIPE=flashnext-mtp2` (+ HIP defaults from `#130`) |
 | Faster Flash-Next decode experiment | `EXTRA_ARGS="--monokernel"` — A/B ITL; regenerate TunableOp if PP cliffs |
 | 3× Flash-Next | `RECIPE=flashnext-pp3` or `flashnext-pp3-mtp2` (HEAD only) |

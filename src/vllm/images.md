@@ -14,6 +14,12 @@ pending **0.28** bake is **historical** — that line shipped as `v0.28.0-extras
 superseded by 0.31. `#vllm-rdna` (17 Oct): do **not** bump the image Triton pin to **3.9+** —
 those releases drop RDNA1/RDNA2. Stay on **3.7.1** until the bake moves.
 
+`#vllm-rdna` (1 Nov 2026): the **source** repo also publishes
+`ghcr.io/opengfx1030/vllm-rdna:nightly` from
+[`.github/workflows/docker-image.yml`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/.github/workflows/docker-image.yml)
+(`docker/Dockerfile.rdna`). That is a **HEAD snapshot**, not a new `vllm-rdna-docker` Hub
+bake — [Running](running.md#ghcr-nightly).
+
 ## Layout
 
 | File | Purpose |

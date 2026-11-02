@@ -7,18 +7,22 @@
 
 `#vllm-rdna` (Sep 2026): the **official** gfx1030 vLLM source is the shared-org repo. File new PRs and
 issues there. Flash-Next work lives on `rdna_extras`. Published
-Docker Hub **`v0.31.0-extras`** landed 11 Oct 2026.
+Docker Hub **`v0.31.0-extras`** landed 11 Oct 2026 and is still the **day-to-day** extras bake.
+`#vllm-rdna` (1 Nov 2026): `rdna_extras` HEAD rebased through **v0.32.0** then **v0.33.0**
+(Qwen4 readiness). Clone HEAD or pull the org GHCR nightly — do **not** treat Hub 0.31 as
+0.33.
 
 | # | Repo / branch | Role | Use it when… |
 |---|---|---|---|
-| **Official** | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) (default) | Hand-written **RDNA HIP kernels** + dispatch. Moved from the old personal `blivioniag/vllm` `rdna2_extras` line (repo **404** today). **vLLM 0.31.0** as of 11 Oct 2026; old 0.28 line is `rdna_extra/v0.28.0` | Clone, contribute, track HEAD |
+| **Official** | [`opengfx1030/vllm-rdna` @ `rdna_extras`](https://github.com/opengfx1030/vllm-rdna) (default) | Hand-written **RDNA HIP kernels** + dispatch. Moved from the old personal `blivioniag/vllm` `rdna2_extras` line (repo **404** today). **HEAD is vLLM 0.33.0** as of 1–2 Nov 2026; Hub bake is still **0.31.0**. Old 0.28 line is `rdna_extra/v0.28.0` | Clone, contribute, track HEAD |
 | **Flash-Next (older container)** | [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) (e.g. `rdna2/qwen38-flash-next`) | Older Flash-Next **container** + [docs/rdna2](https://github.com/leapdragon/vllm-rdna2-qwen/tree/rdna2/qwen38-flash-next/docs/rdna2). Day-to-day kernels / Hub bake live on org `rdna_extras` / **`v0.31.0-extras`**; this tree still receives occasional commits (last push 11 Oct 2026) | Existing GHCR / compose that still points here; `docs/rdna2` references |
 | **Historical** | `blivioniag/vllm` @ `rdna2_extras` (public repo **gone**) | Predecessor of the official repo. Do **not** file new PRs here | Comparing old commit SHAs only; current Hub extras bakes clone the org repo |
 
 **Day-to-day serving:** pull [`blivioniag/vllm-rdna`](https://hub.docker.com/r/blivioniag/vllm-rdna)
 **`v0.31.0-extras`** (`#announcements` 11 Oct 2026). **Source of truth** for new kernel work is
-[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` (now the v0.31.0
-port). Older Hub tags stay for A/B. Do not assume org GHCR tags exist yet.
+[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras` (**v0.33.0**
+as of 1–2 Nov). Older Hub tags stay for A/B. Org GHCR now exists:
+`ghcr.io/opengfx1030/vllm-rdna:nightly` (and `:nightly-rocm7.14.0`) — [Running](running.md#ghcr-nightly).
 
 Companion (not an engine fork): [`leapdragon/vllm-rdna2-recipe`](https://github.com/leapdragon/vllm-rdna2-recipe)
 (mirror [`opengfx1030/vllm-rdna2-recipe`](https://github.com/opengfx1030/vllm-rdna2-recipe))
@@ -31,7 +35,7 @@ still worth cherry-picking into that stack.
 ### Progress snapshot {#progress-snapshot}
 
 For a dated **Hub vs HEAD vs backlog** table (MonoKernel, HIP defaults, PP3,
-INT4 KV, W4A8, open drafts), see **[Fork progress](fork-progress.md)** (26 Oct
+INT4 KV, W4A8, 0.33 rebase, open drafts), see **[Fork progress](fork-progress.md)** (2 Nov
 2026). The chronicle below keeps per-PR detail.
 
 ### Consolidation status (Sep 3–26 2026) {#consolidation-status}
@@ -90,10 +94,13 @@ INT4 KV, W4A8, open drafts), see **[Fork progress](fork-progress.md)** (26 Oct
 | **INT4 KV `int4_fp16_block` (`#138`)** | **Merged** [`#138`](https://github.com/opengfx1030/vllm-rdna/pull/138) (25 Oct): packed INT4 + FP16 per-32-channel block scales as a real `CacheDType`. Native **write/read on the non-MonoKernel QSA path**; other backends refuse the dtype (silent corruption risk). Opt-in `--kv-cache-dtype int4_fp16_block`. Default FP16 KV unchanged. `#vllm-rdna` (21 Oct): maintainer still prioritizes restoring **INT8** KV ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)) for day-to-day. **Not** Hub. |
 | **fp16 SSM + W4A8 default (`#140`)** | **Merged** [`#140`](https://github.com/opengfx1030/vllm-rdna/pull/140) (26 Oct): GDN prefill can keep mamba state in **fp16** (page ~half → denser KV); launcher derives prefill budget from the mamba block; `27b-awq` recipe defaults **`W4A8=1`** (int8-activation prefill GEMMs for M≥33; decode stays W4A16). Author-host 4× TP4 27B: 16k c=1 PP **860 → 1075** tok/s; c=8 agg out **42.5 → 52.3**; paired PPL ~4.94 → 4.91. **Not** Hub. |
 | **TP2 AWQ MoE expert offload (`#146`)** | **Merged** [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct): Flash-Next **TP=2 / EP=2** expert-weight spill to pinned host RAM with a bounded GPU slot cache (default **96** slots/layer, `lfu_lru` or `lru`). `#vllm-rdna` (28 Oct): **V1 landed**. In-tree launcher is [`tools/rdna/mono/serve_offload.sh`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/tools/rdna/mono/serve_offload.sh) — **not** a `serve_rdna.sh` `RECIPE=` yet. Design notes: [`docs/rdna2/moe-offloading-target.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/moe-offloading-target.md). Author-host **2× V620**, `wtdcode` AWQ-W4A16, MTP-2, 16 GiB native CPU KV: 16k/1024 **c=1** ~**19.8** tok/s aggregate (TTFT ~17 s, ~**30** decode); **c=8** ~**26.7** agg; 32k/256 c=1 ~**30** decode / TTFT ~34 s — **Fork-source**, no controlled resident-vs-offload speedup claimed. Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (resident recipes stay as they were). **Not** Hub. — [2× serve](flash-next-serve.md#flash-next-2x-moe-offload). |
+| **v0.32 / v0.33 rebase + GHCR nightly** | `#vllm-rdna` (1 Nov 2026): `rdna_extras` became **0.32.0**-based, then the same day **0.33.0**-based (“to be ready for Qwen4”). Author: prefill looked **better on 0.32**, mixed on 0.33 — **Community**, not a Hub bump. CI [`#151`](https://github.com/opengfx1030/vllm-rdna/pull/151) / [`#154`](https://github.com/opengfx1030/vllm-rdna/pull/154): source-owned images `ghcr.io/opengfx1030/vllm-rdna:nightly` (and `:nightly-rocm7.14.0`; per-commit `:sha-<commit>`). Day-to-day Docker stays Hub **`v0.31.0-extras`**. |
+| **0.33 PLE CUDA-graph break / fix** | `#vllm-rdna` (1–2 Nov): first nightly was announced with **CUDA graphs broken**. Public HEAD (2 Nov): PLE custom ops froze the first request’s layout under breakable `FULL_AND_PIECEWISE` — second request **NaN logits** / Flash-Next **`!!!!`**, PIECEWISE-only boot faulted in `_ple_conv_kernel`. Follow-up: break PLE only on **PIECEWISE** segments; **FULL** decode keeps them inline. Pull HEAD **after** that fix (or stay on Hub 0.31). — [graphs](../troubleshooting/vllm.md#033-nightly-ple-cuda-graphs). |
 
 Official-fork feature set called out in-channel (HIP): **MXFP4**, **AWQ INT4**, **GPTQ INT4**, GDN
 prefill/decode linear attention, FA-RDNA2, one-shot all-reduce, FULL_AND_PIECEWISE, EXL3, MTP=2.
-Treat Hub **`v0.31.0-extras`** as the current extras bake; clone HEAD for work after that tag.
+Treat Hub **`v0.31.0-extras`** as the current extras bake; clone HEAD (now **0.33**) or pull
+org GHCR nightly for work after that tag.
 Readable snapshot: [Fork progress](fork-progress.md).
 
 ---

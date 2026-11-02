@@ -37,8 +37,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct |
-| `rdna_extras` = upstream vLLM 0.31.0 + RDNA port | **Fork-source** | `#announcements` 11 Oct; org default branch `rdna_extras` |
+| Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct. Still the published bake after the 1 Nov 0.33 rebase |
+| `rdna_extras` HEAD = upstream vLLM 0.33.0 + RDNA port | **Fork-source** | `#vllm-rdna` 1 Nov + org default branch. Hub bake remains 0.31. 11 Oct announcement described the 0.31 line |
+| Org GHCR `nightly` | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`. Tag name from author + workflow. Package may need GHCR auth |
 | Path A 27B AWQ docker run | **Community** | Same announcement + prior `#vllm-rdna` day-to-day model pick |
 | Path B `serve_rdna.sh` + `PLE=int4` Flash-Next | **Community** | `#announcements` + `#vllm-rdna` Oct 11 launcher example |
 | `P2P=0` for hosts without PCIe P2P | **Fork-source** | `tools/rdna/serve_rdna.sh` + `#vllm-rdna` Oct 11 |
@@ -48,7 +49,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | Image tag matrix | **Needs verify** | [Docker Hub tags](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) |
-| Hub `v0.31.0-extras` | **Fork-source** | `#announcements` 11 Oct 2026 + Hub push 11 Oct 15:14 UTC (same digest as `v0.31.0-extras-rocm7.14.0`). ROCm 7.14 / torch 2.12 / Triton 3.7.1. Flash-Next MTP-2 (BF16 + INT4-disk) served. |
+| Hub `v0.31.0-extras` | **Fork-source** | `#announcements` 11 Oct 2026 + Hub push 11 Oct 15:14 UTC (same digest as `v0.31.0-extras-rocm7.14.0`). ROCm 7.14 / torch 2.12 / Triton 3.7.1. Flash-Next MTP-2 (BF16 + INT4-disk) served. Still day-to-day after 1 Nov HEAD rebase |
+| Org GHCR `ghcr.io/opengfx1030/vllm-rdna:nightly` | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + `.github/workflows/docker-image.yml`. First nightly had broken CUDA graphs; 2 Nov PLE fix on HEAD |
 | Hub `v0.28.0-extras` | **Historical** | Sep 18 test tag. Prefer `v0.31.0-extras`. Source now `rdna_extra/v0.28.0`. |
 | `PYTORCH_ROCM_ARCH` list | **Solid** | `vllm-rdna-docker` build |
 | Prefer `--dtype float16` | **Solid** | RDNA2 BF16 limitation |
@@ -217,7 +219,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Hub **`v0.31.0-extras`** current | **Solid** | Org repo + default branch; `#announcements` 11 Oct 2026 Hub bake. leapdragon is legacy container/docs |
+| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Hub **`v0.31.0-extras`** current bake; HEAD **0.33** | **Solid** | Org repo + default branch; `#announcements` 11 Oct Hub bake; `#vllm-rdna` 1 Nov rebase. leapdragon is legacy container/docs |
+| v0.32 / v0.33 rebase + GHCR nightly | **Fork-source / Community** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`. Prefill “better on 0.32” is Community. Not a Hub bump |
+| 0.33 PLE CUDA-graph NaN / `!!!!` | **Fork-source** | `#vllm-rdna` 1–2 Nov + public 2 Nov commits. Nightly before the fix is unsafe |
 | Consolidation / 0.28 gap audit | **Community** | `#vllm-rdna` Sep 3–7 channel notes; treat as WIP |
 | No WMMA on RDNA2 | **Solid** | Architecture |
 | Kernel file list | **Solid** | Fork tree (`rdna_extras`) |
@@ -265,7 +269,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Snapshot dated 26 Oct 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
+| Snapshot dated 2 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
 | Hub `v0.31.0-extras` feature set | **Fork-source** | `#announcements` 11 Oct |
 | HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
 | Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
@@ -456,7 +460,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm-flash-next.md` FA-RDNA2 partial on QSA | **Community / Fork-source** | `#vllm-rdna` Oct 13 — QSA Triton owner ignores `--attention-backend` |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; 26 Oct: CPU-RAM KV + prefix cache OK when **disk** KV offload is off |
-| `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC |
+| `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC. 1–2 Nov: also PLE CUDA-graph freeze on early 0.33 nightly — **Fork-source** |
 | `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4; still no Hub recipe |
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify** |
 | `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620 |
@@ -466,7 +470,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` `#126` / `#127` / `#128` / `#130` / `#131` / `#132` | **Fork-source** | Merged 18–21 Oct; Hub `v0.31.0-extras` lags |
 | `vllm/fork.md` `#117` / `#137` / `#138` / `#140` | **Fork-source** | Merged 17–26 Oct; EXL3 Flash-Next, MTP mono, INT4 KV, W4A8 default. Not Hub |
 | `vllm/fork.md` / `flash-next-serve.md` `#146` TP2 MoE offload | **Fork-source** | `#146` merged 28 Oct; `serve_offload.sh`; author-host 2× V620 16k/1024 ~19.8 / ~26.7 agg. Not Hub. **Needs verify** on a second host |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 31 Oct Hub vs HEAD vs backlog |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 2 Nov Hub vs 0.33 HEAD vs GHCR nightly vs backlog |
+| `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; anonymous GHCR pull not confirmed |
+| `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `vllm/fork-progress.md` draft `#148` | **Fork-source** | `#vllm-rdna` 30 Oct + public draft — tiered KV paging; live paging stalls; not a recipe |
 | `troubleshooting/vllm.md` disk KV write-amp / Optane | **Community / Needs verify** | `#vllm-rdna` 30 Oct — terabytes/day NVMe at huge context; prefer U.2/PCIe/DIMM Optane over M10; LMCache NVMe still unused |
 | `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed. Same day: ACS Request Redirect + Relaxed Ordering flipped on after adding GPUs to a passthrough VM; restore stopped the drop; PP2/TP4 OK, TP8 still broken |

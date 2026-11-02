@@ -25,6 +25,24 @@ Mount cache volumes — see [Configuration](../vllm/configuration.md#cache-volum
 
 On multi-GPU AOT cache issues: `VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1`
 
+### 0.33 nightly: PLE CUDA graphs (NaN / `!!!!`) {#033-nightly-ple-cuda-graphs}
+
+`#vllm-rdna` (1–2 Nov 2026): the first org GHCR **`nightly`** was announced with
+**CUDA graphs broken**. On early **v0.33** HEAD, breakable `FULL_AND_PIECEWISE`
+(`VLLM_USE_BREAKABLE_CUDAGRAPH=1`, used by MoE expert-offload) captured AMD **PLE**
+ops that read per-request metadata. Symptoms:
+
+- second request: **NaNs detected in logits** (offload)
+- Flash-Next: repeating **`!!!!`**
+- PIECEWISE-only boot fault in `_ple_conv_kernel`
+
+Public HEAD (2 Nov) keeps PLE inside **FULL** decode graphs and breaks only
+**PIECEWISE** (mixed/prefill) segments. Recipes stay on `FULL_AND_PIECEWISE`.
+
+**If you pulled nightly on 1 Nov:** pull again after that fix, or fall back to Hub
+**`v0.31.0-extras`**. `--enforce-eager` is a temporary A/B, not the day-to-day path.
+See [GHCR nightly](../vllm/running.md#ghcr-nightly).
+
 ### `TORCHINDUCTOR_CACHE_DIR` survives `VLLM_DISABLE_COMPILE_CACHE` {#torchinductor-cache-survives-vllm-disable-compile-cache}
 
 `rdna_extras` (1 Oct, EXL3 27B mul1 TP=4): piecewise `assert_size_stride` kept failing after a
@@ -372,6 +390,10 @@ adds experimental native hybrid KV paging — the PR itself says live paging
 no offload while isolating loops.
 
 ## Repeating `!!!!` tokens (clocks / undervolt) {#repeating-exclamation-tokens}
+
+On **0.33 nightly / HEAD** from 1–2 Nov, repeating `!!!!` can also be the
+[PLE CUDA-graph freeze](#033-nightly-ple-cuda-graphs) — check that first if you
+just pulled GHCR `nightly`.
 
 `#vllm-rdna` (27 Oct): a different token-repeat (`!!!!` / `!!!!!!`) showed up while
 hunting the KV-restore loop. One host could **only** reproduce it with **undervolt
