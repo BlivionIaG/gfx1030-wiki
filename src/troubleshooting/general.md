@@ -127,6 +127,15 @@ those controls stopped the IOMMU faults and the disappearing-card group.
 **PP2/TP4** then ran; **TP8** still failed after the ACS fix. Mixed PSU /
 breakout remains a risk, not a wiki default. **Needs verify** on a second host.
 
+`#general` (2 Nov): same class of **8× V620** host, **vLLM TP8** still logged
+**IOMMU faults** and the cards vanished — during **load**, mid-**inference**,
+or after decode had already started. **llama.cpp TP8** on that host did **not**
+drop cards and ran at **~99%** of the power cap. **PP2/TP4** in vLLM still
+worked. That A/B makes a simple PSU trip less likely for the remaining TP8
+fail (llama.cpp was already at full draw). Community guess: a vLLM / ROCm
+kernel writing **outside its DMA buffer**. Unresolved — **Needs verify.** Prefer
+**PP2/TP4** (or llama.cpp TP8) until a second host reproduces.
+
 A/B before blaming the fork or ripping every cable:
 
 1. Re-read ACS **inside the guest** (and on the host) after you add or
@@ -136,4 +145,6 @@ A/B before blaming the fork or ripping every cable:
 2. Confirm **dual 8-pin** on every card in the disappearing group — [power](../tuning/power.md#slot-power-and-psu-transients).
 3. Read `dmesg` for IOMMU / AER / fatal PCIe around the drop.
 4. Cap TDP and retry TP8 vs a smaller world size (PP2/TP4 was the working split here).
-5. Do **not** treat a mixed PSU / breakout layout as a wiki default.
+5. A/B **llama.cpp TP8** vs **vLLM TP8** on the same host. If only vLLM drops
+   cards at full draw, treat it as a **vLLM / DMA** lead, not “buy a bigger PSU.”
+6. Do **not** treat a mixed PSU / breakout layout as a wiki default.

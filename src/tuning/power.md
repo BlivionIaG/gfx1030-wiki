@@ -184,10 +184,13 @@ PSU → breakout board** dropped from the OS; the two cards powered entirely by 
 **workstation PSU** stayed. Same-day follow-up: adding GPUs into a
 **passthrough VM** flipped **ACS Request Redirect** and **Relaxed Ordering**
 **on**; restoring those controls stopped the drop. **PP2/TP4** then worked;
-**TP8** still failed. Mixed PSU / breakout is still not a wiki default.
-**Needs verify.** Re-check ACS in the guest after you add cards, then A/B aux
-power and `dmesg` — the first card to log the fault is not necessarily the bad
-one. See [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop)
+**TP8** still failed. `#general` (2 Nov): **llama.cpp TP8** on that host held
+**~99%** of the power cap **without** the drop; **vLLM TP8** still IOMMU-faulted
+(load or mid-decode). Remaining TP8 fail is less likely a simple PSU trip.
+Mixed PSU / breakout is still not a wiki default. **Needs verify.** Re-check
+ACS in the guest after you add cards, then A/B aux power and `dmesg` — the
+first card to log the fault is not necessarily the bad one. See
+[general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop)
 and [ACS bits](p2p.md#acs-bits).
 
 See the full recipe, prerequisites, and the deep-dive docs

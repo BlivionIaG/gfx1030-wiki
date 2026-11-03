@@ -420,7 +420,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 | `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Ice Lake 4× V620 host — llama.cpp + vLLM |
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
-| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host. 31 Oct: adding GPUs in a passthrough VM flipped Request Redirect + Relaxed Ordering; restore stopped IOMMU / card-drop; TP8 still failed |
+| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host. 31 Oct: adding GPUs in a passthrough VM flipped Request Redirect + Relaxed Ordering; restore stopped IOMMU / card-drop; TP8 still failed. 2 Nov: llama.cpp TP8 held ~99% power without a drop; vLLM TP8 still IOMMU-faulted |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
 | `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
@@ -464,6 +464,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4; still no Hub recipe |
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify** |
 | `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620 |
+| `setup/hardware.md` / `host-firmware.md` MZ32-AR0 LRDIMM SKUs | **Community / Needs verify** | `#general` 2 Nov — Gigabyte MZ32-AR0; Samsung `M386A4G40DM0-CPB0Q` (IDT) trains, `…-CPB2Q` (Montage) does not; BIOS rev bumps no help. Community: EPYC wants 3DS/TSV from 128 GB up |
 | `tuning/power.md` V620 dual 8-pin enumeration | **Community** | `#general` 29 Oct — one aux cable can light LEDs without `lspci` |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
 | `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
@@ -475,7 +476,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `vllm/fork-progress.md` draft `#148` | **Fork-source** | `#vllm-rdna` 30 Oct + public draft — tiered KV paging; live paging stalls; not a recipe |
 | `troubleshooting/vllm.md` disk KV write-amp / Optane | **Community / Needs verify** | `#vllm-rdna` 30 Oct — terabytes/day NVMe at huge context; prefer U.2/PCIe/DIMM Optane over M10; LMCache NVMe still unused |
-| `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed. Same day: ACS Request Redirect + Relaxed Ordering flipped on after adding GPUs to a passthrough VM; restore stopped the drop; PP2/TP4 OK, TP8 still broken |
+| `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed. Same day: ACS Request Redirect + Relaxed Ordering flipped on after adding GPUs to a passthrough VM; restore stopped the drop; PP2/TP4 OK, TP8 still broken. 2 Nov: llama.cpp TP8 ~99% power, no drop; vLLM TP8 still faults (load or mid-decode) |
 | `vllm/flash-next-serve.md` HIP defaults `#130` | **Fork-source** | 19 Oct — Flash-Next HEAD recipes HIP on |
 | `vllm/flash-next-serve.md` DFlash2 `#132` | **Fork-source** | 21 Oct — MTP-2 still faster in PR A/B |
 | `troubleshooting/vllm.md` `rdna_ar` silent hang `#128` | **Fork-source** | 19 Oct |
