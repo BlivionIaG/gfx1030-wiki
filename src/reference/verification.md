@@ -420,7 +420,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 | `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Ice Lake 4× V620 host — llama.cpp + vLLM |
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
-| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host. 31 Oct: adding GPUs in a passthrough VM flipped Request Redirect + Relaxed Ordering; restore stopped IOMMU / card-drop; TP8 still failed. 2 Nov: llama.cpp TP8 held ~99% power without a drop; vLLM TP8 still IOMMU-faulted |
+| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host. 31 Oct: adding GPUs in a passthrough VM flipped Request Redirect + Relaxed Ordering; restore stopped IOMMU / card-drop; TP8 still failed. 2 Nov: llama.cpp TP8 held ~99% power without a drop; vLLM TP8 still IOMMU-faulted. 3–4 Nov: Request Redirect hairpins via the root complex (slower P2P, not no P2P); one host reports working VM P2P |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
 | `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
@@ -465,6 +465,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify** |
 | `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620 |
 | `setup/hardware.md` / `host-firmware.md` MZ32-AR0 LRDIMM SKUs | **Community / Needs verify** | `#general` 2 Nov — Gigabyte MZ32-AR0; Samsung `M386A4G40DM0-CPB0Q` (IDT) trains, `…-CPB2Q` (Montage) does not; BIOS rev bumps no help. Community: EPYC wants 3DS/TSV from 128 GB up |
+| `setup/host-firmware.md` / `hardware.md` R730 vs SYS-2028GR | **Community / Needs verify** | `#general` 3 Nov — Dell PowerEdge R730 stuck at Enumerating PCIe devices with a V620; BIOS A/B no help. SuperMicro SYS-2028GR then POSTed (Intel GPU tray; 4 dual-slot / 6 with switches; 3D-printed bezels). Dual-socket: keep GPUs on one CPU |
 | `tuning/power.md` V620 dual 8-pin enumeration | **Community** | `#general` 29 Oct — one aux cable can light LEDs without `lspci` |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
 | `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
@@ -503,6 +504,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `choose-a-stack.md` GLM-5.3-Flash not 1-card | **Community / Needs verify** | `#general` Oct 25 — 1× V620 + RAM offload poor fit; Maya ~200/13 stale; public 320B/18B active. 8× recipe already on `recipes.md` |
 | `choose-a-stack.md` / `meta/resources.md` Strata 0.1.49.2 DeepSeek engine | **Community** | `#strata` Oct 25 — signed feed has no gfx1030 HIP DeepSeek engine (gfx1200/gfx1201 + CUDA) |
 | `choose-a-stack.md` / `meta/resources.md` Strata `--calibrate` / Avalon | **Community / Needs verify** | `#strata` 31 Oct–1 Nov — `--calibrate` is the A/B knob; one 4× V620 host used `--prefill-pipe 3072` + `STRATA_SH_STREAM=1`. Avalon is RDNA3-only |
+| `choose-a-stack.md` / `meta/resources.md` Strata 2× concurrency | **Community / Needs verify** | `#strata` 3 Nov — 2× V620 extra streams little/no total TG; two streams slower. Second host also a miss |
 | `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates`; `#general` Oct 9 tool calls |
 | `vllm/recipes.md` 3× MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — public temp repo |
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |

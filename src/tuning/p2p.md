@@ -126,6 +126,13 @@ you add or passthrough cards — see
 Relaxed Ordering is a **Device Control** bit, not an ACS bit; still A/B it if
 it flipped with the ACS word.
 
+`#general` (3–4 Nov): **P2P Request Redirect** (ACS bit 2) does **not** block
+peer DMA. It **hairpins** the request **up to the root complex and back down**
+— **slower** P2P, not “no P2P.” One community host treated that hairpin as a
+hard fail on a switch fabric; another reports **working P2P in a passthrough
+VM**. Do not assume SR-IOV is required for guest P2P. Still A/B
+`amd-smi topology` + a TP serve. **Needs verify.**
+
 ## When P2P helps — and when it does not
 
 `amd-smi topology` saying **P2P ENABLED** is not the same as faster tokens. Always A/B with

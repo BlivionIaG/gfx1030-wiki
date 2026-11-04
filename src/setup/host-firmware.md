@@ -17,6 +17,8 @@ Community symptoms:
   + bifurcation card.
 - The same 4× V620 + PLX kit **works** on a recent consumer board (community: Z690-class) but not on
   a **Dell Precision** tower you want for more RAM / more slots.
+- A **13G rack** host (community: Dell **PowerEdge R730**) never leaves **Enumerating PCIe
+  devices** once a V620 is installed.
 - `lspci` never appears because firmware never hands off.
 
 If Linux already sees all cards, skip this page and go to [P2P](../tuning/p2p.md) / [Getting
@@ -82,6 +84,8 @@ switch** on a **bifurcation** card, guest **Proxmox**.
 | **ASUS WS-Z270 + ReBAR** | `#motherboard` WIP on **MI50** (not V620). **Above 4G on**, **CSM off**, [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI). One card at 32 GB ReBAR, two cards collapsing to 16 GB / POST code **96** is **not** a gfx1030 recipe. Sep 15: `ReBarState` **> 14** with two 32 GB cards threw code **96**; UEFIPatch hit **PciBus** only, not **PciRootBridge**. Suggested A/B: [GpuMMIOFix](https://github.com/Radi0Glitch/GpuMMIOFix) (OS remap, typically **every boot**) — **Needs verify**. |
 | **Modern desktop (Z690-class, etc.)** | Often POSTs 4× V620 + PLX **without** hidden MMIO patches (community contrast to Precision). |
 | **Gigabyte MZ32-AR0 (EPYC)** | `#general` (2 Nov): mixed Samsung **LRDIMM** SKUs on the same board. **`M386A4G40DM0-CPB0Q`** (IDT buffer) **enumerated**; **`M386A4G40DM0-CPB2Q`** (Montage buffer) **did not**. Latest **Rev1 Rome+Naples** and **Rev3 Rome+Milan** BIOS did not fix the Montage SKU. Community: older **quad-bank LRDIMMs** are often **Intel-only**; **EPYC** wants **3DS / TSV** parts from **128 GB** and up. **Needs verify** — not a QVL. See [hardware](hardware.md#epyc-lrdimm). |
+| **Dell PowerEdge R730** | `#general` (3 Nov): a V620 in an existing **R730** never left **Enumerating PCIe devices**. BIOS A/B did not help. This is a **13G rack** path, not the Precision T5820 / T7820 / T7920 MMIO High work above. **Unresolved / Needs verify** — not a V620 recipe. |
+| **SuperMicro SYS-2028GR** | `#general` (3 Nov): same reporter then POSTed a V620 on a **SYS-2028GR** (Haswell-era, Intel GPU tray). Community: **4** dual-slot cards native, **6** with PCIe switches. Stock Intel-style GPU brackets did not fit V620 (mechanical 3D-printed bezels). Bare-metal. Dual-socket: keep inference GPUs on **one** CPU for P2P — [topology](../tuning/p2p.md#host-topology). **Needs verify**. |
 
 ### Supermicro H12D {#supermicro-h12d}
 
