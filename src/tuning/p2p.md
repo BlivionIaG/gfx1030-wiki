@@ -186,6 +186,12 @@ Fedora 43 AMD validation).
 - **Do not tensor-split across a daisy-chained pair of switches** — that single inter-switch link
   is a TP bottleneck. Prefer TP **inside** one switch and pipeline-parallel **between** switches
   (vLLM can do TP+PP that way; llama.cpp generally cannot).
+- `#general` (4–5 Nov): **dual PLX88096** **8× V620** still **Needs verify**.
+  `NCCL_P2P_LEVEL=pix` only enables **intra-switch** P2P; **TP8** or **TP=4,PP=2**
+  across the two switches forced host-staged DMA (community: KFD **userptr
+  restore** storm) and crashed some hosts even with the TP-inside / PP-between
+  split. A/B llama.cpp TP8 vs vLLM, vision off, `PLE=int4-disk` on ~128 GB —
+  [IOMMU drop](../troubleshooting/general.md#iommu-psu-group-drop).
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).

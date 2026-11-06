@@ -2,7 +2,7 @@
 
 > **WIP snapshot:** Readable status of
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`.
-> Dated **2 Nov 2026** from public merges + `#vllm-rdna` / `#announcements`.
+> Dated **6 Nov 2026** from public merges + `#vllm-rdna` / `#announcements`.
 > Kernel file lists and older chronicle rows stay on [Fork landscape](fork.md).
 > See [Verification status](../reference/verification.md#vllm-fork-progressmd).
 
@@ -88,6 +88,7 @@ readiness). No new Hub extras tag. Author: prefill looked better on 0.32 than
 |---|---|---|
 | CI [`#151`](https://github.com/opengfx1030/vllm-rdna/pull/151) / [`#154`](https://github.com/opengfx1030/vllm-rdna/pull/154) | Source GHCR `ghcr.io/opengfx1030/vllm-rdna:nightly` (+ `:nightly-rocm7.14.0`, `:sha-<commit>`) | `--platform linux/amd64`. Day-to-day stays Hub **0.31**. |
 | 2 Nov PLE graph fix | Breakable `FULL_AND_PIECEWISE` froze PLE layout → NaN / `!!!!` / `_ple_conv_kernel` | Fixed on HEAD: PLE breaks **PIECEWISE** only. Nightly from **before** that commit is unsafe. [Troubleshooting](../troubleshooting/vllm.md#033-nightly-ple-cuda-graphs) |
+| `#vllm-rdna` 4–5 Nov (Community) | 4× Flash-Next HEAD A/B: one host 1k/512 c=1 decode **122 → ~150** t/s (`MAXBAT=2048`, INT4 PLE in RAM, MTP-2, W4A8 prefill). Author expected **~90–100**. Mixed **RDNA2+RDNA3** is **not** a wiki path. | **Needs verify**. Not a recipe. |
 
 ## Open backlog (selected)
 
@@ -107,12 +108,13 @@ Do **not** treat drafts as recipes. Full list:
 | Disagg prefill/decode | Open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) | Cross-PLX KV bridge — Needs verify |
 | GLM-5.3 / Glm5Next | Drafts [`#51`](https://github.com/opengfx1030/vllm-rdna/pull/51) / [`#133`](https://github.com/opengfx1030/vllm-rdna/pull/133) | Correctness WIP |
 | Tiered expert budgets + hybrid KV paging | Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148) | `#vllm-rdna` (30 Oct): follow-up to merged `#146`. Live paging **stalls**; PR stays **draft** until mixed-workload gaps look acceptable. **Not** a recipe. |
+| RidgeFill late-layer cache fill | Open [`#155`](https://github.com/opengfx1030/vllm-rdna/pull/155) | `#vllm-rdna` (4–6 Nov) + PR verdict **6 Nov**: opt-in `VLLM_RDNA_RIDGEFILL` **defaults off**. Fill path is exact; **no map set met the quality gate**. **Not** a recipe. |
 
 `#vllm-rdna` (21 Oct): community DeepSeek-V4-Flash correctness write-up on a fork of
 `rdna_extras` (bf16→fp16 cast, logits all-gather, EP routing). In-tree
 `RECIPE=dsv4-flash` still **Needs verify** — [serve](flash-next-serve.md#deepseek-v4-flash).
 
-## Practical defaults (2 Nov)
+## Practical defaults (6 Nov)
 
 | Goal | Prefer |
 |---|---|

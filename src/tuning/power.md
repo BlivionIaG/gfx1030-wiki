@@ -193,6 +193,13 @@ first card to log the fault is not necessarily the bad one. See
 [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop)
 and [ACS bits](p2p.md#acs-bits).
 
+`#general` (4–5 Nov): on another **8×** dual-PLX host, **MTP=2** caused an
+**instant reset** while **MTP=0** held a **higher** sustained GPU wattage
+(~951 W vs a 521–933 W trip band). Average `rocm-smi` draw is the wrong
+signal for that fail — size for **speculative bursts**, or A/B MTP=0 until
+the PSU/breakout is proven. **120 V** multi-PSU + add2PSU / chassis breakout
+is still not a wiki default.
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.

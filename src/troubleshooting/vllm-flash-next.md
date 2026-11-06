@@ -207,6 +207,37 @@ Two different OOM modes (`#vllm-rdna` Sep 17–21 + the in-tree launcher):
 Leave `--language-model-only --skip-mm-profiling` if you do not need images. See
 [4× recipe vision notes](../vllm/flash-next-serve.md#flash-next-4x-piecewise).
 
+### Vision + 8× TP8 crash {#flash-next-vision-tp8}
+
+`#general` (5 Nov): on a dual-**PLX88096** **8× V620** host, turning **vision
+on** crashed the whole box during a Flash-Next **TP8** bring-up. The same
+layout with **`--language-model-only`** then stayed up (community first decode
+~**110** t/s; prefill ~**1100** tok/s was called bottlenecked — **Needs
+verify**, not a recipe). A/B vision last on 8-card / cross-switch serves. Also
+check [PLE RAM vs disk](#flash-next-8x-ple-disk) and
+[IOMMU / PSU-group drop](./general.md#iommu-psu-group-drop).
+
+## 8× Flash-Next: PLE in RAM vs `int4-disk` {#flash-next-8x-ple-disk}
+
+`#vllm-rdna` / `#general` (5 Nov): a **Tyan S8030** **8× V620** host with
+**~128 GB** DRAM could not bring up Flash-Next **TP=8** or **TP=4,PP=2** with
+`PLE=int4` **pinned in RAM**. Switching to **`PLE=int4-disk`** (CPU sidecar
+mmap) was the operational fix. Fork comments still treat INT4-in-RAM as a
+**~35 GB** working set — that plus 8 ranks, KV, and the n-gram sidecar is what
+ran out, not a 4× day-to-day path.
+
+**What to do:**
+
+1. On **~128 GB** (or smaller) **8-card** hosts, start with `PLE=int4-disk`
+   + `PLE_QUANT_DIR=…/ples_int4` — [serve scripts](../vllm/serve-scripts.md).
+2. Keep `PLE=int4` (RAM) for 4× hosts with tens of GB free.
+3. If the box **reboots** rather than OOMs, still A/B disk PLE — a host OOM
+   killer can look like a crash. Then [power / IOMMU](./general.md#iommu-psu-group-drop).
+
+`#vllm-rdna` (4 Nov): `VLLM_RDNA_DENSE_INT8_ONLY=1` (on `flashnext-pp3*` recipes)
+caused **token looping** around **~70k** context on one 4× host. Leave it off
+for 4× TP4 unless you are on PP3. **Needs verify.**
+
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 
 `#vllm-rdna` (Sep 17): Flash-Next **hybrid** KV (main KV + GDN conv/SSM + PLE conv **per page**) can

@@ -95,7 +95,8 @@ Precision T5820 / T7820 / T7920) even when the same kit boots on a modern deskto
 firmware MMIO High / SR-IOV work — see [Host firmware](./host-firmware.md) — not a ROCm bug.
 `#general` (3 Nov): a **Dell PowerEdge R730** never left **Enumerating PCIe devices** with a
 V620 installed (BIOS A/B did not help). Same thread: a **SuperMicro SYS-2028GR** then POSTed
-— **Needs verify**, not a recipe.
+— **Needs verify**, not a recipe. `#general` (5 Nov): SYS-2028GR **cannot boot from NVMe**;
+put `/boot` on **SATA**.
 
 ## EPYC LRDIMM SKUs (community) {#epyc-lrdimm}
 

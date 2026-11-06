@@ -148,3 +148,25 @@ A/B before blaming the fork or ripping every cable:
 5. A/B **llama.cpp TP8** vs **vLLM TP8** on the same host. If only vLLM drops
    cards at full draw, treat it as a **vLLM / DMA** lead, not “buy a bigger PSU.”
 6. Do **not** treat a mixed PSU / breakout layout as a wiki default.
+
+`#general` (4–5 Nov): a **second** 8× class of host (dual **PLX88096**, community
+**Tyan S8030**, **~128 GB** DRAM, multi server-PSU / breakout) still could not
+keep **vLLM TP8** or **TP=4,PP=2** up while hunting the same drop:
+
+- **MTP=2** vs **MTP=0:** MTP=2 triggered an **instant reset** in the **521–933 W**
+  GPU-power band while MTP=0 **sustained ~951 W** across several ladders —
+  treat as **PSU OCP / di/dt transient**, not “the average wattage is fine.”
+  Caps do not always catch spikes — [power](../tuning/power.md#slot-power-and-psu-transients).
+- **120 V** multi-PSU: community used **add2PSU** / a chassis **breakout** and
+  preferred **same ground / same wall circuit** where possible. Reseat the
+  breakout if TP8 only fails after you move cables.
+- **Cross-switch hop:** `NCCL_P2P_LEVEL=pix` is **intra-switch** P2P. Dual-PLX
+  **TP8** or **PP across the two switches** still forced host-staged traffic
+  (community: KFD **userptr restore** storm). Prefer TP **inside** one switch —
+  [PLX](../tuning/p2p.md#plx--pcie-switches).
+- **Vision on** crashed TP8; **`--language-model-only`** then stayed up —
+  [vision + TP8](./vllm-flash-next.md#flash-next-vision-tp8).
+- **`PLE=int4` in RAM** on ~128 GB blocked TP8 / PP2; **`PLE=int4-disk`** was
+  the fit — [PLE disk](./vllm-flash-next.md#flash-next-8x-ple-disk).
+
+Still **Needs verify**. Not an 8× Flash-Next recipe.
