@@ -192,6 +192,13 @@ Fedora 43 AMD validation).
   restore** storm) and crashed some hosts even with the TP-inside / PP-between
   split. A/B llama.cpp TP8 vs vLLM, vision off, `PLE=int4-disk` on ~128 GB —
   [IOMMU drop](../troubleshooting/general.md#iommu-psu-group-drop).
+- `#vllm-rdna` (7 Nov): on a dual-**PEX88096** **TP=8** host, switch
+  **register counters** did **not** show the inter-switch link saturating
+  (single-digit GB/s in steady traffic; short bursts at launch with LMCache).
+  Treat remaining TP8 pain as **latency / DMA**, not “the x16 uplink is
+  full.” **Needs verify.** `#other` (5 Nov): P2P **config** on those boards
+  was the **same** as a no-switch host — the switch does not replace the
+  usual ACS / `amd-smi` checks.
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).

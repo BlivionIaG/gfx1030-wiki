@@ -238,6 +238,16 @@ ran out, not a 4× day-to-day path.
 caused **token looping** around **~70k** context on one 4× host. Leave it off
 for 4× TP4 unless you are on PP3. **Needs verify.**
 
+## 8× Flash-Next: TP8 vs TP=4,PP=2 {#flash-next-8x-tp-vs-pp}
+
+`#vllm-rdna` (6 Nov): on dual-**PLX88096** **8× V620**, community expected
+**TP=8** to win **decode** and saw **better prefill** on **TP=4,PP=2**. That
+matches the usual “TP inside a switch, PP between switches” split —
+[PLX](../tuning/p2p.md#plx--pcie-switches) — but **neither** layout is a
+recipe yet. Both still crashed some hosts (vision-on, MTP=2 transients,
+cross-switch hop). A BMC with **no** PCIe log does not clear the host; check
+`dmesg` / AER — [IOMMU drop](./general.md#iommu-psu-group-drop).
+
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 
 `#vllm-rdna` (Sep 17): Flash-Next **hybrid** KV (main KV + GDN conv/SSM + PLE conv **per page**) can

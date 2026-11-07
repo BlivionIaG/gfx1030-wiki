@@ -200,6 +200,14 @@ signal for that fail — size for **speculative bursts**, or A/B MTP=0 until
 the PSU/breakout is proven. **120 V** multi-PSU + add2PSU / chassis breakout
 is still not a wiki default.
 
+`#vllm-rdna` (6 Nov): on that **dual-PLX** 8× class of host, community ran
+**two Seasonic PX1600** units — one fed the **motherboard**, and **each PSU
+fed one switch plus the GPUs on that switch**. Cabling was **12VHPWR** plus
+**8-pin → dual 8-pin** splitters. One PX1600 **without** a PCIe switch had
+been fine at **250 W**; with **two switches** they dropped the cap to
+**175 W**. **Needs verify.** Mixed / add2PSU / breakout is still not a wiki
+default.
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.

@@ -169,4 +169,19 @@ keep **vLLM TP8** or **TP=4,PP=2** up while hunting the same drop:
 - **`PLE=int4` in RAM** on ~128 GB blocked TP8 / PP2; **`PLE=int4-disk`** was
   the fit — [PLE disk](./vllm-flash-next.md#flash-next-8x-ple-disk).
 
+`#vllm-rdna` (6–7 Nov) on the same dual-PLX class:
+
+- **Per-switch PSU:** two **Seasonic PX1600** — motherboard on one; each
+  switch + its GPUs on its own PSU; **175 W** cap (250 W had been OK with
+  one PSU and **no** switch) — [power](../tuning/power.md#slot-power-and-psu-transients).
+- **BMC often silent:** a hang can look like an **OS freeze** with **no**
+  PCIe SERR / crash log on the BMC. Use host `dmesg` / AER first.
+- **TP=8 vs TP=4,PP=2:** community still expected **TP8 decode** to win and
+  saw **better prefill** on **TP=4,PP=2**. Neither is a recipe; both still
+  crash some hosts — [Flash-Next 8×](./vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+- **Inter-switch counters:** one host reading **PEX88096** registers did
+  **not** see the uplink saturate (single-digit GB/s in steady inference;
+  bursts mainly at startup with LMCache). Community guess is **latency**,
+  not bandwidth — [PLX](../tuning/p2p.md#plx--pcie-switches).
+
 Still **Needs verify**. Not an 8× Flash-Next recipe.
