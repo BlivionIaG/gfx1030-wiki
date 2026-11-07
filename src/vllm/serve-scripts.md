@@ -79,6 +79,12 @@ Docker: `-v /path/to/ples_int4:/ples_int4 -e VLLM_PLE_QUANT_DIR=/ples_int4` and,
 for disk mode, `-e VLLM_PLE_CPU_OFFLOAD=1`. First-time path: [Onboard](onboarding.md).
 See [Flash-Next serve lines](flash-next-serve.md).
 
+`#vllm-rdna` / `#general` (5 Nov): on an **8× V620** host with **~128 GB** DRAM
+(community: Tyan **S8030**), `PLE=int4` **in RAM** blocked **TP=8** and
+**TP=4,PP=2** Flash-Next. `PLE=int4-disk` was the workaround. INT4-in-RAM is
+still fine on 4× hosts with tens of GB free; 8-card world size plus the n-gram
+table is what ran out. **Needs verify** on a second 8-card host.
+
 ### Do not paste these onto Flash-Next
 
 `#vllm-rdna` (Oct 10): agent / Unsloth / old overlay pastes still break serves.

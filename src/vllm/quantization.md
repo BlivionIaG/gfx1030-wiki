@@ -184,8 +184,14 @@ plus block scales, an optional smoother, and an **order-16 Hadamard**; you set a
 **quality target** and the tool reports the bit rate (`--target-bpw 3.0` is the
 compact recipe). HIP kernels and the vLLM loader live in the **vLLM RDNA2 fork**,
 not in the hi2 repo. `#vllm-rdna` (30 Oct): **3 bpw** was called a bit
-aggressive; **3.5 bpw** may hold quality better but QAD is slow. There is **no**
-vLLM `RECIPE=` / Hub bake yet. Do not treat hi2 as a serve path.
+aggressive; **3.5 bpw** may hold quality better but QAD is slow. `#hi2` (1 Nov):
+public
+[`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw)
+is a **~15 GiB** 27B pack (HF may mis-report the parameter count). Author card:
+**66 % INT2 / 34 % INT4**, measured **3.012 bpw**; tool-call / first-tool match
+is weaker than **AWQ INT4** at this rate (community: 3.2 bpw may be the next
+try). There is still **no** vLLM `RECIPE=` / Hub bake. Do not treat hi2 as a
+day-to-day serve path — kernels stay on the RDNA2 fork, not a second clone.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 

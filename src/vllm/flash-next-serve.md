@@ -29,7 +29,9 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 Expect large **host DRAM** for the BF16 n-gram table (~**95 GB** class). INT4 pinned is a
 **~30 GB** table; `#vllm-rdna` (Oct 11) corrected an inflated **~90 GB** host-RAM figure — INT4
 sidecar working set is closer to **~35 GB**. `int4-disk` mmaps shards (`MADV_RANDOM`) so only the
-gather/dequant working set hits RAM. That is **weight** offload, not KV. Native **KV RAM overflow**
+gather/dequant working set hits RAM. That is **weight** offload, not KV. `#vllm-rdna` (5 Nov): an
+**8×** host with **~128 GB** DRAM still needed **`PLE=int4-disk`** for TP=8 / TP=4,PP=2 Flash-Next
+— pinned INT4 PLE plus the 8-rank working set did not fit. Native **KV RAM overflow**
 was broken on one 4× host (Sep 14: **128 GB** not enough); the
 fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
 [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
@@ -394,6 +396,9 @@ on 32 GB cards. `max_pixels=1605632` keeps images up to about **1424×1424**.
 image**. Runtime is a second OOM: vLLM may **not reserve** vision memory, so a **tight KV** plus an
 image can OOM after a clean start. `#general` (Sep 21): vision + **PP3** is especially tight. Keep
 `--language-model-only --skip-mm-profiling` if you do not need images.
+`#general` (5 Nov): on an **8×** dual-PLX host, **enabling vision crashed** a
+TP8 Flash-Next serve; **`--language-model-only`** then stayed up. **Needs
+verify** — [vision + TP8](../troubleshooting/vllm-flash-next.md#flash-next-vision-tp8).
 
 Maintainer QA playbook (not a second wiki): [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa).
 

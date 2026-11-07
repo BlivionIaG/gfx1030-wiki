@@ -4,9 +4,9 @@
 > day-to-day practice in `#vllm-rdna`. See [Verification status](../reference/verification.md#onboardingmd).
 
 Get from a bare V620 host to an OpenAI-compatible `vllm serve` with the community
-[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) fork (`rdna_extras` = upstream
-**vLLM 0.31.0** + RDNA HIP kernels). Prefer this page over the deeper vLLM docs until the first
-request succeeds.
+[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) fork. Path A uses Hub
+**`v0.31.0-extras`**. `rdna_extras` HEAD is **vLLM 0.33.0** as of 1–2 Nov 2026 (Path B).
+Prefer this page over the deeper vLLM docs until the first request succeeds.
 
 Not sure vLLM is the right stack? Read [llama.cpp or vLLM](../choose-a-stack.md) first.
 
@@ -32,7 +32,9 @@ Optional but worth it on V620 before long serves: [power cap](../tuning/power.md
 
 `#announcements` (11 Oct 2026): Hub **`v0.31.0-extras`** is the published 0.31 bake (ROCm **7.14**,
 torch **2.12**, Triton **3.7.1**). Older `v0.27.1-extras` / `v0.28.0-extras` tags remain on Hub for
-comparison only.
+comparison only. `#vllm-rdna` (1 Nov): `rdna_extras` HEAD is **v0.33.0**; Path A stays on Hub
+**0.31**. Org GHCR `nightly` is a HEAD snapshot, not the first-serve image —
+[Running](running.md#ghcr-nightly).
 
 ---
 
