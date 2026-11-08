@@ -208,6 +208,15 @@ been fine at **250 W**; with **two switches** they dropped the cap to
 **175 W**. **Needs verify.** Mixed / add2PSU / breakout is still not a wiki
 default.
 
+`#vllm-rdna` / `#general` (7–8 Nov): two dual-PLX **8×** hosts then stayed up
+on **vLLM TP=8** and **TP=4,PP=2** after dropping to **~120 W** and **~1900 MHz**
+core (one host had been crashing with last logs at **~950–970 W** wall). Decode
+barely moved (community ~**900** tok/s prefill / ~**100** t/s decode under that
+cap — **Needs verify**, not a tok/s recipe). A **4×** host at **250 W**, no
+undervolt, **2300 MHz** core / **1000 MHz** memory, still saw **~1250–1460 W**
+wall for four cards + PLX + fans. Size 8× for **transients**, not the 4× average.
+Still not a wiki default — [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
 in the repo.

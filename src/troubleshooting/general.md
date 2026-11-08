@@ -184,4 +184,18 @@ keep **vLLM TP8** or **TP=4,PP=2** up while hunting the same drop:
   bursts mainly at startup with LMCache). Community guess is **latency**,
   not bandwidth — [PLX](../tuning/p2p.md#plx--pcie-switches).
 
+`#vllm-rdna` / `#general` (7–8 Nov) on that class of host:
+
+- **Kernel 7.3.1 → 7.3.2:** one **7.x-class** host (distro not named; wiki
+  already has Ubuntu 26 / Fedora **7.x** kernels) said the bump stopped
+  **load / prefill** crashes; rerunning the old kernel crashed again. Remaining
+  **decode** crashes were **prompt-length dependent**. **Needs verify** — do
+  not treat “install 7.3.2” as a recipe without knowing your distro package.
+- **120 W / ~1900 MHz:** two hosts then kept **TP=8** and **TP=4,PP=2** up at
+  that cap. One had last crash logs at **~950–970 W** wall; lowering clocks
+  barely moved tokens. Treat leftover 8× drops as **PSU transients** after ACS
+  / PLE-disk / vision-off — [power](../tuning/power.md#slot-power-and-psu-transients).
+- One host then ran **vision-on** after the kernel bump (still under extra
+  logging). Keep A/B vision **last** — [vision + TP8](./vllm-flash-next.md#flash-next-vision-tp8).
+
 Still **Needs verify**. Not an 8× Flash-Next recipe.

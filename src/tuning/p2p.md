@@ -199,6 +199,13 @@ Fedora 43 AMD validation).
   full.” **Needs verify.** `#other` (5 Nov): P2P **config** on those boards
   was the **same** as a no-switch host — the switch does not replace the
   usual ACS / `amd-smi` checks.
+- `#general` (7 Nov): BIOS **PCIe 10-bit + ARI** did **not** move tokens on
+  a dual-PLX host. One “switch disappeared” A/B was a **loose SlimSAS**, not
+  the 10-bit bit. Community kernel cmdline that *did* stick:
+  **`pci=pcie_bus_perf`** (let the kernel pick MPS) instead of forcing
+  **MRRS 4096** / **MPS 512** with `setpci`. V620 Max Payload is at least
+  **256 B**; whether higher MPS helps is **Needs verify**. Do not chase
+  10-bit as a serve recipe.
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).

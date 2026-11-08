@@ -243,6 +243,10 @@ PRINT=1 MODEL=/path/to/flash-next PLE_QUANT_DIR=/path/to/ples_int4 \
 - Default layout: **TP=2 / EP=2**, `--monokernel`, **96** expert slots per layer/rank,
   native CPU KV tier (`KV_OFFLOAD_GB`; `0` disables KV offload for an expert-only A/B).
 - Slot policy knobs: `SLOTS`, `POLICY` (`lfu_lru` or `lru`), `DECAY`.
+  `#vllm-rdna` (8 Nov): this is the fork’s expert-residency cache. It is **not**
+  upstream `--enable-eplb`. Community **`--enable-eplb`** with
+  `num_redundant_experts: 64` ate **~200–250k** context on an 8× host —
+  [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 - Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (Q32 dense
   accumulation). Resident 4× recipes keep their existing default.
 - Design notes: [`docs/rdna2/moe-offloading-target.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/moe-offloading-target.md).

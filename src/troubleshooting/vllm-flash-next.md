@@ -248,6 +248,20 @@ recipe yet. Both still crashed some hosts (vision-on, MTP=2 transients,
 cross-switch hop). A BMC with **no** PCIe log does not clear the host; check
 `dmesg` / AER — [IOMMU drop](./general.md#iommu-psu-group-drop).
 
+`#vllm-rdna` / `#general` (7–8 Nov): two hosts then stayed up on **both**
+layouts at **~120 W** and **~1900 MHz** core. Decode barely dropped versus
+higher clocks. A **4×** host at **250 W** / **2300 MHz** is a different
+power envelope — do not copy 8× caps onto 4×. Still **Needs verify**. Not a
+recipe — [power](../tuning/power.md#slot-power-and-psu-transients).
+
+`#vllm-rdna` (8 Nov): upstream vLLM **`--enable-eplb`** with
+`num_redundant_experts: 64` **ate ~200–250k** context on one 8× host
+(experts replicated, KV shrinks). That is **not** the fork’s
+[`serve_offload.sh`](../vllm/flash-next-serve.md#flash-next-2x-moe-offload)
+`SLOTS` / `POLICY` cache. Do not start 8× with 64 redundant experts. Idle
+rebalance / JSON restore from that thread is **local WIP**, not a public
+PR. **Needs verify.**
+
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 
 `#vllm-rdna` (Sep 17): Flash-Next **hybrid** KV (main KV + GDN conv/SSM + PLE conv **per page**) can
