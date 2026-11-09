@@ -256,11 +256,14 @@ recipe — [power](../tuning/power.md#slot-power-and-psu-transients).
 
 `#vllm-rdna` (8 Nov): upstream vLLM **`--enable-eplb`** with
 `num_redundant_experts: 64` **ate ~200–250k** context on one 8× host
-(experts replicated, KV shrinks). That is **not** the fork’s
+(experts replicated, KV shrinks). `#vllm-rdna` (9 Nov): the same host then
+tried **8** and **32** replicas — still **no** decode win that paid for the
+lost KV after ~1M tokens (linear placement left one card ~**24%** busier).
+That is **not** the fork’s
 [`serve_offload.sh`](../vllm/flash-next-serve.md#flash-next-2x-moe-offload)
-`SLOTS` / `POLICY` cache. Do not start 8× with 64 redundant experts. Idle
-rebalance / JSON restore from that thread is **local WIP**, not a public
-PR. **Needs verify.**
+`SLOTS` / `POLICY` cache. Do not start 8× with large redundant-expert counts
+to “fix” uneven MoE. Idle rebalance / JSON restore from that thread is
+**local WIP**, not a public PR. **Needs verify.**
 
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 

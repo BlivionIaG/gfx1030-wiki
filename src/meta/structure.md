@@ -96,6 +96,7 @@ src/
 | Content type | Location |
 |---|---|
 | Install ROCm, hardware list | `setup/` |
+| Stock V620 VBIOS P/N (500 vs 600) | `setup/hardware.md#v620-vbios` |
 | BIOS / MMIO High / SR-IOV so 4× V620 POSTs | `setup/host-firmware.md` |
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |

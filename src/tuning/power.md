@@ -21,6 +21,10 @@ echo 180000000 | sudo tee /sys/class/hwmon/hwmonX/power1_cap
 # -> Invalid argument
 ```
 
+Identify which stock image you have with `rocm-smi --showvbios` —
+[hardware](../setup/hardware.md#v620-vbios). April **500** vs June **600** share the same
+perf tables; do not flash between them for clocks or power.
+
 The SMU firmware actually accepts values down to 120 W — only the **kernel** is in the way.
 
 `#general` (17 Oct 2026): that “Invalid argument” story is **not** universal. A **Debian 12.12 /
