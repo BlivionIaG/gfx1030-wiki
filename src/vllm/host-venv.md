@@ -21,6 +21,9 @@ were called the **same** for day-to-day serving — do not reinstall just to cha
 path mess) before a clean 7.14 retry — **Needs verify**. Stay on the bake pins
 below unless you are A/B-ing 10.x. TunableOp already has a thin ROCm 10 profile —
 [serve scripts](serve-scripts.md#rocm-10-and-rocblas-56).
+`#general` (9–10 Nov): a **Gentoo** host compiled the fork and served the
+recommended Flash-Next AWQ-W4A16 pack on **4× V620** (EPYC 7663, 128 GB RAM).
+First-run tok/s are **not** a recipe. **Needs verify.**
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.
 

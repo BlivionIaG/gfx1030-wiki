@@ -29,6 +29,7 @@ gfx1030. This section covers stock builds and the community RDNA2-optimized fork
 
 The comparison table and the "what fits on a V620" notes live on
 [llama.cpp or vLLM](../choose-a-stack.md). Short version: GGUF and single-stream start here;
-concurrency and 4× Flash-Next go to vLLM.
+concurrency and 4× Flash-Next go to vLLM. Large DeepSeek-class MoE on 4× HIP
+(not llama.cpp) is experimental [Cilla](../choose-a-stack.md) / [resources](../meta/resources.md).
 
 Multi-GPU tensor parallel benefits greatly from [PCIe P2P](../tuning/p2p.md).

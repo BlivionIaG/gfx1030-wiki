@@ -244,9 +244,10 @@ PRINT=1 MODEL=/path/to/flash-next PLE_QUANT_DIR=/path/to/ples_int4 \
   native CPU KV tier (`KV_OFFLOAD_GB`; `0` disables KV offload for an expert-only A/B).
 - Slot policy knobs: `SLOTS`, `POLICY` (`lfu_lru` or `lru`), `DECAY`.
   `#vllm-rdna` (8–9 Nov): this is the fork’s expert-residency cache. It is **not**
-  upstream `--enable-eplb`. Community **`--enable-eplb`** with
+  upstream `--enable-eplb`.   Community **`--enable-eplb`** with
   `num_redundant_experts: 64` ate **~200–250k** context on an 8× host; **8** and
-  **32** replicas also failed to pay for the KV loss —
+  **32** replicas also failed to pay for the KV loss. Freezing a soak-learned
+  layout (no live EPLB) is **local WIP**, not this launcher —
   [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 - Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (Q32 dense
   accumulation). Resident 4× recipes keep their existing default.

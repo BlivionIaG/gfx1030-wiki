@@ -263,7 +263,10 @@ That is **not** the fork’s
 [`serve_offload.sh`](../vllm/flash-next-serve.md#flash-next-2x-moe-offload)
 `SLOTS` / `POLICY` cache. Do not start 8× with large redundant-expert counts
 to “fix” uneven MoE. Idle rebalance / JSON restore from that thread is
-**local WIP**, not a public PR. **Needs verify.**
+**local WIP**, not a public PR. `#vllm-rdna` (10 Nov): after recording a long
+activation soak, the same host froze expert placement (no live EPLB) to get KV
+back; linear layout was still ~**20–25%** imbalanced. That freeze is **local
+WIP**, not a `serve_rdna.sh` flag. **Needs verify.**
 
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 

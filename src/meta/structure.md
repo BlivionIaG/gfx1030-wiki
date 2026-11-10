@@ -104,6 +104,7 @@ src/
 | Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`; MonoKernel: `#flash-next-monokernel`) |
 | Fork `tools/rdna/serve_rdna.sh` recipes | `vllm/serve-scripts.md` |
 | llama.cpp vs vLLM | `choose-a-stack.md` |
+| Cilla / Maya HIP (not vLLM) | `choose-a-stack.md` + `meta/resources.md` |
 | Kernel source, fork branches | `vllm/fork.md` |
 | Hub vs HEAD vs backlog progress | `vllm/fork-progress.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |

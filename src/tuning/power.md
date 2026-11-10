@@ -219,7 +219,13 @@ barely moved (community ~**900** tok/s prefill / ~**100** t/s decode under that
 cap — **Needs verify**, not a tok/s recipe). A **4×** host at **250 W**, no
 undervolt, **2300 MHz** core / **1000 MHz** memory, still saw **~1250–1460 W**
 wall for four cards + PLX + fans. Size 8× for **transients**, not the 4× average.
-Still not a wiki default — [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+`#general` (9 Nov): one **8×** host’s **2100 MHz** burn passed after moving a
+**third 750 W** PSU onto a **separate circuit** (two 750 W units had been sharing
+one 15 A / 120 V circuit). Community chassis: **Octominer x12** breakout
+load-shares for redundancy. Derate a 15 A / 120 V circuit to **80%** for
+multi-hour load (~1800 W → two 750 W units). **Needs verify.** Mixed 120 V
+multi-PSU is still not a wiki default —
+[8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))
