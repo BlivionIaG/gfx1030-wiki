@@ -223,8 +223,12 @@ wall for four cards + PLX + fans. Size 8× for **transients**, not the 4× avera
 **third 750 W** PSU onto a **separate circuit** (two 750 W units had been sharing
 one 15 A / 120 V circuit). Community chassis: **Octominer x12** breakout
 load-shares for redundancy. Derate a 15 A / 120 V circuit to **80%** for
-multi-hour load (~1800 W → two 750 W units). **Needs verify.** Mixed 120 V
-multi-PSU is still not a wiki default —
+multi-hour load (~1800 W → two 750 W units). `#general` (10–11 Nov): on that
+class of breakout, **balance GPU loads across strips** — overloading one strip
+looked like a PSU limit. The same host still saw **load-share instability** on
+**750 W** units; swapping those for **1200 W HP server PSUs** then held even at
+**150 W** caps. **Needs verify.** Mixed 120 V multi-PSU / chassis breakout is
+still not a wiki default —
 [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 
 See the full recipe, prerequisites, and the deep-dive docs

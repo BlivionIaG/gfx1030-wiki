@@ -148,6 +148,10 @@ A/B before blaming the fork or ripping every cable:
 5. A/B **llama.cpp TP8** vs **vLLM TP8** on the same host. If only vLLM drops
    cards at full draw, treat it as a **vLLM / DMA** lead, not “buy a bigger PSU.”
 6. Do **not** treat a mixed PSU / breakout layout as a wiki default.
+7. On chassis **breakout boards**, balance cards across **strips** (one
+   overloaded rail can look like a PSU trip). `#general` (10–11 Nov): an
+   Octominer-class load-share still wobbled on **750 W** units; **1200 W HP
+   server PSUs** then held even at **150 W** — [power](../tuning/power.md#slot-power-and-psu-transients).
 
 `#general` (4–5 Nov): a **second** 8× class of host (dual **PLX88096**, community
 **Tyan S8030**, **~128 GB** DRAM, multi server-PSU / breakout) still could not
