@@ -247,7 +247,9 @@ PRINT=1 MODEL=/path/to/flash-next PLE_QUANT_DIR=/path/to/ples_int4 \
   upstream `--enable-eplb`.   Community **`--enable-eplb`** with
   `num_redundant_experts: 64` ate **~200–250k** context on an 8× host; **8** and
   **32** replicas also failed to pay for the KV loss. Freezing a soak-learned
-  layout (no live EPLB) is **local WIP**, not this launcher —
+  layout (no live EPLB) is **local WIP**, not this launcher. `#vllm-rdna`
+  (12 Nov): **400B** traces still ~**22%** linear rank delta (drafter ~**27%**);
+  a local rebalance evened per-card power — still not this launcher —
   [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 - Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (Q32 dense
   accumulation). Resident 4× recipes keep their existing default.
