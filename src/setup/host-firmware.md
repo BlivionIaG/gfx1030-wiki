@@ -17,6 +17,8 @@ Community symptoms:
   + bifurcation card.
 - The same 4× V620 + PLX kit **works** on a recent consumer board (community: Z690-class) but not on
   a **Dell Precision** tower you want for more RAM / more slots.
+- A **13G rack** host (community: Dell **PowerEdge R730**) never leaves **Enumerating PCIe
+  devices** once a V620 is installed.
 - `lspci` never appears because firmware never hands off.
 
 If Linux already sees all cards, skip this page and go to [P2P](../tuning/p2p.md) / [Getting
@@ -77,10 +79,13 @@ switch** on a **bifurcation** card, guest **Proxmox**.
 | Platform | Community note |
 |---|---|
 | **Supermicro H12D** | `#general` (Oct 6 2026): one **H12D** + V620 host looped POST codes **`95, DE, AD, DF, 36, 05, 37`** (reporter thought the card was dead). The combo that then POSTed: **SR-IOV off**, **Above 4G decode on**, **CSM off**, **ReBAR on**. Same thread: **SR-IOV off** was also needed for **4 GPUs per PLX** on that board. **Needs verify** on other H12D BIOS revs — see [below](#supermicro-h12d). |
-| **HP Z4 G4** | Firmware described as **32-bit MMIO** with V620 — BAR / crosstalk pain; dual-CPU Z6/Z8 G4 are a different (more complex) story. `#motherboard` (Sep 16), **Xeon W-2133** host: BIOS **PCIe MIMO Assignment = 32-bit** **and** **ReBAR on**. That 32-bit ceiling would fail to map **64 GB** of VRAM; Linux then **reallocates** with GRUB `pci=realloc=off pci=nocrs iommu=pt amdgpu.aspm=0 amdgpu.gpu_recovery=1`. **Needs verify** on other Z4 BIOS revs. |
-| **HP Z6 G4** | `#motherboard` (18–23 Oct), single-CPU / 96 GB host, Fedora or Ubuntu: after a **BIOS upgrade**, front / memory-header **blower fans** could sit at the wrong PWM until a **BIOS factory reset** (settings looked pegged at 100%). Same thread: a **second** V620 in **slot 5** failed with **`PSP load kdb failed!`** / PSP init error; that V620 POSTed in **slot 2**, and a small Quadro in slot 5 was fine. MMIO 32-bit, ACS off, ReBAR, PCI reset, and the Z4 GRUB realloc line were already set. `#motherboard` (29 Oct): community slot map **slots 2 and 5 = x16**, **slot 4 = x8**; a **hidden BIOS setting** (not in the visible menu) is the current guess for why a **second** V620 fails to init. Same thread (26 Oct): another Z-class host put V620s in **slots 1 and 3** (x16) and a Quadro in **slot 5** (x8). **Unresolved / Needs verify** — not a dual-V620 recipe yet. |
+| **HP Z4 G4** | Firmware described as **32-bit MMIO** with V620 — BAR / crosstalk pain; dual-CPU Z6/Z8 G4 are a different (more complex) story. `#motherboard` (Sep 16), **Xeon W-2133** host: BIOS **PCIe MIMO Assignment = 32-bit** **and** **ReBAR on**. That 32-bit ceiling would fail to map **64 GB** of VRAM; Linux then **reallocates** with GRUB `pci=realloc=off pci=nocrs iommu=pt amdgpu.aspm=0 amdgpu.gpu_recovery=1`. `#motherboard` (7 Nov): a dual-V620 kit (NVMe + RAM + **two** V620s) that **failed on Z6 G4** POSTed on a **Z4 G4** with the **same BIOS and boot settings**. `#motherboard` (10 Nov): swapping **W-2133 → W-2235** unlocked **2933 MHz** DDR4 (the W-2133 had downclocked the same DIMMs) and improved Maya DeepSeek decode/prefill on that dual-V620 Z4. Informal community A/B (no matched bench): prefill **low 200s → ~300**, decode **low 20s → ~30–40**. **Needs verify** on other Z4 BIOS/CPU mixes — not a Z6 recipe. |
+| **HP Z6 G4** | `#motherboard` (18–23 Oct), single-CPU / 96 GB host, Fedora or Ubuntu: after a **BIOS upgrade**, front / memory-header **blower fans** could sit at the wrong PWM until a **BIOS factory reset** (settings looked pegged at 100%). Same thread: a **second** V620 in **slot 5** failed with **`PSP load kdb failed!`** / PSP init error; that V620 POSTed in **slot 2**, and a small Quadro in slot 5 was fine. MMIO 32-bit, ACS off, ReBAR, PCI reset, and the Z4 GRUB realloc line were already set. `#motherboard` (29 Oct): community slot map **slots 2 and 5 = x16**, **slot 4 = x8**; a **hidden BIOS setting** (not in the visible menu) is the current guess for why a **second** V620 fails to init. Same thread (26 Oct): another Z-class host put V620s in **slots 1 and 3** (x16) and a Quadro in **slot 5** (x8). `#motherboard` (7 Nov): the same dual-V620 kit then **worked on Z4 G4**; **Z6 G4 still did not**. **Unresolved / Needs verify** — not a dual-V620 Z6 recipe. |
 | **ASUS WS-Z270 + ReBAR** | `#motherboard` WIP on **MI50** (not V620). **Above 4G on**, **CSM off**, [ReBARUEFI](https://github.com/xCuri0/ReBARUEFI). One card at 32 GB ReBAR, two cards collapsing to 16 GB / POST code **96** is **not** a gfx1030 recipe. Sep 15: `ReBarState` **> 14** with two 32 GB cards threw code **96**; UEFIPatch hit **PciBus** only, not **PciRootBridge**. Suggested A/B: [GpuMMIOFix](https://github.com/Radi0Glitch/GpuMMIOFix) (OS remap, typically **every boot**) — **Needs verify**. |
 | **Modern desktop (Z690-class, etc.)** | Often POSTs 4× V620 + PLX **without** hidden MMIO patches (community contrast to Precision). |
+| **Gigabyte MZ32-AR0 (EPYC)** | `#general` (2 Nov): mixed Samsung **LRDIMM** SKUs on the same board. **`M386A4G40DM0-CPB0Q`** (IDT buffer) **enumerated**; **`M386A4G40DM0-CPB2Q`** (Montage buffer) **did not**. Latest **Rev1 Rome+Naples** and **Rev3 Rome+Milan** BIOS did not fix the Montage SKU. Community: older **quad-bank LRDIMMs** are often **Intel-only**; **EPYC** wants **3DS / TSV** parts from **128 GB** and up. **Needs verify** — not a QVL. See [hardware](hardware.md#epyc-lrdimm). |
+| **Dell PowerEdge R730** | `#general` (3 Nov): a V620 in an existing **R730** never left **Enumerating PCIe devices**. BIOS A/B did not help. This is a **13G rack** path, not the Precision T5820 / T7820 / T7920 MMIO High work above. **Unresolved / Needs verify** — not a V620 recipe. |
+| **SuperMicro SYS-2028GR** | `#general` (3 Nov): same reporter then POSTed a V620 on a **SYS-2028GR** (Haswell-era, Intel GPU tray). Community: **4** dual-slot cards native, **6** with PCIe switches. Stock Intel-style GPU brackets did not fit V620 (mechanical 3D-printed bezels). Bare-metal. Dual-socket: keep inference GPUs on **one** CPU for P2P — [topology](../tuning/p2p.md#host-topology). `#general` (5 Nov): this board **cannot boot the OS from NVMe** — put `/boot` (and `/boot/efi`) on **SATA**. **Needs verify**. |
 
 ### Supermicro H12D {#supermicro-h12d}
 
@@ -92,8 +97,13 @@ switch** on a **bifurcation** card, guest **Proxmox**.
 4. **ReBAR** — **on**.
 
 That is a **menu-level** combo, not the Dell hidden-`mmiohsize` path above. Do not factory-reset /
-clear CMOS after it works — on other boards that re-enables SR-IOV and turns ReBAR off. **Needs
-verify** on other H12D revisions.
+clear CMOS after it works — on other boards that re-enables SR-IOV and turns ReBAR off.
+
+`#general` (8 Nov): **H12D-8D** chassis **standoffs** under the **upper DIMM** banks can
+short or press the modules (community: top-middle of the board). Same thread: **EPYC**
+is sensitive to **socket pressure** — a “dead” memory channel came back after
+**retorquing** the CPU. Check standoffs and torque before blaming DIMM SKUs —
+[EPYC LRDIMM](hardware.md#epyc-lrdimm). **Needs verify** on other H12D revisions.
 
 BIOS editors and unsigned flashes **void warranty** and can brick the board. Use the vendor
 flashback / recovery path if you have one. This wiki does not publish byte patches.

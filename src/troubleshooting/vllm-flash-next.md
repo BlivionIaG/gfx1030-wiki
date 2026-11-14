@@ -207,6 +207,71 @@ Two different OOM modes (`#vllm-rdna` Sep 17–21 + the in-tree launcher):
 Leave `--language-model-only --skip-mm-profiling` if you do not need images. See
 [4× recipe vision notes](../vllm/flash-next-serve.md#flash-next-4x-piecewise).
 
+### Vision + 8× TP8 crash {#flash-next-vision-tp8}
+
+`#general` (5 Nov): on a dual-**PLX88096** **8× V620** host, turning **vision
+on** crashed the whole box during a Flash-Next **TP8** bring-up. The same
+layout with **`--language-model-only`** then stayed up (community first decode
+~**110** t/s; prefill ~**1100** tok/s was called bottlenecked — **Needs
+verify**, not a recipe). A/B vision last on 8-card / cross-switch serves. Also
+check [PLE RAM vs disk](#flash-next-8x-ple-disk) and
+[IOMMU / PSU-group drop](./general.md#iommu-psu-group-drop).
+
+## 8× Flash-Next: PLE in RAM vs `int4-disk` {#flash-next-8x-ple-disk}
+
+`#vllm-rdna` / `#general` (5 Nov): a **Tyan S8030** **8× V620** host with
+**~128 GB** DRAM could not bring up Flash-Next **TP=8** or **TP=4,PP=2** with
+`PLE=int4` **pinned in RAM**. Switching to **`PLE=int4-disk`** (CPU sidecar
+mmap) was the operational fix. Fork comments still treat INT4-in-RAM as a
+**~35 GB** working set — that plus 8 ranks, KV, and the n-gram sidecar is what
+ran out, not a 4× day-to-day path.
+
+**What to do:**
+
+1. On **~128 GB** (or smaller) **8-card** hosts, start with `PLE=int4-disk`
+   + `PLE_QUANT_DIR=…/ples_int4` — [serve scripts](../vllm/serve-scripts.md).
+2. Keep `PLE=int4` (RAM) for 4× hosts with tens of GB free.
+3. If the box **reboots** rather than OOMs, still A/B disk PLE — a host OOM
+   killer can look like a crash. Then [power / IOMMU](./general.md#iommu-psu-group-drop).
+
+`#vllm-rdna` (4 Nov): `VLLM_RDNA_DENSE_INT8_ONLY=1` (on `flashnext-pp3*` recipes)
+caused **token looping** around **~70k** context on one 4× host. Leave it off
+for 4× TP4 unless you are on PP3. **Needs verify.**
+
+## 8× Flash-Next: TP8 vs TP=4,PP=2 {#flash-next-8x-tp-vs-pp}
+
+`#vllm-rdna` (6 Nov): on dual-**PLX88096** **8× V620**, community expected
+**TP=8** to win **decode** and saw **better prefill** on **TP=4,PP=2**. That
+matches the usual “TP inside a switch, PP between switches” split —
+[PLX](../tuning/p2p.md#plx--pcie-switches) — but **neither** layout is a
+recipe yet. Both still crashed some hosts (vision-on, MTP=2 transients,
+cross-switch hop). A BMC with **no** PCIe log does not clear the host; check
+`dmesg` / AER — [IOMMU drop](./general.md#iommu-psu-group-drop).
+
+`#vllm-rdna` / `#general` (7–8 Nov): two hosts then stayed up on **both**
+layouts at **~120 W** and **~1900 MHz** core. Decode barely dropped versus
+higher clocks. A **4×** host at **250 W** / **2300 MHz** is a different
+power envelope — do not copy 8× caps onto 4×. Still **Needs verify**. Not a
+recipe — [power](../tuning/power.md#slot-power-and-psu-transients).
+
+`#vllm-rdna` (8 Nov): upstream vLLM **`--enable-eplb`** with
+`num_redundant_experts: 64` **ate ~200–250k** context on one 8× host
+(experts replicated, KV shrinks). `#vllm-rdna` (9 Nov): the same host then
+tried **8** and **32** replicas — still **no** decode win that paid for the
+lost KV after ~1M tokens (linear placement left one card ~**24%** busier).
+That is **not** the fork’s
+[`serve_offload.sh`](../vllm/flash-next-serve.md#flash-next-2x-moe-offload)
+`SLOTS` / `POLICY` cache. Do not start 8× with large redundant-expert counts
+to “fix” uneven MoE. Idle rebalance / JSON restore from that thread is
+**local WIP**, not a public PR. `#vllm-rdna` (10 Nov): after recording a long
+activation soak, the same host froze expert placement (no live EPLB) to get KV
+back; linear layout was still ~**20–25%** imbalanced. `#vllm-rdna` (12 Nov):
+**400B** activation traces still showed ~**22%** best-to-worst rank delta on
+linear mapping (drafter experts ~**27%**). After a **local** rebalance (still
+not a public PR), that host saw **more even per-card power** (2 Hz sampling —
+**Needs verify** whether it calms PSU transients). That freeze / rebalance is
+**local WIP**, not a `serve_rdna.sh` flag. **Needs verify.**
+
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 
 `#vllm-rdna` (Sep 17): Flash-Next **hybrid** KV (main KV + GDN conv/SSM + PLE conv **per page**) can

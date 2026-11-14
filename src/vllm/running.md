@@ -36,12 +36,29 @@ FlashAttention, quantized GEMM, MoE, GDN, …). Check
 [Docker Hub](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) for the current tag list. Tags are
 refreshed in place — `docker pull` before debugging.
 
-`#announcements` (11 Oct 2026): **`v0.31.0-extras`** is the current extras image — `rdna_extras`
-is now the **v0.31.0** port, and that bake served Flash-Next MTP-2. First-time path:
-[Onboard on V620](onboarding.md). Older Hub tags (`v0.27.1-extras*`, `v0.28.0-extras*`) do **not**
-track HEAD. For kernels newer than the bake, **clone the org repo and follow
-[Host venv](host-venv.md)** + [`serve_rdna.sh`](serve-scripts.md). Use `rocm-rdna:7.14.0` if you
-only need a ROCm packaging base.
+`#announcements` (11 Oct 2026): **`v0.31.0-extras`** is the current extras image — that bake
+served Flash-Next MTP-2. First-time path: [Onboard on V620](onboarding.md). Older Hub tags
+(`v0.27.1-extras*`, `v0.28.0-extras*`) do **not** track HEAD. `#vllm-rdna` (1 Nov 2026):
+`rdna_extras` HEAD is now **v0.33.0**; Hub **0.31 is unchanged**. For kernels newer than
+the bake, pull org GHCR nightly (below) or **clone + [host venv](host-venv.md)** +
+[`serve_rdna.sh`](serve-scripts.md). Use `rocm-rdna:7.14.0` if you only need a ROCm
+packaging base.
+
+### Org GHCR nightly {#ghcr-nightly}
+
+`#vllm-rdna` (1 Nov) + merged CI [`#151`](https://github.com/opengfx1030/vllm-rdna/pull/151):
+the source repo now publishes its own images (ROCm **7.14.0**):
+
+```bash
+docker pull --platform linux/amd64 ghcr.io/opengfx1030/vllm-rdna:nightly
+```
+
+Also `:nightly-rocm7.14.0`. Branch pushes tag `:sha-<commit>`; git tags (not `nightly` /
+`latest`) publish version images ([`#154`](https://github.com/opengfx1030/vllm-rdna/pull/154)).
+This is **not** a replacement for Hub **`v0.31.0-extras`**. The first nightly was announced
+with **CUDA graphs broken**; pull a digest after the 2 Nov PLE graph fix or stay on Hub
+0.31 — [troubleshooting](../troubleshooting/vllm.md#033-nightly-ple-cuda-graphs). GHCR
+may require org package access.
 
 **Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
 those in-between releases is reported broken with more than one card — see

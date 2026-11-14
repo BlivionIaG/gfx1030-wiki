@@ -21,6 +21,10 @@ echo 180000000 | sudo tee /sys/class/hwmon/hwmonX/power1_cap
 # -> Invalid argument
 ```
 
+Identify which stock image you have with `rocm-smi --showvbios` —
+[hardware](../setup/hardware.md#v620-vbios). April **500** vs June **600** share the same
+perf tables; do not flash between them for clocks or power.
+
 The SMU firmware actually accepts values down to 120 W — only the **kernel** is in the way.
 
 `#general` (17 Oct 2026): that “Invalid argument” story is **not** universal. A **Debian 12.12 /
@@ -181,10 +185,51 @@ applied the floor yet.
 `#general` (31 Oct): an **8× V620** host saw **IOMMU page faults** then **fatal
 PCIe errors** during **TP8** or model load. The six cards on a **1500 W server
 PSU → breakout board** dropped from the OS; the two cards powered entirely by a
-**workstation PSU** stayed. Unresolved (power delivery vs riser/cable vs
-driver). **Needs verify.** A/B the disappearing group’s aux power and `dmesg`
-for IOMMU / AER — the first card to log the fault is not necessarily the bad
-one. See [general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop).
+**workstation PSU** stayed. Same-day follow-up: adding GPUs into a
+**passthrough VM** flipped **ACS Request Redirect** and **Relaxed Ordering**
+**on**; restoring those controls stopped the drop. **PP2/TP4** then worked;
+**TP8** still failed. `#general` (2 Nov): **llama.cpp TP8** on that host held
+**~99%** of the power cap **without** the drop; **vLLM TP8** still IOMMU-faulted
+(load or mid-decode). Remaining TP8 fail is less likely a simple PSU trip.
+Mixed PSU / breakout is still not a wiki default. **Needs verify.** Re-check
+ACS in the guest after you add cards, then A/B aux power and `dmesg` — the
+first card to log the fault is not necessarily the bad one. See
+[general troubleshooting](../troubleshooting/general.md#iommu-psu-group-drop)
+and [ACS bits](p2p.md#acs-bits).
+
+`#general` (4–5 Nov): on another **8×** dual-PLX host, **MTP=2** caused an
+**instant reset** while **MTP=0** held a **higher** sustained GPU wattage
+(~951 W vs a 521–933 W trip band). Average `rocm-smi` draw is the wrong
+signal for that fail — size for **speculative bursts**, or A/B MTP=0 until
+the PSU/breakout is proven. **120 V** multi-PSU + add2PSU / chassis breakout
+is still not a wiki default.
+
+`#vllm-rdna` (6 Nov): on that **dual-PLX** 8× class of host, community ran
+**two Seasonic PX1600** units — one fed the **motherboard**, and **each PSU
+fed one switch plus the GPUs on that switch**. Cabling was **12VHPWR** plus
+**8-pin → dual 8-pin** splitters. One PX1600 **without** a PCIe switch had
+been fine at **250 W**; with **two switches** they dropped the cap to
+**175 W**. **Needs verify.** Mixed / add2PSU / breakout is still not a wiki
+default.
+
+`#vllm-rdna` / `#general` (7–8 Nov): two dual-PLX **8×** hosts then stayed up
+on **vLLM TP=8** and **TP=4,PP=2** after dropping to **~120 W** and **~1900 MHz**
+core (one host had been crashing with last logs at **~950–970 W** wall). Decode
+barely moved (community ~**900** tok/s prefill / ~**100** t/s decode under that
+cap — **Needs verify**, not a tok/s recipe). A **4×** host at **250 W**, no
+undervolt, **2300 MHz** core / **1000 MHz** memory, still saw **~1250–1460 W**
+wall for four cards + PLX + fans. Size 8× for **transients**, not the 4× average.
+`#general` (9 Nov): one **8×** host’s **2100 MHz** burn passed after moving a
+**third 750 W** PSU onto a **separate circuit** (two 750 W units had been sharing
+one 15 A / 120 V circuit). Community chassis: **Octominer x12** breakout
+load-shares for redundancy. Derate a 15 A / 120 V circuit to **80%** for
+multi-hour load (~1800 W → two 750 W units). `#general` (10–11 Nov): on that
+class of breakout, **balance GPU loads across strips** — overloading one strip
+looked like a PSU limit. The same host still saw **load-share instability** on
+**750 W** units; swapping those for **1200 W HP server PSUs** then held even at
+**150 W** caps. **Needs verify.** Mixed 120 V multi-PSU / chassis breakout is
+still not a wiki default —
+[8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 
 See the full recipe, prerequisites, and the deep-dive docs
 ([`docs/POWERCAP.md`](https://github.com/blivioniag/v620_toolbox/blob/master/powertuning/docs/POWERCAP.md))

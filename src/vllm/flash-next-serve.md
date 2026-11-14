@@ -29,7 +29,9 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 Expect large **host DRAM** for the BF16 n-gram table (~**95 GB** class). INT4 pinned is a
 **~30 GB** table; `#vllm-rdna` (Oct 11) corrected an inflated **~90 GB** host-RAM figure — INT4
 sidecar working set is closer to **~35 GB**. `int4-disk` mmaps shards (`MADV_RANDOM`) so only the
-gather/dequant working set hits RAM. That is **weight** offload, not KV. Native **KV RAM overflow**
+gather/dequant working set hits RAM. That is **weight** offload, not KV. `#vllm-rdna` (5 Nov): an
+**8×** host with **~128 GB** DRAM still needed **`PLE=int4-disk`** for TP=8 / TP=4,PP=2 Flash-Next
+— pinned INT4 PLE plus the 8-rank working set did not fit. Native **KV RAM overflow**
 was broken on one 4× host (Sep 14: **128 GB** not enough); the
 fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
 [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
@@ -241,6 +243,14 @@ PRINT=1 MODEL=/path/to/flash-next PLE_QUANT_DIR=/path/to/ples_int4 \
 - Default layout: **TP=2 / EP=2**, `--monokernel`, **96** expert slots per layer/rank,
   native CPU KV tier (`KV_OFFLOAD_GB`; `0` disables KV offload for an expert-only A/B).
 - Slot policy knobs: `SLOTS`, `POLICY` (`lfu_lru` or `lru`), `DECAY`.
+  `#vllm-rdna` (8–9 Nov): this is the fork’s expert-residency cache. It is **not**
+  upstream `--enable-eplb`.   Community **`--enable-eplb`** with
+  `num_redundant_experts: 64` ate **~200–250k** context on an 8× host; **8** and
+  **32** replicas also failed to pay for the KV loss. Freezing a soak-learned
+  layout (no live EPLB) is **local WIP**, not this launcher. `#vllm-rdna`
+  (12 Nov): **400B** traces still ~**22%** linear rank delta (drafter ~**27%**);
+  a local rebalance evened per-card power — still not this launcher —
+  [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 - Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (Q32 dense
   accumulation). Resident 4× recipes keep their existing default.
 - Design notes: [`docs/rdna2/moe-offloading-target.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/moe-offloading-target.md).
@@ -394,6 +404,9 @@ on 32 GB cards. `max_pixels=1605632` keeps images up to about **1424×1424**.
 image**. Runtime is a second OOM: vLLM may **not reserve** vision memory, so a **tight KV** plus an
 image can OOM after a clean start. `#general` (Sep 21): vision + **PP3** is especially tight. Keep
 `--language-model-only --skip-mm-profiling` if you do not need images.
+`#general` (5 Nov): on an **8×** dual-PLX host, **enabling vision crashed** a
+TP8 Flash-Next serve; **`--language-model-only`** then stayed up. **Needs
+verify** — [vision + TP8](../troubleshooting/vllm-flash-next.md#flash-next-vision-tp8).
 
 Maintainer QA playbook (not a second wiki): [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa).
 

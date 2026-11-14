@@ -121,10 +121,85 @@ W6800 waterblocks are **not** a guaranteed fit.
 from a **workstation PSU** stayed. The first GPU to report the IOMMU fault was
 **not** always the same card, and was **not** necessarily the problem card.
 
-Unresolved: power delivery vs riser/cable vs driver. **Needs verify.** A/B
-before blaming the fork:
+Same thread later (31 Oct): after **adding GPUs** into a **passthrough VM**,
+**ACS Request Redirect** and **Relaxed Ordering** flipped **on**. Restoring
+those controls stopped the IOMMU faults and the disappearing-card group.
+**PP2/TP4** then ran; **TP8** still failed after the ACS fix. Mixed PSU /
+breakout remains a risk, not a wiki default. **Needs verify** on a second host.
 
-1. Confirm **dual 8-pin** on every card in the disappearing group — [power](../tuning/power.md#slot-power-and-psu-transients).
-2. Read `dmesg` for IOMMU / AER / fatal PCIe around the drop.
-3. Cap TDP and retry TP8 vs a smaller world size.
-4. Do **not** treat a mixed PSU / breakout layout as a wiki default.
+`#general` (2 Nov): same class of **8× V620** host, **vLLM TP8** still logged
+**IOMMU faults** and the cards vanished — during **load**, mid-**inference**,
+or after decode had already started. **llama.cpp TP8** on that host did **not**
+drop cards and ran at **~99%** of the power cap. **PP2/TP4** in vLLM still
+worked. That A/B makes a simple PSU trip less likely for the remaining TP8
+fail (llama.cpp was already at full draw). Community guess: a vLLM / ROCm
+kernel writing **outside its DMA buffer**. Unresolved — **Needs verify.** Prefer
+**PP2/TP4** (or llama.cpp TP8) until a second host reproduces.
+
+A/B before blaming the fork or ripping every cable:
+
+1. Re-read ACS **inside the guest** (and on the host) after you add or
+   passthrough cards — [ACS bits](../tuning/p2p.md#acs-bits). Request Redirect
+   (bit 2) is the principal P2P obstacle; community also saw Relaxed Ordering
+   flip (Device Control, not an ACS bit).
+2. Confirm **dual 8-pin** on every card in the disappearing group — [power](../tuning/power.md#slot-power-and-psu-transients).
+3. Read `dmesg` for IOMMU / AER / fatal PCIe around the drop.
+4. Cap TDP and retry TP8 vs a smaller world size (PP2/TP4 was the working split here).
+5. A/B **llama.cpp TP8** vs **vLLM TP8** on the same host. If only vLLM drops
+   cards at full draw, treat it as a **vLLM / DMA** lead, not “buy a bigger PSU.”
+6. Do **not** treat a mixed PSU / breakout layout as a wiki default.
+7. On chassis **breakout boards**, balance cards across **strips** (one
+   overloaded rail can look like a PSU trip). `#general` (10–11 Nov): an
+   Octominer-class load-share still wobbled on **750 W** units; **1200 W HP
+   server PSUs** then held even at **150 W** — [power](../tuning/power.md#slot-power-and-psu-transients).
+
+`#general` (4–5 Nov): a **second** 8× class of host (dual **PLX88096**, community
+**Tyan S8030**, **~128 GB** DRAM, multi server-PSU / breakout) still could not
+keep **vLLM TP8** or **TP=4,PP=2** up while hunting the same drop:
+
+- **MTP=2** vs **MTP=0:** MTP=2 triggered an **instant reset** in the **521–933 W**
+  GPU-power band while MTP=0 **sustained ~951 W** across several ladders —
+  treat as **PSU OCP / di/dt transient**, not “the average wattage is fine.”
+  Caps do not always catch spikes — [power](../tuning/power.md#slot-power-and-psu-transients).
+- **120 V** multi-PSU: community used **add2PSU** / a chassis **breakout** and
+  preferred **same ground / same wall circuit** where possible. Reseat the
+  breakout if TP8 only fails after you move cables.
+- **Cross-switch hop:** `NCCL_P2P_LEVEL=pix` is **intra-switch** P2P. Dual-PLX
+  **TP8** or **PP across the two switches** still forced host-staged traffic
+  (community: KFD **userptr restore** storm). Prefer TP **inside** one switch —
+  [PLX](../tuning/p2p.md#plx--pcie-switches).
+- **Vision on** crashed TP8; **`--language-model-only`** then stayed up —
+  [vision + TP8](./vllm-flash-next.md#flash-next-vision-tp8).
+- **`PLE=int4` in RAM** on ~128 GB blocked TP8 / PP2; **`PLE=int4-disk`** was
+  the fit — [PLE disk](./vllm-flash-next.md#flash-next-8x-ple-disk).
+
+`#vllm-rdna` (6–7 Nov) on the same dual-PLX class:
+
+- **Per-switch PSU:** two **Seasonic PX1600** — motherboard on one; each
+  switch + its GPUs on its own PSU; **175 W** cap (250 W had been OK with
+  one PSU and **no** switch) — [power](../tuning/power.md#slot-power-and-psu-transients).
+- **BMC often silent:** a hang can look like an **OS freeze** with **no**
+  PCIe SERR / crash log on the BMC. Use host `dmesg` / AER first.
+- **TP=8 vs TP=4,PP=2:** community still expected **TP8 decode** to win and
+  saw **better prefill** on **TP=4,PP=2**. Neither is a recipe; both still
+  crash some hosts — [Flash-Next 8×](./vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+- **Inter-switch counters:** one host reading **PEX88096** registers did
+  **not** see the uplink saturate (single-digit GB/s in steady inference;
+  bursts mainly at startup with LMCache). Community guess is **latency**,
+  not bandwidth — [PLX](../tuning/p2p.md#plx--pcie-switches).
+
+`#vllm-rdna` / `#general` (7–8 Nov) on that class of host:
+
+- **Kernel 7.3.1 → 7.3.2:** one **7.x-class** host (distro not named; wiki
+  already has Ubuntu 26 / Fedora **7.x** kernels) said the bump stopped
+  **load / prefill** crashes; rerunning the old kernel crashed again. Remaining
+  **decode** crashes were **prompt-length dependent**. **Needs verify** — do
+  not treat “install 7.3.2” as a recipe without knowing your distro package.
+- **120 W / ~1900 MHz:** two hosts then kept **TP=8** and **TP=4,PP=2** up at
+  that cap. One had last crash logs at **~950–970 W** wall; lowering clocks
+  barely moved tokens. Treat leftover 8× drops as **PSU transients** after ACS
+  / PLE-disk / vision-off — [power](../tuning/power.md#slot-power-and-psu-transients).
+- One host then ran **vision-on** after the kernel bump (still under extra
+  logging). Keep A/B vision **last** — [vision + TP8](./vllm-flash-next.md#flash-next-vision-tp8).
+
+Still **Needs verify**. Not an 8× Flash-Next recipe.

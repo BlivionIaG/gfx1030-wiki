@@ -37,8 +37,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct |
-| `rdna_extras` = upstream vLLM 0.31.0 + RDNA port | **Fork-source** | `#announcements` 11 Oct; org default branch `rdna_extras` |
+| Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct. Still the published bake after the 1 Nov 0.33 rebase |
+| `rdna_extras` HEAD = upstream vLLM 0.33.0 + RDNA port | **Fork-source** | `#vllm-rdna` 1 Nov + org default branch. Hub bake remains 0.31. 11 Oct announcement described the 0.31 line |
+| Org GHCR `nightly` | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`. Tag name from author + workflow. Package may need GHCR auth |
 | Path A 27B AWQ docker run | **Community** | Same announcement + prior `#vllm-rdna` day-to-day model pick |
 | Path B `serve_rdna.sh` + `PLE=int4` Flash-Next | **Community** | `#announcements` + `#vllm-rdna` Oct 11 launcher example |
 | `P2P=0` for hosts without PCIe P2P | **Fork-source** | `tools/rdna/serve_rdna.sh` + `#vllm-rdna` Oct 11 |
@@ -48,7 +49,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | Image tag matrix | **Needs verify** | [Docker Hub tags](https://hub.docker.com/r/blivioniag/vllm-rdna/tags) |
-| Hub `v0.31.0-extras` | **Fork-source** | `#announcements` 11 Oct 2026 + Hub push 11 Oct 15:14 UTC (same digest as `v0.31.0-extras-rocm7.14.0`). ROCm 7.14 / torch 2.12 / Triton 3.7.1. Flash-Next MTP-2 (BF16 + INT4-disk) served. |
+| Hub `v0.31.0-extras` | **Fork-source** | `#announcements` 11 Oct 2026 + Hub push 11 Oct 15:14 UTC (same digest as `v0.31.0-extras-rocm7.14.0`). ROCm 7.14 / torch 2.12 / Triton 3.7.1. Flash-Next MTP-2 (BF16 + INT4-disk) served. Still day-to-day after 1 Nov HEAD rebase |
+| Org GHCR `ghcr.io/opengfx1030/vllm-rdna:nightly` | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + `.github/workflows/docker-image.yml`. First nightly had broken CUDA graphs; 2 Nov PLE fix on HEAD |
 | Hub `v0.28.0-extras` | **Historical** | Sep 18 test tag. Prefer `v0.31.0-extras`. Source now `rdna_extra/v0.28.0`. |
 | `PYTORCH_ROCM_ARCH` list | **Solid** | `vllm-rdna-docker` build |
 | Prefer `--dtype float16` | **Solid** | RDNA2 BF16 limitation |
@@ -217,7 +219,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Hub **`v0.31.0-extras`** current | **Solid** | Org repo + default branch; `#announcements` 11 Oct 2026 Hub bake. leapdragon is legacy container/docs |
+| Fork landscape: official `opengfx1030/vllm-rdna` `rdna_extras`; Hub **`v0.31.0-extras`** current bake; HEAD **0.33** | **Solid** | Org repo + default branch; `#announcements` 11 Oct Hub bake; `#vllm-rdna` 1 Nov rebase. leapdragon is legacy container/docs |
+| v0.32 / v0.33 rebase + GHCR nightly | **Fork-source / Community** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`. Prefill “better on 0.32” is Community. Not a Hub bump |
+| 0.33 PLE CUDA-graph NaN / `!!!!` | **Fork-source** | `#vllm-rdna` 1–2 Nov + public 2 Nov commits. Nightly before the fix is unsafe |
 | Consolidation / 0.28 gap audit | **Community** | `#vllm-rdna` Sep 3–7 channel notes; treat as WIP |
 | No WMMA on RDNA2 | **Solid** | Architecture |
 | Kernel file list | **Solid** | Fork tree (`rdna_extras`) |
@@ -265,7 +269,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Snapshot dated 26 Oct 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
+| Snapshot dated 2 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
 | Hub `v0.31.0-extras` feature set | **Fork-source** | `#announcements` 11 Oct |
 | HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
 | Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
@@ -296,7 +300,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
 | Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `flashnext-dflash2` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env`. `flashnext-dflash2` is `#132` (21 Oct); Hub lags |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
-| Flash-Next PLE `bf16` / `int4` / `int4-disk` | **Fork-source** | `#announcements` 11 Oct + `serve_rdna.sh` `PLE=`. INT4 table ~30 GB; `#vllm-rdna` Oct 11 corrected inflated ~90 GB host-RAM figure (~35 GB working set). Disk mmap via `VLLM_PLE_CPU_OFFLOAD=1`. Speed at parity on author 4× V620. |
+| Flash-Next PLE `bf16` / `int4` / `int4-disk` | **Fork-source** | `#announcements` 11 Oct + `serve_rdna.sh` `PLE=`. INT4 table ~30 GB; `#vllm-rdna` Oct 11 corrected inflated ~90 GB host-RAM figure (~35 GB working set). Disk mmap via `VLLM_PLE_CPU_OFFLOAD=1`. Speed at parity on author 4× V620. `#vllm-rdna` 5 Nov: 8× / ~128 GB needed `int4-disk` for TP8 / TP=4,PP=2 — **Community / Needs verify** |
 | Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
 | `PRINT=1` prints env, command, and TunableOp profile and does not launch | **Fork-source** | `serve_rdna.sh` header; `RECIPE` is an argument, `MODEL` and `VENV` stay required |
 | TunableOp auto-select by `librocblas.so.5` hash; `TUNABLEOP_PROFILE` mismatch aborts | **Fork-source** | `tunableop/README.md` + `profiles.json` + `tools/rdna2_028/tunableop_env.sh`: `rocm7.14-rocblas5.5` (783 rows, `f30bb442e9b5`), `rocm10-rocblas5.6` (70, `c27e2252cc7a`) |
@@ -410,13 +414,14 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/ecc.md` two-reboot `ras_enable=0` | **Community** | lunnova on W6800; Discord reports V620 ECC-on (~30 GB). Confirm `rocm-smi` after two reboots |
 | `tuning/ecc.md` Vulkan memtest before ECC-off | **Community** | `#general` Sep 23 — quiet dmesg ≠ clean card; leave ECC on if errors |
 | `tuning/ecc.md` Flash-Next can trip ECC that 27B misses | **Community** | `#general` Sep 26 — dmesg only on Flash-Next; 5–8 min Vulkan memtest; replacement OK |
+| `tuning/ecc.md` extra VRAM holds more MoE experts | **Community / Needs verify** | `#strata` 7 Nov — ECC-off ~2 GB used for resident experts; decode bump unconfirmed |
 | `tuning/p2p.md` validation | **Solid** | From `v620_toolbox` on Fedora + AMD CPU |
 | `tuning/p2p.md` Ubuntu 26 / 7.0 kernel gap | **Community** | `#vllm-rdna` Sep 24 — validated Pre-7 ≤6.19 or Post-7 ≥7.1; 7.0 not the Fedora recipe |
 | `tuning/p2p.md` ~25 GB/s bandwidth | **Community** | Bandwidth ≠ inference speed |
 | `tuning/p2p.md` host topology table | **Community** | Dual-socket, gen3 x4, PLX, TP3 — `#general` / `#llamacpp` |
 | `tuning/p2p.md` Ice Lake P2P no-op / ~4% regression | **Community** | Ice Lake 4× V620 host — llama.cpp + vLLM |
 | `tuning/p2p.md` Intel IOMMU-off breaks P2P | **Community** | Ice Lake host; opposite of some generic docs |
-| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host |
+| `tuning/p2p.md` ACS bits / `ACSCtl=0x0019` | **Community / Needs verify** | `#general` 25 Oct — all-off vs leave bits 0/3/4; toolbox “ACS off” can still show `0x0019`. Clearing remaining bits broke V620↔V620 on one host. 31 Oct: adding GPUs in a passthrough VM flipped Request Redirect + Relaxed Ordering; restore stopped IOMMU / card-drop; TP8 still failed. 2 Nov: llama.cpp TP8 held ~99% power without a drop; vLLM TP8 still IOMMU-faulted. 3–4 Nov: Request Redirect hairpins via the root complex (slower P2P, not no P2P); one host reports working VM P2P |
 | `tuning/p2p.md` PLX daisy-chain / heatsink fan | **Community** | `#general` PLX 88096 |
 | `tuning/p2p.md` PEX88096 8-riser / H12D-8D x8x8 | **Community** | `#general` Sep 19 — 6 GPUs still awkward; 2/4/8 vs any even count |
 | `tuning/p2p.md` X570 x8x8 gen4 + single x16 PEX88096 uplink | **Community** | `#general` Sep 21 — cards talk on the switch bus |
@@ -456,20 +461,26 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm-flash-next.md` FA-RDNA2 partial on QSA | **Community / Fork-source** | `#vllm-rdna` Oct 13 — QSA Triton owner ignores `--attention-backend` |
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; 26 Oct: CPU-RAM KV + prefix cache OK when **disk** KV offload is off |
-| `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC |
-| `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive |
+| `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC. 1–2 Nov: also PLE CUDA-graph freeze on early 0.33 nightly — **Fork-source** |
+| `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4; still no Hub recipe. 12 Nov: TP4/TP8 hi2 export ranks not shipped |
+| `vllm/quantization.md` oQ6e Flash-Next | **Needs verify** | `#vllm-rdna` 12–13 Nov — public HF `Qwen3.8-Flash-Next-oQ6e*` packs; gfx1030 first inference ~10 tok/s PP then broken. Not a recipe |
+| `vllm/quantization.md` LeapQuant RFC | **Community / Needs verify** | `#general` 12–13 Nov + public [vLLM #64725](https://github.com/vllm-project/vllm/issues/64725) / [arXiv 2609.38166](https://arxiv.org/abs/2609.38166). Paper NVIDIA; RFC not gfx1030 HIP. One TP4 host: no low-concurrency gain |
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify** |
-| `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620 |
+| `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620. 7 Nov: same dual-V620 kit POSTed on Z4 G4 with the same BIOS/boot; Z6 G4 still failed |
+| `setup/hardware.md` / `host-firmware.md` MZ32-AR0 LRDIMM SKUs | **Community / Needs verify** | `#general` 2 Nov — Gigabyte MZ32-AR0; Samsung `M386A4G40DM0-CPB0Q` (IDT) trains, `…-CPB2Q` (Montage) does not; BIOS rev bumps no help. Community: EPYC wants 3DS/TSV from 128 GB up |
+| `setup/host-firmware.md` / `hardware.md` R730 vs SYS-2028GR | **Community / Needs verify** | `#general` 3 Nov — Dell PowerEdge R730 stuck at Enumerating PCIe devices with a V620; BIOS A/B no help. SuperMicro SYS-2028GR then POSTed (Intel GPU tray; 4 dual-slot / 6 with switches; 3D-printed bezels). Dual-socket: keep GPUs on one CPU. 5 Nov: SYS-2028GR cannot boot OS from NVMe — SATA `/boot` |
 | `tuning/power.md` V620 dual 8-pin enumeration | **Community** | `#general` 29 Oct — one aux cable can light LEDs without `lspci` |
 | `vllm/fork.md` v0.31.0 release | **Fork-source** | `#announcements` 11 Oct + Hub `v0.31.0-extras` + closed `#47`. Author 4× V620 Flash-Next benches. PP3 recipes (`#96`) are HEAD-only |
 | `vllm/fork.md` MonoKernel `#94` | **Fork-source** | `#94` merged 16 Oct; not Hub; recipes do not enable |
 | `vllm/fork.md` `#126` / `#127` / `#128` / `#130` / `#131` / `#132` | **Fork-source** | Merged 18–21 Oct; Hub `v0.31.0-extras` lags |
 | `vllm/fork.md` `#117` / `#137` / `#138` / `#140` | **Fork-source** | Merged 17–26 Oct; EXL3 Flash-Next, MTP mono, INT4 KV, W4A8 default. Not Hub |
 | `vllm/fork.md` / `flash-next-serve.md` `#146` TP2 MoE offload | **Fork-source** | `#146` merged 28 Oct; `serve_offload.sh`; author-host 2× V620 16k/1024 ~19.8 / ~26.7 agg. Not Hub. **Needs verify** on a second host |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 31 Oct Hub vs HEAD vs backlog |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 6 Nov Hub vs 0.33 HEAD vs GHCR nightly vs RidgeFill `#155` vs backlog |
+| `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; anonymous GHCR pull not confirmed |
+| `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `vllm/fork-progress.md` draft `#148` | **Fork-source** | `#vllm-rdna` 30 Oct + public draft — tiered KV paging; live paging stalls; not a recipe |
 | `troubleshooting/vllm.md` disk KV write-amp / Optane | **Community / Needs verify** | `#vllm-rdna` 30 Oct — terabytes/day NVMe at huge context; prefer U.2/PCIe/DIMM Optane over M10; LMCache NVMe still unused |
-| `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed |
+| `troubleshooting/general.md` / `tuning/power.md` IOMMU + PSU-group drop | **Community / Needs verify** | `#general` 31 Oct — 8× V620 TP8/load; 6 cards on 1500 W breakout vanished; 2 on workstation PSU stayed. Same day: ACS Request Redirect + Relaxed Ordering flipped on after adding GPUs to a passthrough VM; restore stopped the drop; PP2/TP4 OK, TP8 still broken. 2 Nov: llama.cpp TP8 ~99% power, no drop; vLLM TP8 still faults (load or mid-decode). 4–5 Nov: second dual-PLX host — MTP=2 instant reset vs MTP=0 sustained ~951 W; `pix` is intra-switch; vision-on crashed TP8; `PLE=int4-disk` on ~128 GB. 6–7 Nov `#vllm-rdna`: two Seasonic PX1600 (one per switch, 175 W); BMC silent on hangs; PEX88096 counters not saturating. 7–8 Nov: kernel 7.3.1→7.3.2 reduced load/prefill crashes on one 7.x host; two hosts then held TP8 and TP=4,PP=2 at ~120 W / ~1900 MHz |
 | `vllm/flash-next-serve.md` HIP defaults `#130` | **Fork-source** | 19 Oct — Flash-Next HEAD recipes HIP on |
 | `vllm/flash-next-serve.md` DFlash2 `#132` | **Fork-source** | 21 Oct — MTP-2 still faster in PR A/B |
 | `troubleshooting/vllm.md` `rdna_ar` silent hang `#128` | **Fork-source** | 19 Oct |
@@ -494,7 +505,22 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `reference/env-vars.md` `PLE_OFFLOAD_PREFAULT` | **Community / Needs verify** | `#vllm-rdna` Oct 8 — overlay/sidecar name; ~25% slower off; not org extras HEAD |
 | `choose-a-stack.md` / `meta/resources.md` Strata HIP | **Community / Needs verify** | `#general` Oct 7–8 + public `Niko1221/Strata`. 2× V620 0.1.39+#835/#849 PP jump; 3-card behind vLLM. No serve recipe |
 | `choose-a-stack.md` GLM-5.3-Flash not 1-card | **Community / Needs verify** | `#general` Oct 25 — 1× V620 + RAM offload poor fit; Maya ~200/13 stale; public 320B/18B active. 8× recipe already on `recipes.md` |
-| `choose-a-stack.md` / `meta/resources.md` Strata 0.1.49.2 DeepSeek engine | **Community** | `#strata` Oct 25 — signed feed has no gfx1030 HIP DeepSeek engine (gfx1200/gfx1201 + CUDA) |
+| `choose-a-stack.md` / `meta/resources.md` Strata 0.1.49.2 DeepSeek engine | **Community** | `#strata` Oct 25 — signed feed has no gfx1030 HIP DeepSeek engine (gfx1200/gfx1201 + CUDA). 10 Nov: stock Strata DeepSeek still “doesn't work on AMD”; V620 path is Maya/Cilla |
+| `choose-a-stack.md` / `meta/resources.md` Strata `--calibrate` / Avalon | **Community / Needs verify** | `#strata` 31 Oct–1 Nov — `--calibrate` is the A/B knob; one 4× V620 host used `--prefill-pipe 3072` + `STRATA_SH_STREAM=1`. Avalon is RDNA3-only |
+| `choose-a-stack.md` / `meta/resources.md` Strata 2× concurrency | **Community / Needs verify** | `#strata` 3 Nov — 2× V620 extra streams little/no total TG; two streams slower. Second host also a miss |
+| `choose-a-stack.md` / `meta/resources.md` Strata `--tune thorough` / Q8 vs Q4 | **Community / Needs verify** | `#strata` 5 Nov — `STRATA_HIP_PROMPT_F16=1` still first (~500→~1000 PP on one host); `--tune thorough` after. 4× Q8 prefill faster than Q4. Community fork `andrewprock/Strata` `v620-stack-0210-f2-mmq` |
+| `choose-a-stack.md` / `meta/resources.md` Strata tool-call recovery | **Community / Needs verify** | `#strata` 7–9 Nov + Strata `docs/DETAILS.md`. `tool_call_recovery` on since 0.2.8. VS Code Copilot + QFN Q8 still dropped calls; pi.dev host had none. No serve recipe |
+| `choose-a-stack.md` / `meta/resources.md` Strata 2× QFN ballpark | **Community / Needs verify** | `#strata` 10 Nov — 2× V620 IQ3-class Qwen Flash-Next clustered ~1200–1600 PP / ~40–70 TG with 128 GB DRAM; one Q3 host ~800/40. 11 Nov: OS-level 2 MiB hugepages (`vm.nr_hugepages`) required for stability on one 2× host (Strata 0.2.7 DeepSeek note; not a JSON flag; container untested); that IQ3_S host ~1200–2000 PP / ~50–70 TG. Prefer QFN / q3.8fn over Mix-128G-class DeepSeek packs. Not a recipe |
+| `choose-a-stack.md` / `meta/resources.md` Cilla-v620 Maya fork | **Community / Needs verify** | `#general` 9 Nov + public `crispyging/cilla-v620` `release/cilla-v620`. README: DeepSeek-V4.1-Flash-1017, ROCm 7.2.4, Python 3.11, four-V620 opt-in LAUNCHING.md. No wiki serve recipe. Mixed first-tries; 8× untested. `#strata` 10 Nov: 2× V620 + 128 GB DDR4 Maya DeepSeek ~30 t/s / ~200 PP vs ~1.5k Qwen Flash PP on the same host. 11 Nov: Mix-128G-class DeepSeek packs a poor 2× fit; Engram on NVMe can drop decode to single digits |
+| `vllm/fork.md` / `fork-progress.md` RidgeFill `#155` | **Fork-source** | Public `#155` + `#vllm-rdna` 4–6 Nov. `VLLM_RDNA_RIDGEFILL` defaults off; quality gate not met 6 Nov; not a recipe |
+| `troubleshooting/vllm-flash-next.md` 8× PLE disk / vision TP8 | **Community / Needs verify** | `#vllm-rdna` / `#general` 5 Nov — Tyan S8030 ~128 GB needed `PLE=int4-disk`; vision-on crashed TP8. 6 Nov: TP8 expected better decode, TP=4,PP=2 better prefill — not a recipe. 7–8 Nov: two hosts held both layouts at ~120 W / ~1900 MHz; `--enable-eplb` 64 redundant experts ate ~200–250k KV. 9 Nov: 8 and 32 replicas still not worth the KV loss (~1M tokens; one card ~24% busier). 10 Nov: freeze-after-soak to reclaim KV; linear layout ~20–25% imbalanced. 12 Nov: 400B traces still ~22% linear rank delta (drafter ~27%); local rebalance evened per-card power — local WIP |
+| `tuning/p2p.md` dual-PEX88096 counters | **Community / Needs verify** | `#vllm-rdna` 7 Nov — inter-switch uplink not saturating; latency/DMA lead. `#other` 5 Nov — P2P config same as no-switch |
+| `tuning/p2p.md` PCIe 10-bit / ARI / `pci=pcie_bus_perf` | **Community / Needs verify** | `#general` 7 Nov — 10-bit+ARI no token gain; one switch drop was loose SlimSAS; `pci=pcie_bus_perf` instead of forced MRRS/MPS |
+| `vllm/recipes.md` / `choose-a-stack.md` 2× 16 GB RAM → 27B | **Community** | `#vllm-rdna` 5 Nov — Flash-Next PLE+experts want tens of GB DRAM |
+| `vllm/host-venv.md` Gentoo 4× Flash-Next compile | **Community / Needs verify** | `#general` 9–10 Nov — Gentoo compiled `rdna_extras` and served recommended Qwen3.8-Flash-Next-AWQ-W4A16 on 4× V620 / EPYC 7663 / 128 GB. First-run tok/s not a recipe |
+| `tuning/power.md` 8× 2100 MHz / separate 750 W circuit | **Community / Needs verify** | `#general` 9 Nov — third 750 W PSU on another circuit unblocked 2100 MHz burn; Octominer x12 load-share; 15 A / 120 V 80% derate. 10–11 Nov: balance breakout **strips**; same host still wobbled on 750 W load-share, then held on **1200 W HP server PSUs** even at 150 W. Not a wiki default |
+| `troubleshooting/vllm-flash-next.md` DENSE_INT8 looping ~70k | **Community / Needs verify** | `#vllm-rdna` 4 Nov — `VLLM_RDNA_DENSE_INT8_ONLY` looping at ~70k on one 4× host |
+| `vllm/fork-progress.md` 4× HEAD 1k/512 decode A/B | **Community / Needs verify** | `#vllm-rdna` 4 Nov — one host 122→~150 t/s; author expected ~90–100. Mixed RDNA2+3 not a wiki path |
 | `llama-cpp/rdna2-serving.md` froggeric Qwen Jinja | **Needs verify** | `#vllm-rdna` Oct 8 + public `froggeric/Qwen-Fixed-Chat-Templates`; `#general` Oct 9 tool calls |
 | `vllm/recipes.md` 3× MoE HIP overlay | **Community** | `#vllm-rdna` Sep 17–18 — public temp repo |
 | `vllm/recipes.md` DeepSeek-V4 Flash | **Needs verify** | `#vllm-rdna` Sep 17 — not Hub |
@@ -536,6 +562,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` layer vs tensor split explainer | **Community** | `#benchmarks` Sep 2026 |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
 | `setup/hardware.md` W6800 BIOS on V620 → 54 CU | **Community** | `#general` Sep 2026 PSA — stay on stock V620 VBIOS |
+| `setup/hardware.md` stock V620 VBIOS 500 vs 600 | **Community** | `#vllm-rdna` 9 Nov — `113-D6030500-100` (Apr) vs `113-D6030600-100` (Jun); mixed OK; perf tables identical; `rocm-smi --showvbios` / `amdvbflash -s` dump only. Public D60306 archive `baldpope/uncategorized` `amd_v620/` |
 | `setup/host-firmware.md` Dell Precision MMIO High / `mmiohsize` | **Community** | `#motherboard` / `#general` Sep 12–14 2026 — dump your own UEFI; 0x03 vs 0x04 |
 | `setup/host-firmware.md` T7820 4× V620 + PEX880xx POSTed after SR-IOV off | **Needs verify** | Single-host `#motherboard` Sep 14 2026 — board-specific hidden vars |
 | `setup/host-firmware.md` CMOS loss re-enables SR-IOV / disables ReBAR | **Community** | `#general` Sep 23 — MMIO / missing GPUs until BIOS restored |
@@ -545,7 +572,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/llama-cpp.md` lemonade-sdk M-RoPE A/B | **Needs verify** | `#llamacpp` Sep 13 — one host; not the RDNA2 fork |
 | `troubleshooting/general.md` blower vs unducted 120 mm | **Community** | `#general` Sep 13 2026 |
 | `troubleshooting/general.md` 9733 / Thingiverse 7296707 + PWM hub | **Community** | `#general` Oct 4–6 — 9733 loud with pulse PWM or Molex-at-100%; EFH-08E12W-JP01 + Arctic ACFAN00351A + CoolerControl; SUNON PF97331B1 + SilverStone CPF04 quieter path; Molex-for-four **Needs verify** |
-| `setup/host-firmware.md` H12D POST loop / SR-IOV + ReBAR + CSM | **Needs verify** | `#general` Oct 6 — codes `95, DE, AD, DF, 36, 05, 37`; then POSTed. Single-host |
+| `setup/host-firmware.md` H12D POST loop / SR-IOV + ReBAR + CSM | **Needs verify** | `#general` Oct 6 — codes `95, DE, AD, DF, 36, 05, 37`; then POSTed. Single-host. 8 Nov: H12D-8D standoffs under upper DIMMs; EPYC socket retorque restored a dead channel |
 | `meta/resources.md` TensorFold ROCm `#389` | **Needs verify** | `#tensorfold` Oct 4–6 + public `ashhart/TensorFold#389` (draft `--backend rocm`). RDNA2 is FP16 `v_dot2`, not WMMA. Community: not faster than vLLM. Oct 6: Python engine frozen; ROCm path moving to Zig. No wiki serve recipe |
 
 ### `setup/host-firmware.md`
@@ -557,8 +584,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | CMOS / BIOS loss re-enables SR-IOV / disables ReBAR | **Community** | `#general` Sep 23 — fewer GPUs / MMIO errors until settings restored |
 | 256 GB MMIO window for 4× V620 | **Community** | `#motherboard` — 64 GB too small |
 | GpuMMIOFix OS BAR remap | **Needs verify** | `#motherboard` Sep 15–16 — typically every boot |
-| HP Z4 G4 32-bit MIMO + ReBAR + `pci=realloc=off` | **Needs verify** | `#motherboard` Sep 16 — Xeon W-2133; Linux reallocates 64 GB VRAM |
-| HP Z6 G4 blower PWM + slot-5 PSP kdb | **Needs verify** | `#motherboard` 18–23 Oct — factory reset unstuck fans; second V620 in slot 5 unresolved. 29 Oct: slots 2+5 x16 / slot 4 x8; hidden BIOS guess |
+| HP Z4 G4 32-bit MIMO + ReBAR + `pci=realloc=off` | **Needs verify** | `#motherboard` Sep 16 — Xeon W-2133; Linux reallocates 64 GB VRAM. 7 Nov: dual V620 kit that failed Z6 G4 POSTed on Z4 G4 with the same BIOS/boot. 10 Nov: W-2133 → W-2235 unlocked 2933 MHz DDR4 (same DIMMs); informal Maya DeepSeek A/B prefill low 200s→~300, decode low 20s→~30–40 |
+| HP Z6 G4 blower PWM + slot-5 PSP kdb | **Needs verify** | `#motherboard` 18–23 Oct — factory reset unstuck fans; second V620 in slot 5 unresolved. 29 Oct: slots 2+5 x16 / slot 4 x8; hidden BIOS guess. 7 Nov: still not a dual-V620 Z6 path |
 | H12D V620 POST loop; SR-IOV off + Above 4G + CSM off + ReBAR on | **Needs verify** | `#general` Oct 6 — one host; menu-level, not Dell hidden vars |
 
 ---
