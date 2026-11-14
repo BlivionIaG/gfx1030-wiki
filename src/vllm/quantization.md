@@ -192,6 +192,18 @@ is a **~15 GiB** 27B pack (HF may mis-report the parameter count). Author card:
 is weaker than **AWQ INT4** at this rate (community: 3.2 bpw may be the next
 try). There is still **no** vLLM `RECIPE=` / Hub bake. Do not treat hi2 as a
 day-to-day serve path — kernels stay on the RDNA2 fork, not a second clone.
+`#vllm-rdna` (12 Nov): TP4 / TP8 hi2 export ranks were mentioned as **future work**, not
+shipped.
+
+`#vllm-rdna` (12–13 Nov): **oQ6e** Flash-Next packs are public on Hugging Face (search
+[`Qwen3.8-Flash-Next-oQ6e`](https://huggingface.co/models?search=Qwen3.8-Flash-Next-oQ6e);
+one listed pack is
+[`mlx-community/Qwen3.8-Flash-Next-oQ6e-mtp`](https://huggingface.co/mlx-community/Qwen3.8-Flash-Next-oQ6e-mtp)).
+Community described the format as an MLX-oriented higher-accuracy quant (often compared to
+~8–10 bpw naive) aimed at **TP8**, **not** as a Hub recipe. gfx1030 HIP kernels were **not**
+a serve path in this window: first inference ran at about **10 tok/s prefill**, then a
+follow-up said something was wrong. Stay on GPTQ/AWQ (or documented EXL3/hi2 caveats) until
+a public fork recipe exists.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 
@@ -220,6 +232,21 @@ cannot pack the record **refuse** the dtype up front. Default FP16 KV is unchang
 `#vllm-rdna` (21 Oct): maintainer priority for longer context is still restoring the
 **INT8** KV HIP path ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)), not
 replacing day-to-day FP16 with experimental packs. Snapshot: [Fork progress](fork-progress.md).
+
+## LeapQuant (GDN recurrent state, not in `rdna_extras`) {#leapquant}
+
+`#general` (12–13 Nov): [LeapQuant](https://arxiv.org/abs/2609.38166) stores GDN / KDA
+**recurrent state** in INT8 (~1.19 bytes/element vs FP32) with per-window re-quant and a few
+FP16 compensator tokens. Paper speedups are **NVIDIA**. Upstream RFC
+[`vllm#64725`](https://github.com/vllm-project/vllm/issues/64725) proposes it as an **opt-in**
+ReplaySSM checkpoint format (Triton, CUDA + MI355X — **not** gfx1030 HIP). Phase 1 is
+non-speculative GDN decode; MTP / speculative decode is a non-goal of that RFC.
+
+A community **TP4** V620 overnight run saw **almost no observable gain at low concurrency**.
+Same thread: any KV-cache win would still want a smaller attention page / block size —
+**Needs verify**, not a recipe. This is **not** fork INT4 KV (`int4_fp16_block`) and **not**
+INT8 decode shadows. There is no LeapQuant flag on Hub **`v0.31.0-extras`** or current
+`rdna_extras`. Links: [resources](../meta/resources.md#upstream-projects).
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 
