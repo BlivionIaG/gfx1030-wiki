@@ -269,7 +269,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Snapshot dated 2 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
+| Snapshot dated 15 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
+| LeapQuant `#168` on HEAD | **Fork-source** | Merged 14 Nov; `RECIPE=flashnext-leapquant-mtp2`. Not Hub |
 | Hub `v0.31.0-extras` feature set | **Fork-source** | `#announcements` 11 Oct |
 | HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
 | Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
@@ -298,7 +299,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
-| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `flashnext-dflash2` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env`. `flashnext-dflash2` is `#132` (21 Oct); Hub lags |
+| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `flashnext-dflash2` / `flashnext-leapquant-mtp2` / `27b-awq` / `27b-exl3` / `dsv4-flash` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env`. `flashnext-dflash2` is `#132` (21 Oct); `flashnext-leapquant-mtp2` is `#168` (14 Nov); Hub lags |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
 | Flash-Next PLE `bf16` / `int4` / `int4-disk` | **Fork-source** | `#announcements` 11 Oct + `serve_rdna.sh` `PLE=`. INT4 table ~30 GB; `#vllm-rdna` Oct 11 corrected inflated ~90 GB host-RAM figure (~35 GB working set). Disk mmap via `VLLM_PLE_CPU_OFFLOAD=1`. Speed at parity on author 4× V620. `#vllm-rdna` 5 Nov: 8× / ~128 GB needed `int4-disk` for TP8 / TP=4,PP=2 — **Community / Needs verify** |
 | Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
@@ -463,8 +464,10 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; 26 Oct: CPU-RAM KV + prefix cache OK when **disk** KV offload is off |
 | `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC. 1–2 Nov: also PLE CUDA-graph freeze on early 0.33 nightly — **Fork-source** |
 | `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public, no recipe. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4; still no Hub recipe. 12 Nov: TP4/TP8 hi2 export ranks not shipped |
-| `vllm/quantization.md` oQ6e Flash-Next | **Needs verify** | `#vllm-rdna` 12–13 Nov — public HF `Qwen3.8-Flash-Next-oQ6e*` packs; gfx1030 first inference ~10 tok/s PP then broken. Not a recipe |
-| `vllm/quantization.md` LeapQuant RFC | **Community / Needs verify** | `#general` 12–13 Nov + public [vLLM #64725](https://github.com/vllm-project/vllm/issues/64725) / [arXiv 2609.38166](https://arxiv.org/abs/2609.38166). Paper NVIDIA; RFC not gfx1030 HIP. One TP4 host: no low-concurrency gain |
+| `vllm/quantization.md` oQ6e Flash-Next | **Needs verify** | `#vllm-rdna` 12–15 Nov — public HF `Qwen3.8-Flash-Next-oQ6e*` packs; gfx1030 first inference ~10 tok/s PP; later MLX-side tinkering. Not a HIP recipe |
+| `vllm/quantization.md` / `flash-next-serve.md` LeapQuant `#168` | **Fork-source** | `#168` merged 14 Nov; `RECIPE=flashnext-leapquant-mtp2`; `VLLM_RDNA_GDN_LEAPQUANT=1`; opt-in lossy gfx10x HIP. Author-host 1k c=1 −6.6%; 32k c=8 +20% confounded with admission. Not Hub. `#vllm-rdna` 14 Nov: not a portable CUDA/MI300 port |
+| `vllm/quantization.md` LeapQuant RFC vs HIP | **Community / Fork-source** | `#general` 12–13 Nov RFC [vLLM #64725](https://github.com/vllm-project/vllm/issues/64725) / [arXiv 2609.38166](https://arxiv.org/abs/2609.38166) is NVIDIA / MI355X. Pre-merge TP4 host: no low-concurrency gain. Retracted “not in `rdna_extras`” after `#168` |
+| LeapQuant follow-up `#170` | **Needs verify** | Draft `#170` 14 Nov — flag rename / packing; **no GPU run**. Not a recipe |
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify** |
 | `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620. 7 Nov: same dual-V620 kit POSTed on Z4 G4 with the same BIOS/boot; Z6 G4 still failed |
 | `setup/hardware.md` / `host-firmware.md` MZ32-AR0 LRDIMM SKUs | **Community / Needs verify** | `#general` 2 Nov — Gigabyte MZ32-AR0; Samsung `M386A4G40DM0-CPB0Q` (IDT) trains, `…-CPB2Q` (Montage) does not; BIOS rev bumps no help. Community: EPYC wants 3DS/TSV from 128 GB up |
@@ -475,7 +478,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` `#126` / `#127` / `#128` / `#130` / `#131` / `#132` | **Fork-source** | Merged 18–21 Oct; Hub `v0.31.0-extras` lags |
 | `vllm/fork.md` `#117` / `#137` / `#138` / `#140` | **Fork-source** | Merged 17–26 Oct; EXL3 Flash-Next, MTP mono, INT4 KV, W4A8 default. Not Hub |
 | `vllm/fork.md` / `flash-next-serve.md` `#146` TP2 MoE offload | **Fork-source** | `#146` merged 28 Oct; `serve_offload.sh`; author-host 2× V620 16k/1024 ~19.8 / ~26.7 agg. Not Hub. **Needs verify** on a second host |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 6 Nov Hub vs 0.33 HEAD vs GHCR nightly vs RidgeFill `#155` vs backlog |
+| `vllm/fork.md` / `flash-next-serve.md` `#168` LeapQuant | **Fork-source** | `#168` merged 14 Nov; recipe `flashnext-leapquant-mtp2`. Not Hub |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 15 Nov Hub vs 0.33 HEAD vs GHCR nightly vs LeapQuant `#168` vs RidgeFill `#155` vs backlog |
 | `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; anonymous GHCR pull not confirmed |
 | `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `vllm/fork-progress.md` draft `#148` | **Fork-source** | `#vllm-rdna` 30 Oct + public draft — tiered KV paging; live paging stalls; not a recipe |

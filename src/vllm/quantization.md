@@ -195,15 +195,15 @@ day-to-day serve path — kernels stay on the RDNA2 fork, not a second clone.
 `#vllm-rdna` (12 Nov): TP4 / TP8 hi2 export ranks were mentioned as **future work**, not
 shipped.
 
-`#vllm-rdna` (12–13 Nov): **oQ6e** Flash-Next packs are public on Hugging Face (search
+`#vllm-rdna` (12–15 Nov): **oQ6e** Flash-Next packs are public on Hugging Face (search
 [`Qwen3.8-Flash-Next-oQ6e`](https://huggingface.co/models?search=Qwen3.8-Flash-Next-oQ6e);
 one listed pack is
 [`mlx-community/Qwen3.8-Flash-Next-oQ6e-mtp`](https://huggingface.co/mlx-community/Qwen3.8-Flash-Next-oQ6e-mtp)).
 Community described the format as an MLX-oriented higher-accuracy quant (often compared to
 ~8–10 bpw naive) aimed at **TP8**, **not** as a Hub recipe. gfx1030 HIP kernels were **not**
-a serve path in this window: first inference ran at about **10 tok/s prefill**, then a
-follow-up said something was wrong. Stay on GPTQ/AWQ (or documented EXL3/hi2 caveats) until
-a public fork recipe exists.
+a serve path: first inference ran at about **10 tok/s prefill**, then later MLX-side
+tinkering. Stay on GPTQ/AWQ (or documented EXL3/hi2 caveats) until a public fork recipe
+exists.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 
@@ -233,20 +233,34 @@ cannot pack the record **refuse** the dtype up front. Default FP16 KV is unchang
 **INT8** KV HIP path ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)), not
 replacing day-to-day FP16 with experimental packs. Snapshot: [Fork progress](fork-progress.md).
 
-## LeapQuant (GDN recurrent state, not in `rdna_extras`) {#leapquant}
+## LeapQuant (GDN recurrent state, HEAD `#168`) {#leapquant}
 
-`#general` (12–13 Nov): [LeapQuant](https://arxiv.org/abs/2609.38166) stores GDN / KDA
-**recurrent state** in INT8 (~1.19 bytes/element vs FP32) with per-window re-quant and a few
-FP16 compensator tokens. Paper speedups are **NVIDIA**. Upstream RFC
-[`vllm#64725`](https://github.com/vllm-project/vllm/issues/64725) proposes it as an **opt-in**
-ReplaySSM checkpoint format (Triton, CUDA + MI355X — **not** gfx1030 HIP). Phase 1 is
-non-speculative GDN decode; MTP / speculative decode is a non-goal of that RFC.
+[LeapQuant](https://arxiv.org/abs/2609.38166) stores GDN / KDA **recurrent state** as an INT8
+blob instead of FP32. Paper speedups are **NVIDIA**. Upstream RFC
+[`vllm#64725`](https://github.com/vllm-project/vllm/issues/64725) is Triton / CUDA + MI355X —
+**not** gfx1030 HIP, and MTP is a non-goal of that RFC.
 
-A community **TP4** V620 overnight run saw **almost no observable gain at low concurrency**.
-Same thread: any KV-cache win would still want a smaller attention page / block size —
-**Needs verify**, not a recipe. This is **not** fork INT4 KV (`int4_fp16_block`) and **not**
-INT8 decode shadows. There is no LeapQuant flag on Hub **`v0.31.0-extras`** or current
-`rdna_extras`. Links: [resources](../meta/resources.md#upstream-projects).
+Merged [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov 2026) is the
+**fork HIP** path: opt-in `VLLM_RDNA_GDN_LEAPQUANT=1`, **lossy**, gfx10x only, no Triton.
+Default stays FP32 with **1024**-token blocks. MTP2, MonoKernel, `FULL_AND_PIECEWISE`, and
+prefix caching stay enabled. Recipe `flashnext-leapquant-mtp2` uses **512**-token blocks and
+`--monokernel`. `#vllm-rdna` (14 Nov): the kernels are **RDNA2-shaped**, not a portable
+MI300 / CUDA port. Upstream ReplaySSM GDN decode
+([`vllm#62004`](https://github.com/vllm-project/vllm/pull/62004)) is **not** in this tree.
+
+This is **not** fork INT4 KV (`int4_fp16_block`) and **not** INT8 decode shadows. **Not** in
+Hub **`v0.31.0-extras`**. Day-to-day stays `flashnext-mtp2`. Serve line:
+[LeapQuant](flash-next-serve.md#flash-next-leapquant).
+
+`#general` (12–13 Nov) community TP4 overnight run (before `#168`) saw **almost no gain at
+low concurrency** — that matches the PR matrix **1k c=1 −6.6%** TG aggregate. The same
+matrix reports **32k/2048 c=8 +20%**, but that run changes **block size and admission
+together** (FP32 preempted; LeapQuant did not). Owner accepted the 1k c=1 loss. KV capacity
+**+2.44%** (266,945 → 273,456 tokens) — **not** a 2× KV win. **Fork-source**.
+
+Draft [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) would replace the env flag
+with `--replayssm-state-dtype leapquant` and add opt-in page packing. **No GPU run** as of
+14 Nov — do not use it as a recipe. Links: [resources](../meta/resources.md#upstream-projects).
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

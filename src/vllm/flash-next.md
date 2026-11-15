@@ -11,7 +11,7 @@
 | [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
-| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [LeapQuant](./flash-next-serve.md#flash-next-leapquant), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
 | [Serve scripts](./serve-scripts.md) | `serve_rdna.sh RECIPE=flashnext-mtp2` and siblings |
 | [Fork progress](./fork-progress.md) | Hub vs HEAD vs open drafts |
 
@@ -59,6 +59,10 @@ turn the `#99` HIP set **on** (QSA / GDN / HC). Hub bake still has the older opt
 **4× V620 + DFlash2 (`#132`, 21 Oct):** `RECIPE=flashnext-dflash2` is on HEAD. Paired A/B
 kept **native MTP-2 faster**; use DFlash2 only if you want that drafter —
 [DFlash2](./flash-next-serve.md#flash-next-dflash2).
+
+**4× V620 + LeapQuant (`#168`, 14 Nov):** `RECIPE=flashnext-leapquant-mtp2` is on HEAD.
+Opt-in **lossy** INT8 GDN state; **not** Hub; 1k c=1 is slower than FP32 MTP-2 —
+[LeapQuant](./flash-next-serve.md#flash-next-leapquant).
 
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer
 **`FULL_AND_PIECEWISE`** (compile `mode: 3`) — uniform decode uses the **FULL** CUDA graph (same

@@ -45,8 +45,10 @@ against forks.
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) — GGUF inference (HIP/ROCm and Vulkan)
 - [vLLM RFC #64725](https://github.com/vllm-project/vllm/issues/64725) /
   [LeapQuant paper](https://arxiv.org/abs/2609.38166) — INT8 GDN/KDA recurrent-state
-  quantization. `#general` 12–13 Nov: **not** in `rdna_extras`; one TP4 V620 host saw no
-  low-concurrency gain. [Quantization](../vllm/quantization.md#leapquant)
+  quantization. Fork HIP path: merged
+  [`opengfx1030/vllm-rdna#168`](https://github.com/opengfx1030/vllm-rdna/pull/168)
+  (`RECIPE=flashnext-leapquant-mtp2`, opt-in, lossy). RFC itself is **not** gfx1030 HIP.
+  [Quantization](../vllm/quantization.md#leapquant)
 - [vLLM PR #52391](https://github.com/vllm-project/vllm/pull/52391) — RDNA gfx1030 platform detection
   (upstream CI enablement for consumer Radeon)
 - [TheRock: RDNA2 (gfx103X) support](https://github.com/ROCm/TheRock/pull/1629) — ROCm/TheRock gfx1030
