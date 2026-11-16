@@ -224,11 +224,14 @@ c=1 / c=8). `#vllm-rdna` (22 Oct): maintainer still has MTP-2 ahead on agentic l
 community: DFlash2 can win short / single-user, MTP-2 under concurrency. **Fork-source**
 for the recipe; community contrast **Needs verify**. Not Hub.
 
-### 4× V620 Flash-Next LeapQuant (`#168`, 14 Nov) {#flash-next-leapquant}
+### 4× V620 Flash-Next LeapQuant (`#168` / `#170`, 14–15 Nov) {#flash-next-leapquant}
 
-**Merged** [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov). Opt-in
+**Merged** [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov) +
+[`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov). Opt-in
 **lossy** INT8 GDN state — **not** a replacement for `flashnext-mtp2`. The recipe sets
-`--monokernel` and **512**-token blocks.
+`--monokernel` and **512**-token blocks. Pull HEAD **after**
+[`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172) (16 Nov) or GDN models
+do not boot.
 
 ```sh
 MODEL=/path/to/flash-next VENV=/path/to/venv \
@@ -236,17 +239,19 @@ MODEL=/path/to/flash-next VENV=/path/to/venv \
   PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
 ```
 
-- Flag: `VLLM_RDNA_GDN_LEAPQUANT=1` (recipe). gfx10x HIP only; default FP32 / block
-  **1024** is unchanged on `flashnext-mtp2`.
+- Flag (after `#170`): `--replayssm-state-dtype leapquant` / launcher
+  `REPLAYSSM_STATE_DTYPE=leapquant`. gfx10x HIP only; default FP32 / block
+  **1024** is unchanged on `flashnext-mtp2`. **Do not** set `VLLM_RDNA_GDN_LEAPQUANT`
+  — the launcher **exits**.
+- Packing `VLLM_RDNA_GDN_LEAPQUANT_PACK=1` is opt-in and a **no-op** at block 512.
 - Author-host TP4 V620 matrix (Flash-Next AWQ, MTP2, MonoKernel, `FULL_AND_PIECEWISE`):
   **1k/512 c=1 −6.6%** TG aggregate vs FP32; **32k/2048 c=8 +20%** but that cell also
   changes admission (FP32 preempted 6–10; LeapQuant 0). Short-prompt TTFT **+23%** at 1k.
-  KV pages **+2.44%** (266,945 → 273,456 tokens). **Fork-source**. Two merge gates (1k
-  c=1 speed, MTP acceptance) were **not met**; owner accepted that cost.
+  KV pages **+2.44%** (266,945 → 273,456 tokens). `#170` re-measured the same KV figure.
+  **Fork-source**. Two `#168` merge gates (1k c=1 speed, MTP acceptance) were **not met**;
+  owner accepted that cost.
 - **Not** Hub. `#vllm-rdna` (14 Nov): RDNA2-shaped kernels, not a portable CUDA / MI300
   drop-in. Upstream ReplaySSM GDN decode (`vllm#62004`) is **not** in this tree.
-- Draft [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (flag rename / packing)
-  has **not** run on GPU — ignore until merged.
 
 Background: [Quantization](quantization.md#leapquant).
 
@@ -467,6 +472,14 @@ Recipe facts (fork comments + `#general` 13 Oct maintainer paste):
 
 `#vllm-rdna` (17 Oct): later HEAD merges were **not re-benched** against this 13 Oct table —
 treat the numbers as a snapshot, not a current HEAD guarantee.
+
+`#vllm-rdna` (16 Nov): maintainer had **not re-tested PP3 in a while**. Dense INT8
+mode **may** misbehave on PP3 (**Needs verify**). A host **ROCm 10.1** from-source
+PP3 serve **spit gibberish**. Prefer org GHCR
+`ghcr.io/opengfx1030/vllm-rdna:nightly-rocm7.14.0` (HEAD after `#172`) over a 10.x
+host venv for PP3. Maintainer: **no vLLM gain** moving the day-to-day box to ROCm
+10 (TunableOp redo). Community llama.cpp **did** see a ROCm 10 bump — not a vLLM
+recipe.
 
 Author-host 16k/1k (`#general` 13 Oct, **Community** — not wiki-tested):
 

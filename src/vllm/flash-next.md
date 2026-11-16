@@ -60,8 +60,9 @@ turn the `#99` HIP set **on** (QSA / GDN / HC). Hub bake still has the older opt
 kept **native MTP-2 faster**; use DFlash2 only if you want that drafter —
 [DFlash2](./flash-next-serve.md#flash-next-dflash2).
 
-**4× V620 + LeapQuant (`#168`, 14 Nov):** `RECIPE=flashnext-leapquant-mtp2` is on HEAD.
-Opt-in **lossy** INT8 GDN state; **not** Hub; 1k c=1 is slower than FP32 MTP-2 —
+**4× V620 + LeapQuant (`#168` / `#170`, 14–15 Nov):** `RECIPE=flashnext-leapquant-mtp2` is on HEAD
+**after `#172`**. Opt-in **lossy** INT8 GDN state; **not** Hub; 1k c=1 is slower than FP32 MTP-2.
+Do **not** set `VLLM_RDNA_GDN_LEAPQUANT` —
 [LeapQuant](./flash-next-serve.md#flash-next-leapquant).
 
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer

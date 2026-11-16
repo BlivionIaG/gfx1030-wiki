@@ -190,10 +190,15 @@ public
 is a **~15 GiB** 27B pack (HF may mis-report the parameter count). Author card:
 **66 % INT2 / 34 % INT4**, measured **3.012 bpw**; tool-call / first-tool match
 is weaker than **AWQ INT4** at this rate (community: 3.2 bpw may be the next
-try). There is still **no** vLLM `RECIPE=` / Hub bake. Do not treat hi2 as a
-day-to-day serve path — kernels stay on the RDNA2 fork, not a second clone.
-`#vllm-rdna` (12 Nov): TP4 / TP8 hi2 export ranks were mentioned as **future work**, not
-shipped.
+try). `#vllm-rdna` (12 Nov): TP4 / TP8 hi2 export ranks were **future work**.
+Merged [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov): HEAD
+recipes **`27b-hi2-tp2`** (MTP=0) and **`27b-hi2-tp2-mtp2`** (MTP=2) serve that
+pack on **2× V620**. Speed switches stay **off in code** and **on in those two
+recipes** — [serve scripts](serve-scripts.md). Guide:
+[`docs/rdna2/hi2-27b-tp2-serving.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/hi2-27b-tp2-serving.md).
+**Not** Hub. Fork-source numbers are **2×** only; do not paste them onto 4× / 8×.
+Do not treat hi2 as a Hub day-to-day path — kernels stay on the RDNA2 fork, not a
+second clone.
 
 `#vllm-rdna` (12–15 Nov): **oQ6e** Flash-Next packs are public on Hugging Face (search
 [`Qwen3.8-Flash-Next-oQ6e`](https://huggingface.co/models?search=Qwen3.8-Flash-Next-oQ6e);
@@ -241,12 +246,23 @@ blob instead of FP32. Paper speedups are **NVIDIA**. Upstream RFC
 **not** gfx1030 HIP, and MTP is a non-goal of that RFC.
 
 Merged [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov 2026) is the
-**fork HIP** path: opt-in `VLLM_RDNA_GDN_LEAPQUANT=1`, **lossy**, gfx10x only, no Triton.
-Default stays FP32 with **1024**-token blocks. MTP2, MonoKernel, `FULL_AND_PIECEWISE`, and
-prefix caching stay enabled. Recipe `flashnext-leapquant-mtp2` uses **512**-token blocks and
+**fork HIP** path: **lossy**, gfx10x only, no Triton. Default stays FP32 with
+**1024**-token blocks. MTP2, MonoKernel, `FULL_AND_PIECEWISE`, and prefix caching
+stay enabled. Recipe `flashnext-leapquant-mtp2` uses **512**-token blocks and
 `--monokernel`. `#vllm-rdna` (14 Nov): the kernels are **RDNA2-shaped**, not a portable
 MI300 / CUDA port. Upstream ReplaySSM GDN decode
 ([`vllm#62004`](https://github.com/vllm-project/vllm/pull/62004)) is **not** in this tree.
+
+Merged [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov) **replaces**
+the `#168` env `VLLM_RDNA_GDN_LEAPQUANT` with `--replayssm-state-dtype leapquant`
+(launcher `REPLAYSSM_STATE_DTYPE=leapquant`). There is **no alias**. The launcher
+**exits** if the old env is still set. Opt-in page packing
+`VLLM_RDNA_GDN_LEAPQUANT_PACK=1` **gains nothing** at the shipped **512**-token
+block. KV capacity vs `#168` is unchanged on that recipe (**+2.44%** vs FP32
+MTP-2, not a 2× KV win). Merged [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172)
+(16 Nov): after `#170` + `#171` landed together, `import …gdn_attn` raised
+`cannot import name 'leapquant_gdn_enabled'` and **no GDN model booted** (Flash-Next
+and 27B / HI2). Pull HEAD **after `#172`**.
 
 This is **not** fork INT4 KV (`int4_fp16_block`) and **not** INT8 decode shadows. **Not** in
 Hub **`v0.31.0-extras`**. Day-to-day stays `flashnext-mtp2`. Serve line:
@@ -258,9 +274,8 @@ matrix reports **32k/2048 c=8 +20%**, but that run changes **block size and admi
 together** (FP32 preempted; LeapQuant did not). Owner accepted the 1k c=1 loss. KV capacity
 **+2.44%** (266,945 → 273,456 tokens) — **not** a 2× KV win. **Fork-source**.
 
-Draft [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) would replace the env flag
-with `--replayssm-state-dtype leapquant` and add opt-in page packing. **No GPU run** as of
-14 Nov — do not use it as a recipe. Links: [resources](../meta/resources.md#upstream-projects).
+Use `RECIPE=flashnext-leapquant-mtp2` on HEAD after `#172`. Do **not** export
+`VLLM_RDNA_GDN_LEAPQUANT`. Links: [resources](../meta/resources.md#upstream-projects).
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

@@ -195,6 +195,10 @@ keep **vLLM TP8** or **TP=4,PP=2** up while hunting the same drop:
   **load / prefill** crashes; rerunning the old kernel crashed again. Remaining
   **decode** crashes were **prompt-length dependent**. **Needs verify** — do
   not treat “install 7.3.2” as a recipe without knowing your distro package.
+- **Kernel 7.3.3 / 7.3.4:** `#vllm-rdna` (15 Nov) community ladder on a 7.x host:
+  **7.0.0** was bad; **7.3** was bad for **P2P** but otherwise stable; **7.3.2**
+  still had problems; **7.3.3 / 7.3.4** is the current state (occasional faults,
+  **P2P works**). Still **Needs verify** — not a distro package pin.
 - **120 W / ~1900 MHz:** two hosts then kept **TP=8** and **TP=4,PP=2** up at
   that cap. One had last crash logs at **~950–970 W** wall; lowering clocks
   barely moved tokens. Treat leftover 8× drops as **PSU transients** after ACS

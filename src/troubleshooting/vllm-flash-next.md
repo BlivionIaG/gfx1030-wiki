@@ -96,6 +96,11 @@ does **not** include them. Older Sep 15–16 pins and the Sep 19 `b33f9b6` KeyEr
 historical. A leapdragon image is only a fallback if you cannot clone HEAD. Do not treat an
 arbitrary mid-September org pin as a drop-in for PP3.
 
+`#vllm-rdna` (16 Nov): maintainer had **not re-tested PP3 recently**. Dense INT8
+**may** have a PP3 issue. One **ROCm 10.1** from-source PP3 host produced
+**gibberish**. Prefer GHCR `nightly-rocm7.14.0` after [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172).
+**Needs verify.**
+
 ## Flash-Next PP3 graph KeyError on small prefill (`b33f9b6`) {#flash-next-pp3-graph-keyerror}
 
 `#vllm-rdna` (Sep 19): community test of
