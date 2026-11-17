@@ -465,10 +465,14 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; 26 Oct: CPU-RAM KV + prefix cache OK when **disk** KV offload is off |
 | `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC. 1–2 Nov: also PLE CUDA-graph freeze on early 0.33 nightly — **Fork-source** |
 | `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community / Fork-source** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4. 12 Nov: TP4/TP8 hi2 export ranks not shipped. 15 Nov: `#171` merged `27b-hi2-tp2` / `27b-hi2-tp2-mtp2` (2× HEAD; **not** Hub) |
-| `vllm/quantization.md` oQ6e Flash-Next | **Needs verify** | `#vllm-rdna` 12–15 Nov — public HF `Qwen3.8-Flash-Next-oQ6e*` packs; gfx1030 first inference ~10 tok/s PP; later MLX-side tinkering. Not a HIP recipe |
+| `vllm/quantization.md` oQ6e Flash-Next | **Needs verify** | `#vllm-rdna` 12–15 Nov — public HF `Qwen3.8-Flash-Next-oQ6e*` packs; gfx1030 first inference ~10 tok/s PP; later MLX-side tinkering. 16 Nov: draft `#178` still open; one-host TP8/MTP2 ~680–708 PP / ~68–69 TG — **not** a HIP recipe |
 | `vllm/quantization.md` / `flash-next-serve.md` LeapQuant `#168` / `#170` | **Fork-source** | `#168` merged 14 Nov; `#170` 15 Nov replaces env with `--replayssm-state-dtype leapquant` (no alias; launcher exits on old env). Recipe `flashnext-leapquant-mtp2`; packing no-op at block 512. Author-host 1k c=1 −6.6%; 32k c=8 +20% confounded with admission. Not Hub. `#vllm-rdna` 14 Nov: not a portable CUDA/MI300 port |
 | `vllm/quantization.md` LeapQuant RFC vs HIP | **Community / Fork-source** | `#general` 12–13 Nov RFC [vLLM #64725](https://github.com/vllm-project/vllm/issues/64725) / [arXiv 2609.38166](https://arxiv.org/abs/2609.38166) is NVIDIA / MI355X. Pre-merge TP4 host: no low-concurrency gain. Retracted “not in `rdna_extras`” after `#168` |
-| LeapQuant follow-up `#170` / boot fix `#172` | **Fork-source** | `#170` merged 15 Nov (GPU-validated on Flash-Next TP4). `#172` merged 16 Nov: `#170`+`#171` broke `gdn_attn` import until the fix. Open `#169` GGUF loader is **not** a recipe |
+| LeapQuant follow-up `#170` / boot fix `#172` | **Fork-source** | `#170` merged 15 Nov (GPU-validated on Flash-Next TP4). `#172` merged 16 Nov: `#170`+`#171` broke `gdn_attn` import until the fix |
+| Flash-Next GGUF `#169`/`#174`/`#177`/`#189` | **Fork-source** | Merged 16 Nov. `RECIPE=flashnext-gguf-mtp0`; Unsloth UD-Q4_K_XL; plugin fork required. Author-host 4× PPL 4.80, 16k TTFT 8.2 s. Not Hub |
+| TunableOp rank agreement `#173` | **Fork-source** | `#173` 16 Nov — per-rank CSVs agree; 531 keys used to disagree. Data-only |
+| Lean EPLB `#175`/`#176` | **Fork-source** | `#175` TP4/EP4 decode EPLB no-go (0.02–0.19% ITL). `#176` opt-in `VLLM_RDNA_EPLB_STATS_DIR`. Still skip `--enable-eplb` |
+| GHCR nightly anonymous pull | **Needs verify** | `#vllm-rdna` 16 Nov maintainer said packages were public; this digest run’s anonymous manifest HEAD still 401 |
 | `vllm/host-venv.md` / `setup/installing-rocm.md` ROCm 10 on Ubuntu 26.04 | **Community / Needs verify** | `#vllm-rdna` 29 Oct — `core-10` / `core-10.1` (no `core-7.14`); Triton pin unconfirmed. 30 Oct: 10 ≈ 7.14 for serving; one 10.1 host-venv fail **Needs verify**. 16 Nov: maintainer still not switching vLLM to 10 (no gain); 10.1 from-source PP3 **gibberish**; llama.cpp community **did** see a 10.x bump |
 | `setup/host-firmware.md` HP Z6 G4 slot map | **Community / Needs verify** | `#motherboard` 26–29 Oct — slots 2+5 x16, slot 4 x8; hidden BIOS guess for 2nd V620. 7 Nov: same dual-V620 kit POSTed on Z4 G4 with the same BIOS/boot; Z6 G4 still failed |
 | `setup/hardware.md` / `host-firmware.md` MZ32-AR0 LRDIMM SKUs | **Community / Needs verify** | `#general` 2 Nov — Gigabyte MZ32-AR0; Samsung `M386A4G40DM0-CPB0Q` (IDT) trains, `…-CPB2Q` (Montage) does not; BIOS rev bumps no help. Community: EPYC wants 3DS/TSV from 128 GB up |
@@ -481,7 +485,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` / `flash-next-serve.md` `#146` TP2 MoE offload | **Fork-source** | `#146` merged 28 Oct; `serve_offload.sh`; author-host 2× V620 16k/1024 ~19.8 / ~26.7 agg. Not Hub. **Needs verify** on a second host |
 | `vllm/fork.md` / `flash-next-serve.md` `#168`/`#170`/`#172` LeapQuant | **Fork-source** | `#168` 14 Nov; `#170` 15 Nov flag; `#172` 16 Nov boot fix. Recipe `flashnext-leapquant-mtp2`. Not Hub |
 | `vllm/fork.md` / `serve-scripts.md` `#171` HI2 | **Fork-source** | `#171` 15 Nov; `27b-hi2-tp2*`; 2× V620. Not Hub |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 16 Nov Hub vs 0.33 HEAD vs GHCR nightly vs LeapQuant `#170` vs HI2 `#171` vs `#172` vs RidgeFill `#155` vs backlog |
+| `vllm/fork.md` / `flash-next-serve.md` GGUF `#169`/`#189` | **Fork-source** | 16 Nov; `flashnext-gguf-mtp0`; plugin fork. Not Hub |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 17 Nov Hub vs 0.33 HEAD vs GHCR nightly vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs backlog |
 | `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; anonymous GHCR pull not confirmed |
 | `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `vllm/fork-progress.md` draft `#148` | **Fork-source** | `#vllm-rdna` 30 Oct + public draft — tiered KV paging; live paging stalls; not a recipe |
@@ -495,6 +500,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/host-firmware.md` HP Z6 G4 PSP / fans | **Community / Needs verify** | `#motherboard` 18–23 Oct |
 | `vllm/fork.md` PLE three modes | **Fork-source** | `#announcements` 11 Oct + launcher `PLE=` + `#vllm-rdna` Oct 11 RAM correction |
 | `troubleshooting/vllm.md` W6800X Duo ALU 0.9.4 MTP-2 | **Community** | `#benchmarks` Oct 10 — 4× W6800X Duo, vLLM 0.30.0 TP4, Qwen3.8-27B fp16, 512 gen |
+| `troubleshooting/vllm.md` dual W6800X Duo 16 Nov | **Community / Needs verify** | `#vllm-rdna` 16 Nov — peak ~72 tok/s, ~40 avg at c=4, PP ~1500 short / ~2330 at 200k ingest. Quant unstated. Not a V620 recipe |
 | `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line |
 | `vllm/quantization.md` W4A8 `#140` author-host table | **Fork-source** | `#140` 26 Oct — 27B 860→1075 PP / 42.5→52.3 agg; Hub may lag |
 | `vllm/quantization.md` INT4 KV `#138` | **Fork-source** | `#138` 25 Oct — `int4_fp16_block`; native QSA; not Hub |

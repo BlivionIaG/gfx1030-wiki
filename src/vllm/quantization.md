@@ -207,8 +207,15 @@ one listed pack is
 Community described the format as an MLX-oriented higher-accuracy quant (often compared to
 ~8–10 bpw naive) aimed at **TP8**, **not** as a Hub recipe. gfx1030 HIP kernels were **not**
 a serve path: first inference ran at about **10 tok/s prefill**, then later MLX-side
-tinkering. Stay on GPTQ/AWQ (or documented EXL3/hi2 caveats) until a public fork recipe
-exists.
+tinkering. `#vllm-rdna` (16 Nov): draft
+[`#178`](https://github.com/opengfx1030/vllm-rdna/pull/178) is still **open** (native oQ6e
+kernels); community TP8/MTP2 benches (~680–708 tok/s prefill / ~68–69 decode on one host)
+are **Needs verify**, not a recipe. Stay on GPTQ/AWQ (or documented EXL3/hi2 / GGUF
+caveats) until a public fork recipe exists.
+
+HEAD after 16 Nov also serves Unsloth **UD-Q4_K_XL** Flash-Next GGUF
+(`RECIPE=flashnext-gguf-mtp0`) — [GGUF](flash-next-serve.md#flash-next-gguf). That is
+**not** oQ6e.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 

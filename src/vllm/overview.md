@@ -22,6 +22,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | Flash-Next MonoKernel (`--monokernel`, HEAD) | [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |
 | Flash-Next DFlash2 (`RECIPE=flashnext-dflash2`, HEAD) | [DFlash2](./flash-next-serve.md#flash-next-dflash2) |
 | Flash-Next LeapQuant (`RECIPE=flashnext-leapquant-mtp2`, HEAD `#168`/`#170`) | [LeapQuant](./flash-next-serve.md#flash-next-leapquant) |
+| Flash-Next GGUF (`RECIPE=flashnext-gguf-mtp0`, HEAD `#169`/`#189`) | [GGUF](./flash-next-serve.md#flash-next-gguf) |
 | 2× 27B HI2 (`RECIPE=27b-hi2-tp2`, HEAD `#171`) | [Quantization](./quantization.md) / [serve scripts](./serve-scripts.md) |
 | Flash-Next **2×** expert offload (`serve_offload.sh`, HEAD `#146`) | [2× MoE offload](./flash-next-serve.md#flash-next-2x-moe-offload) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](./configuration.md) |

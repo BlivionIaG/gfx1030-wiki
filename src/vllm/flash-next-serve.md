@@ -39,8 +39,10 @@ Long-prompt / intermittent stalls: try `VLLM_USE_V2_MODEL_RUNNER=0` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [Flash-Next status](./flash-next.md#qwen38-flash-next-on-vllm).
 
-`#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound.
-EXL3 ~3 bpw is still **experimental** — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+`#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound
+for day-to-day. HEAD after 16 Nov has a **UD-Q4_K_XL** GGUF loader (not Q3) —
+[GGUF](#flash-next-gguf). EXL3 ~3 bpw is still **experimental** —
+[Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
 ### 4× V620 Flash-Next serve (`rdna_extras` `#17`, Sep 23) {#flash-next-4x-pr17}
 
@@ -254,6 +256,43 @@ MODEL=/path/to/flash-next VENV=/path/to/venv \
   drop-in. Upstream ReplaySSM GDN decode (`vllm#62004`) is **not** in this tree.
 
 Background: [Quantization](quantization.md#leapquant).
+
+### 4× V620 Flash-Next GGUF (`#169` / `#189`, 16 Nov) {#flash-next-gguf}
+
+**Merged** [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) (loader) with
+[`#174`](https://github.com/opengfx1030/vllm-rdna/pull/174) (plugin seam),
+[`#177`](https://github.com/opengfx1030/vllm-rdna/pull/177) (fast MoE kernel from the
+plugin fork), and [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (image +
+recipe) on 16 Nov. Native `--load-format qwen4exp_gguf` for mixed-quant Flash-Next
+GGUF shards. **Not** Hub. **Not** a Q3 path.
+
+```sh
+MODEL=/path/to/hf-config-dir \
+GGUF_DIR=/path/to/UD-Q4_K_XL \
+VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-gguf-mtp0
+```
+
+- `MODEL` is the Hugging Face **config + tokenizer** directory (no weights).
+  `GGUF_DIR` is the GGUF shard folder. Recipe **aborts** if `GGUF_DIR` is unset.
+- Checkpoint in the fork note: Unsloth
+  [`Qwen3.8-Flash-Next-GGUF`](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF)
+  `UD-Q4_K_XL/` (4 shards, ~104 GiB).
+- TP=4, **MTP=0** (the GGUF has no MTP head), text only (`language-model-only`),
+  `MAXLEN=32768`, KV **2 GiB** (~128k tokens). Weights ~**22 GiB/card**. Raise KV /
+  MAXLEN only if the card has room.
+- Needs the plugin fork [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin)
+  `rdna_extras`, built for **gfx1030**. The **PyPI** plugin drops experts **256+** in
+  its MMQ kernel (Flash-Next has **512** experts) — PPL **9.79** vs **4.80**, and
+  large batches get sliced (16k TTFT **21.4 s** vs **8.2 s**). The GHCR HEAD image
+  after `#189` installs the fork (pinned `GGUF_PLUGIN_REF`). Host venv: clone +
+  `PYTORCH_ROCM_ARCH=gfx1030 pip install --no-build-isolation --no-deps .`
+- Author-host 4× V620, MTP=0, fork plugin: PPL **4.80** (AWQ 4.80–4.88), 1k c=1
+  TTFT **0.54 s** / ITL **20.3 ms**, 16k c=1 TTFT **8.16 s** (~2008 tok/s), 1k/512
+  c=8 **186.9** tok/s. **Fork-source**. No vision / MTP / TP2 / TP8 claim.
+- Note: [`docs/rdna2/gguf-flashnext-2026-11-16.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/gguf-flashnext-2026-11-16.md).
+  PPL ~10 or a boot fault in `moe_q5_1` / `moe_vec_q` —
+  [GGUF plugin](../troubleshooting/vllm-flash-next.md#flash-next-gguf-plugin).
 
 ### 2× V620 Flash-Next MoE offload (`#146`, 28 Oct) {#flash-next-2x-moe-offload}
 
@@ -578,7 +617,7 @@ fix. **GLM-5.3** on the same fork was asked and **not answered**. See
 ## Related
 
 - [Flash-Next status](./flash-next.md) — throughput, KV, AutoRound
-- [Serve scripts](./serve-scripts.md) — `RECIPE=flashnext-mtp2`, `flashnext-leapquant-mtp2`, and the other in-tree configs
+- [Serve scripts](./serve-scripts.md) — `RECIPE=flashnext-mtp2`, `flashnext-leapquant-mtp2`, `flashnext-gguf-mtp0`, and the other in-tree configs
 - [Hub `-extras` TP4](./recipes.md#hub--extras-tp4-qwen38-27b-awq) — the non-Flash-Next 27B block
 - [Configuration](./configuration.md)
 - [vLLM forks](./fork.md)

@@ -51,6 +51,7 @@ Copy one and change only the deltas to add a config.
 | `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. Daily 4× path. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. `#107` (16 Oct): `GPU_MAX_HW_QUEUES=4` on Flash-Next **TP4** recipes (launcher default stays **2**). `#130` (19 Oct): HIP set **on** by default (not Hub). Opt-in MonoKernel: `EXTRA_ARGS="--monokernel"` — [serve](flash-next-serve.md#flash-next-monokernel). |
 | `flashnext-dflash2` | Flash-Next AWQ-W4A16 + **DFlash2** BF16 drafter. Merged [`#132`](https://github.com/opengfx1030/vllm-rdna/pull/132) (21 Oct). **Not** Hub. MTP-2 still faster in the PR A/B. | Same TP4 / graphs family as `flashnext-mtp2`. Default **3** draft tokens; `DFLASH_TOKENS=2` for the measured 16k c=8 ladder. Recipe sets `EXTRA_ARGS=--monokernel`. — [DFlash2](flash-next-serve.md#flash-next-dflash2). |
 | `flashnext-leapquant-mtp2` | Flash-Next AWQ-W4A16 + **LeapQuant** INT8 GDN state. Merged [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov) + [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov). **Opt-in, lossy.** **Not** Hub. Daily path stays `flashnext-mtp2`. Pull HEAD after [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172). | Same TP4 / MTP=2 / `FULL_AND_PIECEWISE` family, but **block size 512** and `REPLAYSSM_STATE_DTYPE=leapquant`. Recipe sets `EXTRA_ARGS=--monokernel`. Do **not** export `VLLM_RDNA_GDN_LEAPQUANT`. — [LeapQuant](flash-next-serve.md#flash-next-leapquant). |
+| `flashnext-gguf-mtp0` | Flash-Next **UD-Q4_K_XL GGUF** (`--load-format qwen4exp_gguf`). Merged [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) / [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (16 Nov). **Not** Hub. MTP=0, text only. | Port **18096**, TP=4, `MAXLEN=32768`, KV **2 GiB**. **`GGUF_DIR` required** (shard folder). `MODEL` is the HF config/tokenizer dir, not the GGUF. Needs [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) (GHCR nightly after `#189` has it). — [GGUF](flash-next-serve.md#flash-next-gguf). |
 | `flashnext-mtp0` | Same family, **MTP=0**. Recipe note: MTP=0 wins at **8×1k / 512, c=8** (short prompts). | Same ports and graphs as `flashnext-mtp2`, with `MTP=0`. |
 | `flashnext` | Flash-Next **production** stack: tools + reasoning, six in-flight sequences. Separate from `flashnext-mtp0`. | Port **18094**, `--host 0.0.0.0`, CLI entry, KV **7000000000**, `gpu-memory-utilization 0.90`, block size **1024**, `ATTN=fa`, V2 runner. |
 | `flashnext-exl3` | Flash-Next **EXL3** ([`turboderp/Qwen3.8-Flash-Next-exl3`](https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3)). Merged [`#117`](https://github.com/opengfx1030/vllm-rdna/pull/117) (17 Oct). **Not** Hub. | Port **18094**, TP=4, **MTP=0**, `PLE=exl3`, expert-parallel on, `FULL_AND_PIECEWISE`, AOT compile **off**. Drafts `#122`/`#123`/`#124` for MTP/vision/MoE. |
@@ -232,6 +233,11 @@ Solver IDs are build-specific. The helper
 - Lookup is read-only (`PYTORCH_TUNABLEOP_TUNING=0`). The helper does not write rows to `/tmp` or the process CWD. If no profile matches, it uses a legacy `rocblas-<hash>/` folder when that folder exists, then `$HOME/.cache/tunableop/tunableop_results.csv`.
 - `TUNABLEOP=0` turns lookups off (`PYTORCH_TUNABLEOP_ENABLED=0`) for an A/B against the heuristic.
 - `PRINT=1` reports which profile it would pick, including “NOT registered” if `TUNABLEOP_PROFILE` is unknown.
+- Merged [`#173`](https://github.com/opengfx1030/vllm-rdna/pull/173) (16 Nov): per-rank CSVs of
+  `rocm7.14-rocblas5.5` (and the HI2 TP2 profile) now **agree per key**. Pre-fix, 531 of 3,330
+  keys named different rocBLAS solutions on different ranks, so a 1023-row router GEMM could
+  pick different top-k experts. Data-only; `rocm10-rocblas5.6` already agreed. —
+  [rank agreement](../troubleshooting/vllm.md#tunableop-rank-agreement).
 
 ### ROCm 10 and rocBLAS 5.6
 
@@ -326,3 +332,4 @@ trailing `KEY=value`:
 - [Flash-Next serve lines](flash-next-serve.md) — graph modes and PLE
 - [Environment variables](../reference/env-vars.md)
 - [TunableOp mismatch](../troubleshooting/vllm.md#tunableop-rocblas-mismatch)
+- [TunableOp rank agreement](../troubleshooting/vllm.md#tunableop-rank-agreement) (`#173`)

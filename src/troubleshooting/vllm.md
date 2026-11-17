@@ -117,6 +117,16 @@ honoured when no registered profile matches.
 
 Do not commit a host-specific CSV into the wiki. Do not copy another machine’s library hash.
 
+### TunableOp rank files disagree {#tunableop-rank-agreement}
+
+Merged [`#173`](https://github.com/opengfx1030/vllm-rdna/pull/173) (16 Nov): **data only**.
+Shipped `rocm7.14-rocblas5.5` (and the HI2 TP2 profile) now name **one** rocBLAS
+solution per key on every rank. Pre-fix, 531 of 3,330 keys disagreed, so a
+**1023-row** MoE router GEMM could pick different top-k experts (always the
+odd rank in the study). `rocm10-rocblas5.6` already agreed. Pull HEAD for the
+rewritten CSVs; no launcher change. Note:
+[`docs/rdna2/tunableop-rank-agreement-2026-11-16.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/tunableop-rank-agreement-2026-11-16.md).
+
 ## vLLM picks the wrong platform / doesn't see my Radeon
 
 Use published [`blivioniag/vllm-rdna`](../vllm/images.md) images with `patches/*rocm-platform*` fixes rather
@@ -301,6 +311,12 @@ unconfirmed. **Community / Needs verify.** See [recipes](../vllm/recipes.md#host
 **TP=4**, **Qwen3.8-27B fp16** (no quant), **ALU 0.9.4**, **512** generated tokens. **Community**,
 not wiki-tested, **not** a V620 serve recipe. Contrast the Sep 24 **0.29.0 / MTP-0** row
 (~29 → ~19 TG, ~1394 → ~560 PP) in [Verification](../reference/verification.md).
+
+`#vllm-rdna` (16 Nov): a **dual W6800X Duo** host (same gfx1030 class) reported vLLM
+peak **~72** tok/s and **~40** average at 4 concurrent requests, prefill **~1500**
+on short prompts and **~2330** at 200k ingest. Quant / recipe unstated. Maintainer
+pointed at HEAD recipes / LeapQuant. **Community / Needs verify.** Not a V620 serve
+line.
 
 **Concurrency 1**, APC off, **MTP-2**:
 

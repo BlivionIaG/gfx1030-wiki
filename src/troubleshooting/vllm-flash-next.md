@@ -277,6 +277,27 @@ not a public PR), that host saw **more even per-card power** (2 Hz sampling —
 **Needs verify** whether it calms PSU transients). That freeze / rebalance is
 **local WIP**, not a `serve_rdna.sh` flag. **Needs verify.**
 
+Merged [`#175`](https://github.com/opengfx1030/vllm-rdna/pull/175) (16 Nov): a
+**lean EPLB** study on production **TP4/EP4** Flash-Next measured decode EPLB /
+placement at **0.02–0.19%** ITL — **no-go**. Opt-in counters
+`VLLM_RDNA_EPLB_STATS_DIR` (`#176`) stay **off** unless you are collecting
+those traces. Still do **not** turn on upstream `--enable-eplb`.
+
+## Flash-Next GGUF plugin PPL / boot fault {#flash-next-gguf-plugin}
+
+HEAD after 16 Nov: `RECIPE=flashnext-gguf-mtp0` —
+[GGUF serve](../vllm/flash-next-serve.md#flash-next-gguf).
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| PPL ~**9.8** vs AWQ ~**4.8**; incoherent MoE | PyPI `vllm-gguf-plugin` MMQ kernel drops expert ids **256+** (Flash-Next has **512**) | Use [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) `rdna_extras` (GHCR nightly after `#189`). Do not use the PyPI wheel. |
+| 16k TTFT ~**21 s** instead of ~**8 s**, but PPL is fine | Seam slices large batches onto the per-slot kernel when the plugin lacks `MOE_MMQ_MAX_EXPERTS` | Same fork install. Optional `VLLM_QWEN4EXP_GGUF_MMQ_MAX_EXPERTS=512`. |
+| GPU fault at first CUDA-graph capture (`moe_vec_q`) | Plugin reads `topk_ids == -1` unchecked | HEAD seam (`#174`) routes those slots to expert 0 with weight 0. Pull after `#169`. |
+| Memory fault in `moe_q5_1` at boot | MMQ tile loader reads past packed expert weights | HEAD seam pads **4 KiB** slack when MMQ is allowed (`#174`). |
+
+`#vllm-rdna` (16 Nov) pointed people at GHCR `nightly-rocm7.14.0` for HEAD
+features; GGUF in the image needs a digest **after `#189`**.
+
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 
 `#vllm-rdna` (Sep 17): Flash-Next **hybrid** KV (main KV + GDN conv/SSM + PLE conv **per page**) can

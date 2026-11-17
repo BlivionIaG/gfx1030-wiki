@@ -18,7 +18,10 @@ those releases drop RDNA1/RDNA2. Stay on **3.7.1** until the bake moves.
 `ghcr.io/opengfx1030/vllm-rdna:nightly` from
 [`.github/workflows/docker-image.yml`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/.github/workflows/docker-image.yml)
 (`docker/Dockerfile.rdna`). That is a **HEAD snapshot**, not a new `vllm-rdna-docker` Hub
-bake — [Running](running.md#ghcr-nightly).
+bake — [Running](running.md#ghcr-nightly). Merged
+[`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (16 Nov): that Dockerfile now
+builds [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin)
+for **gfx1030** (pinned `GGUF_PLUGIN_REF`) so `flashnext-gguf-mtp0` works in the image.
 
 ## Layout
 

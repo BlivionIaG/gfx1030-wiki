@@ -101,7 +101,7 @@ src/
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
 | First V620 vLLM serve (Docker or fork) | `vllm/onboarding.md` |
-| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`; MonoKernel: `#flash-next-monokernel`) |
+| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`; MonoKernel: `#flash-next-monokernel`; GGUF: `#flash-next-gguf`) |
 | Fork `tools/rdna/serve_rdna.sh` recipes | `vllm/serve-scripts.md` |
 | llama.cpp vs vLLM | `choose-a-stack.md` |
 | Cilla / Maya HIP (not vLLM) | `choose-a-stack.md` + `meta/resources.md` |

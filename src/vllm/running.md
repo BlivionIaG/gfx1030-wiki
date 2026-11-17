@@ -60,7 +60,12 @@ with **CUDA graphs broken**; pull a digest after the 2 Nov PLE graph fix **and**
 [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172) (16 Nov GDN boot fix) or stay on
 Hub 0.31 — [troubleshooting](../troubleshooting/vllm.md#033-nightly-ple-cuda-graphs).
 `#vllm-rdna` (16 Nov): `:nightly-rocm7.14.0` is the tag the maintainer pointed at for
-current LeapQuant + HI2 HEAD. GHCR may require org package access.
+current LeapQuant + HI2 HEAD. After [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189)
+the image also carries [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin)
+(gfx1030), so `RECIPE=flashnext-gguf-mtp0` can run in it. `#vllm-rdna` (16 Nov): maintainer
+said the GHCR packages were made **public**; this digest run’s anonymous manifest HEAD still
+returned **401** — treat anonymous pull as **Needs verify**. GHCR may still require org
+package access.
 
 **Multi-GPU:** pick a **7.2.0** or **7.14.0** tag, not a host ROCm in the 7.2.1–7.13 gap. RCCL on
 those in-between releases is reported broken with more than one card — see

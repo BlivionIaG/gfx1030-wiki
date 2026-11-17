@@ -2,7 +2,7 @@
 
 > **WIP snapshot:** Readable status of
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`.
-> Dated **16 Nov 2026** from public merges + `#vllm-rdna` / `#announcements`.
+> Dated **17 Nov 2026** from public merges + `#vllm-rdna` / `#announcements`.
 > Kernel file lists and older chronicle rows stay on [Fork landscape](fork.md).
 > See [Verification status](../reference/verification.md#vllm-fork-progressmd).
 
@@ -17,7 +17,7 @@
 
 Published Hub tags **lag HEAD**. If a row says “Not Hub”, do not expect it on
 `blivioniag/vllm-rdna:v0.31.0-extras` until a newer extras bake. Org GHCR
-`nightly` tracks `rdna_extras` tip (may need GHCR auth).
+`nightly` tracks `rdna_extras` tip (anonymous pull **Needs verify**; this run still 401).
 
 ## Shipped in Hub `v0.31.0-extras` (11 Oct)
 
@@ -93,6 +93,9 @@ readiness). No new Hub extras tag. Author: prefill looked better on 0.32 than
 | [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov) | LeapQuant **config flag** `--replayssm-state-dtype leapquant` (replaces `VLLM_RDNA_GDN_LEAPQUANT`; no alias) | Packing `VLLM_RDNA_GDN_LEAPQUANT_PACK=1` is a **no-op** at block 512. Same KV as `#168`. **Not** Hub. |
 | [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov) | **HI2** 27B TP=2 recipes `27b-hi2-tp2` / `27b-hi2-tp2-mtp2` | 2× V620 only. Switches off in code. **Not** Hub. [Quantization](quantization.md) |
 | [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172) (16 Nov) | `gdn_attn` import after `#170`+`#171` | Without this, **no GDN model boots**. Pull HEAD / GHCR nightly **after** this merge. |
+| [`#173`](https://github.com/opengfx1030/vllm-rdna/pull/173) (16 Nov) | TunableOp **rank files agree per key** | Data-only. Pre-fix, 531 keys disagreed across ranks (1023-row router GEMM). `rocm10-rocblas5.6` already agreed. [Rank agreement](../troubleshooting/vllm.md#tunableop-rank-agreement). |
+| [`#175`](https://github.com/opengfx1030/vllm-rdna/pull/175) / [`#176`](https://github.com/opengfx1030/vllm-rdna/pull/176) (16 Nov) | Lean **EPLB** study + opt-in load counters | Decode EPLB / placement **no-go** at TP4/EP4 (ITL gain **0.02–0.19%**). Counters: `VLLM_RDNA_EPLB_STATS_DIR` (unset = off). Still skip upstream `--enable-eplb`. |
+| [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) / [`#174`](https://github.com/opengfx1030/vllm-rdna/pull/174) / [`#177`](https://github.com/opengfx1030/vllm-rdna/pull/177) / [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (16 Nov) | Flash-Next **GGUF** `RECIPE=flashnext-gguf-mtp0` | `--load-format qwen4exp_gguf`, UD-Q4_K_XL, MTP=0. Needs [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) (image after `#189`). **Not** Hub. [GGUF](flash-next-serve.md#flash-next-gguf). |
 
 ## Open backlog (selected)
 
@@ -113,21 +116,22 @@ Do **not** treat drafts as recipes. Full list:
 | GLM-5.3 / Glm5Next | Drafts [`#51`](https://github.com/opengfx1030/vllm-rdna/pull/51) / [`#133`](https://github.com/opengfx1030/vllm-rdna/pull/133) | Correctness WIP |
 | Tiered expert budgets + hybrid KV paging | Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148) | `#vllm-rdna` (30 Oct): follow-up to merged `#146`. Live paging **stalls**; PR stays **draft** until mixed-workload gaps look acceptable. **Not** a recipe. |
 | RidgeFill late-layer cache fill | Open [`#155`](https://github.com/opengfx1030/vllm-rdna/pull/155) | `#vllm-rdna` (4–6 Nov) + PR verdict **6 Nov**: opt-in `VLLM_RDNA_RIDGEFILL` **defaults off**. Fill path is exact; **no map set met the quality gate**. **Not** a recipe. |
-| Flash-Next GGUF loader | Open [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) | Native `load_format=qwen4exp_gguf` for mixed-quant Flash-Next shards. **Not merged.** `#welp` (16 Nov) pointed a Mac Pro / W6800X host at it. **Not** a recipe. |
+| Native oQ6e kernels | Draft [`#178`](https://github.com/opengfx1030/vllm-rdna/pull/178) | `#vllm-rdna` (16 Nov): still **not** a serve path. Public HF packs exist; HIP recipe does not. [Quantization](quantization.md). |
 
 `#vllm-rdna` (21 Oct): community DeepSeek-V4-Flash correctness write-up on a fork of
 `rdna_extras` (bf16→fp16 cast, logits all-gather, EP routing). In-tree
 `RECIPE=dsv4-flash` still **Needs verify** — [serve](flash-next-serve.md#deepseek-v4-flash).
 
-## Practical defaults (16 Nov)
+## Practical defaults (17 Nov)
 
 | Goal | Prefer |
 |---|---|
 | Docker / least friction | Hub **`v0.31.0-extras`** (still the published bake) |
-| HEAD / 0.33 kernels in Docker | Org GHCR **`nightly`** / `:nightly-rocm7.14.0` — pull a digest **after `#172`** (16 Nov GDN boot fix), or clone |
+| HEAD / 0.33 kernels in Docker | Org GHCR **`nightly`** / `:nightly-rocm7.14.0` — pull a digest **after `#189`** (16 Nov GGUF plugin in the image), or clone. Anonymous GHCR pull **Needs verify**. |
 | 4× Flash-Next day-to-day on HEAD | `RECIPE=flashnext-mtp2` (+ HIP defaults from `#130`) |
 | Faster Flash-Next decode experiment | `EXTRA_ARGS="--monokernel"` — A/B ITL; regenerate TunableOp if PP cliffs |
 | 3× Flash-Next | `RECIPE=flashnext-pp3` or `flashnext-pp3-mtp2` (HEAD only; 16 Nov: not recently re-tested — prefer `nightly-rocm7.14.0`) |
+| Flash-Next GGUF (HEAD) | `RECIPE=flashnext-gguf-mtp0` + `GGUF_DIR=` (plugin fork, not PyPI). **Not** Hub. |
 | Longer KV on QSA path | `--kv-cache-dtype int4_fp16_block` (HEAD; opt-in) |
 | 2× Flash-Next (weights do not fit) | HEAD `tools/rdna/mono/serve_offload.sh` (`#146`) — **Needs verify** on a second host. llama.cpp RAM/MoE offload remains the non-HEAD path. |
 | 27B AWQ prefill | `RECIPE=27b-awq` with HEAD `W4A8=1` (recipe default after `#140`) |

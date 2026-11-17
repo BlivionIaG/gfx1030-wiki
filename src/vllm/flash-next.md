@@ -11,7 +11,7 @@
 | [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
-| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [LeapQuant](./flash-next-serve.md#flash-next-leapquant), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [LeapQuant](./flash-next-serve.md#flash-next-leapquant), [GGUF](./flash-next-serve.md#flash-next-gguf), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
 | [Serve scripts](./serve-scripts.md) | `serve_rdna.sh RECIPE=flashnext-mtp2` and siblings |
 | [Fork progress](./fork-progress.md) | Hub vs HEAD vs open drafts |
 
@@ -65,6 +65,12 @@ kept **native MTP-2 faster**; use DFlash2 only if you want that drafter —
 Do **not** set `VLLM_RDNA_GDN_LEAPQUANT` —
 [LeapQuant](./flash-next-serve.md#flash-next-leapquant).
 
+**4× V620 + GGUF (`#169` / `#189`, 16 Nov):** `RECIPE=flashnext-gguf-mtp0` on HEAD. Unsloth
+**UD-Q4_K_XL** shards, `--load-format qwen4exp_gguf`, MTP=0, text only. Needs the
+[`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) fork (PyPI
+plugin drops experts 256+). **Not** Hub. Still **no Q3** GGUF path —
+[GGUF](./flash-next-serve.md#flash-next-gguf).
+
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer
 **`FULL_AND_PIECEWISE`** (compile `mode: 3`) — uniform decode uses the **FULL** CUDA graph (same
 live path as `#17` **`FULL_DECODE_ONLY`**); mixed/prefill use piecewise. See
@@ -78,7 +84,7 @@ decode **corrupt** stayed on **`PIECEWISE`** —
 [FULL-graph corruption](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption) /
 [Sep 17 serve line](./flash-next-serve.md#flash-next-4x-piecewise). Community snapshot on that older
 recipe: **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3**
-path on vLLM.
+path on vLLM (HEAD GGUF is **UD-Q4_K_XL**, not Q3).
 
 **6× V620 Flash-Next (`#vllm-rdna` Sep 24):** **minimum 3** cards. Maintainer starting points:
 **`PP=3` + `TP=2`** (six GPUs) or **`PP=6`**. Prefer **power-of-2 tensor parallel** over `PP=2` +
