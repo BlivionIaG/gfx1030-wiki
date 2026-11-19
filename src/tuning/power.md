@@ -140,6 +140,13 @@ high-end Nvidia reference; with a **180 W** cap after the floor unlock, the same
 that. Cap at **160 / 140 W** mainly for PSU headroom, not because 180 W is slow. `#general` (Sep 2026)
 similarly calls **~120–170 W** the practical sweet spot — little gained above that for the extra watts.
 
+`#vllm-rdna` (18 Nov): on one **4× V620** MoE **TP4** host, **decode did not scale with the
+power cap**. Concurrency-1 decode sat at **~30–42 W** and stayed flat (**median ~131 tok/s**)
+from **125 W** upward. Prefill did: **~1724 → ~2495** tok/s from the floor to **250 W**
+(independent pass **~1681 → ~2510**). tok/s per watt peaked at the **120 W** floor. Community
+follow-up: **250 → 300 W** can add ~**10%** prefill only when the kernel is well optimized.
+Matches the **120–170 W** sweet-spot advice for decode-heavy work. **Needs verify.**
+
 Undervolt experiments exist; community: about **−25 mV** was stable for one host, while more aggressive
 settings started emitting **random tokens**. `#vllm-rdna` (27 Oct): looping **`!!!!`** tokens
 reproduced on one host with **undervolt larger than ~20 mV** or **core above ~2479 MHz**.
