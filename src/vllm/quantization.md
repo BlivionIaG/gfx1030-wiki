@@ -200,6 +200,13 @@ recipes** — [serve scripts](serve-scripts.md). Guide:
 Do not treat hi2 as a Hub day-to-day path — kernels stay on the RDNA2 fork, not a
 second clone.
 
+`#benchmarks` (20 Nov): a **second 2× V620** host (Haswell-era **X99**, PCIe **3.0** x8+x16,
+**ROCm 7.2.4**) booted `RECIPE=27b-hi2-tp2` with **MAXBAT=256**. Single-stream decode sat next
+to the `#171` scoreboard (~**44** vs ~**45** tok/s at 1k/512 c=1); **prefill and TTFT** were
+slower. **Community / Needs verify** — not a retraction of the author-host 7.14 table. Prefer
+**7.2.0 or 7.14.0** for TP — [ROCm pin](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+Pack author: a same-size quality pass is still in flight. — [community table](recipes.md#community-2x-hi2-tp2).
+
 `#vllm-rdna` (12–15 Nov): **oQ6e** Flash-Next packs are public on Hugging Face (search
 [`Qwen3.8-Flash-Next-oQ6e`](https://huggingface.co/models?search=Qwen3.8-Flash-Next-oQ6e);
 one listed pack is

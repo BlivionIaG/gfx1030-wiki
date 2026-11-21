@@ -75,6 +75,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Flash-Next vLLM PP4 ~1950 PP / decode collapse | **Needs verify** | `#vllm-rdna` Sep 19 — same host returned to TP4 (~1550 PP; ~30–35 t/s MTP-2) |
 | QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Needs verify** | `#vllm-rdna` Sep 20 author-host table + merged `opengfx1030/vllm-rdna#15`. Sep 21: other 4× hosts on `#15` only got **~1.1–1.45k** PP. The unpublished recovery is **`#17`** (merged 23 Sep) |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
+| HI2 `27b-hi2-tp2` second 2× host | **Community / Needs verify** | `#benchmarks` 20 Nov — X99 2× V620, ROCm 7.2.4, MAXBAT=256. 1k c=1 PP **463** / TG **44**; 16k c=1 PP **441** / TG **33**. Decode ~`#171`; prefill not |
 
 ### `configuration.md`
 
@@ -272,6 +273,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Snapshot dated 16 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` |
 | LeapQuant `#168` / `#170` / `#172` on HEAD | **Fork-source** | `#168` 14 Nov recipe; `#170` 15 Nov flag rename; `#172` 16 Nov GDN boot fix. Not Hub |
 | HI2 `#171` 27B TP=2 recipes | **Fork-source** | Merged 15 Nov; `27b-hi2-tp2` / `27b-hi2-tp2-mtp2`. 2× only. Not Hub |
+| HI2 2× X99 second-host bench | **Community / Needs verify** | `#benchmarks` 20 Nov — `RECIPE=27b-hi2-tp2`, ROCm 7.2.4, MAXBAT=256, PCIe 3.0 x8+x16. Decode ~44 t/s at 1k c=1 vs `#171` ~45; PP/TTFT slower. Not a retraction of the 7.14 scoreboard |
 | Hub `v0.31.0-extras` feature set | **Fork-source** | `#announcements` 11 Oct |
 | HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
 | Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
@@ -464,7 +466,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` `--kv-offloading-size` | **Community / Needs verify** | `#vllm-rdna` Oct 7 — 64 GiB total RAM parking; SSD untested |
 | `troubleshooting/vllm.md` / Flash-Next KV-restore loops | **Community / Needs verify** | `#vllm-rdna` 25–26 Oct — token-repeat after MTP off; 26 Oct: CPU-RAM KV + prefix cache OK when **disk** KV offload is off |
 | `troubleshooting/vllm.md` repeating `!!!!` tokens | **Community / Needs verify** | `#vllm-rdna` 27 Oct — UV >~20 mV or core >~2479 MHz; memtest_vulkan + dmesg ECC. 1–2 Nov: also PLE CUDA-graph freeze on early 0.33 nightly — **Fork-source** |
-| `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community / Fork-source** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4. 12 Nov: TP4/TP8 hi2 export ranks not shipped. 15 Nov: `#171` merged `27b-hi2-tp2` / `27b-hi2-tp2-mtp2` (2× HEAD; **not** Hub) |
+| `vllm/quantization.md` EXL3 vs AWQ / hi2 | **Community / Fork-source** | `#vllm-rdna` / `#hi2` 27 Oct — EXL3 size/quality, AWQ speed; hi2 `rdna_hint_flex` public. 30 Oct + public README: Hadamard + QAD, quality target, 3 bpw compact maybe aggressive. 1 Nov: public `Qwen3.8-27B-HI2-3.0bpw` (~15 GiB); tool-call weaker than AWQ INT4. 12 Nov: TP4/TP8 hi2 export ranks not shipped. 15 Nov: `#171` merged `27b-hi2-tp2` / `27b-hi2-tp2-mtp2` (2× HEAD; **not** Hub). 20 Nov `#benchmarks`: second 2× host booted the recipe (ROCm 7.2.4; decode ~matched, PP slower) |
+| `setup/hardware.md` / `meta/resources.md` YuE2 ROCm V620 | **Community / Needs verify** | `#general` 20 Nov + public `franktheglock/yue2-rocm-v620`. Community ~4× realtime on 1× V620; README 120 s song in ~25 s. Not an LLM recipe |
 | `vllm/quantization.md` oQ6e Flash-Next | **Needs verify** | `#vllm-rdna` 12–15 Nov — public HF `Qwen3.8-Flash-Next-oQ6e*` packs; gfx1030 first inference ~10 tok/s PP; later MLX-side tinkering. 16 Nov: draft `#178` still open; one-host TP8/MTP2 ~680–708 PP / ~68–69 TG — **not** a HIP recipe |
 | `vllm/quantization.md` / `flash-next-serve.md` LeapQuant `#168` / `#170` | **Fork-source** | `#168` merged 14 Nov; `#170` 15 Nov replaces env with `--replayssm-state-dtype leapquant` (no alias; launcher exits on old env). Recipe `flashnext-leapquant-mtp2`; packing no-op at block 512. Author-host 1k c=1 −6.6%; 32k c=8 +20% confounded with admission. Not Hub. `#vllm-rdna` 14 Nov: not a portable CUDA/MI300 port |
 | `vllm/quantization.md` LeapQuant RFC vs HIP | **Community / Fork-source** | `#general` 12–13 Nov RFC [vLLM #64725](https://github.com/vllm-project/vllm/issues/64725) / [arXiv 2609.38166](https://arxiv.org/abs/2609.38166) is NVIDIA / MI355X. Pre-merge TP4 host: no low-concurrency gain. Retracted “not in `rdna_extras`” after `#168` |
@@ -484,7 +487,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` `#117` / `#137` / `#138` / `#140` | **Fork-source** | Merged 17–26 Oct; EXL3 Flash-Next, MTP mono, INT4 KV, W4A8 default. Not Hub |
 | `vllm/fork.md` / `flash-next-serve.md` `#146` TP2 MoE offload | **Fork-source** | `#146` merged 28 Oct; `serve_offload.sh`; author-host 2× V620 16k/1024 ~19.8 / ~26.7 agg. Not Hub. **Needs verify** on a second host |
 | `vllm/fork.md` / `flash-next-serve.md` `#168`/`#170`/`#172` LeapQuant | **Fork-source** | `#168` 14 Nov; `#170` 15 Nov flag; `#172` 16 Nov boot fix. Recipe `flashnext-leapquant-mtp2`. Not Hub |
-| `vllm/fork.md` / `serve-scripts.md` `#171` HI2 | **Fork-source** | `#171` 15 Nov; `27b-hi2-tp2*`; 2× V620. Not Hub |
+| `vllm/fork.md` / `serve-scripts.md` `#171` HI2 | **Fork-source** | `#171` 15 Nov; `27b-hi2-tp2*`; 2× V620. Not Hub. 20 Nov `#benchmarks` second-host boot is **Community / Needs verify** |
 | `vllm/fork.md` / `flash-next-serve.md` GGUF `#169`/`#189` | **Fork-source** | 16 Nov; `flashnext-gguf-mtp0`; plugin fork. Not Hub |
 | `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 17 Nov Hub vs 0.33 HEAD vs GHCR nightly vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs backlog |
 | `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; anonymous GHCR pull not confirmed |

@@ -30,7 +30,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 | Cards | Community starting point (`#vllm-rdna`) |
 |---|---|
 | **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). **GLM-5.3-Flash** is an **8×** community path, not 1-card even with 256 GB host RAM — [GLM-5.3-Flash](#glm-53-flash). |
-| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` / a [host-venv](host-venv.md) clone with `--tensor-parallel-size 2`. HEAD after [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov): **HI2** `RECIPE=27b-hi2-tp2` / `27b-hi2-tp2-mtp2` for [`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw) — [serve scripts](serve-scripts.md). **Not** Hub. `#vllm-rdna` (Sep 26): one host built `vllm-rdna` from source and served **cyankiwi 27B AWQ-INT4** TP=2 — [community table](#host-venv-tp2-qwen38-27b-awq). `#vllm-rdna` (Oct 6): **Qwen3.8-27B fp16** TP=2 + MTP **~40–48 t/s** single-stream; a **Swift 1.5** 27B tune on the same layout **~48 t/s** single / **~70 t/s** across two instances — **not** Flash-Next. `#vllm-rdna` (5 Nov): with only **~16 GB** host RAM, community still pointed at **Qwen3.8 27B**, not Flash-Next (PLE + experts want tens of GB DRAM). **Flash-Next** on 2 cards still needs host RAM for experts: HEAD after [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct) has `tools/rdna/mono/serve_offload.sh` — [2× offload](flash-next-serve.md#flash-next-2x-moe-offload). That is **not** a Hub / `serve_rdna.sh` recipe. llama.cpp RAM/MoE offload remains the non-HEAD path (`#vllm-rdna` Sep 14) — [llama.cpp 2×](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4). |
+| **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` / a [host-venv](host-venv.md) clone with `--tensor-parallel-size 2`. HEAD after [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov): **HI2** `RECIPE=27b-hi2-tp2` / `27b-hi2-tp2-mtp2` for [`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw) — [serve scripts](serve-scripts.md). **Not** Hub. `#benchmarks` (20 Nov): a second 2× host booted that recipe — [community table](#community-2x-hi2-tp2). `#vllm-rdna` (Sep 26): one host built `vllm-rdna` from source and served **cyankiwi 27B AWQ-INT4** TP=2 — [community table](#host-venv-tp2-qwen38-27b-awq). `#vllm-rdna` (Oct 6): **Qwen3.8-27B fp16** TP=2 + MTP **~40–48 t/s** single-stream; a **Swift 1.5** 27B tune on the same layout **~48 t/s** single / **~70 t/s** across two instances — **not** Flash-Next. `#vllm-rdna` (5 Nov): with only **~16 GB** host RAM, community still pointed at **Qwen3.8 27B**, not Flash-Next (PLE + experts want tens of GB DRAM). **Flash-Next** on 2 cards still needs host RAM for experts: HEAD after [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct) has `tools/rdna/mono/serve_offload.sh` — [2× offload](flash-next-serve.md#flash-next-2x-moe-offload). That is **not** a Hub / `serve_rdna.sh` recipe. llama.cpp RAM/MoE offload remains the non-HEAD path (`#vllm-rdna` Sep 14) — [llama.cpp 2×](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4). |
 | **3× V620** | vLLM **tensor parallel needs an even world size**. Use **pipeline parallel 3** (`PP=3`, `TP=1`). Current `rdna_extras` HEAD: `RECIPE=flashnext-pp3` / `flashnext-pp3-mtp2` — [PP3 recipes](./flash-next-serve.md#flash-next-3x-pp3). Hub **`v0.31.0-extras`** (11 Oct) **lags** those recipes. `#vllm-rdna` (16 Nov): PP3 **not recently re-tested**; prefer GHCR `nightly-rocm7.14.0` after `#172`. Older pins corrupted PP3 output — [corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror). llama.cpp can still report TP across three cards (TP3 has [crash notes](../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub **`v0.31.0-extras`** is the current extras bake. **Needs verify** on a second host. Same **gfx1030** class: `#benchmarks` (Oct 10) **4× W6800X Duo**, vLLM **0.30.0** TP4, Qwen3.8-27B **fp16**, ALU **0.9.4**, **MTP-2** — [community table](../troubleshooting/vllm.md#w6800x-duo-alu-093). Not a V620 serve line. |
 | **6× V620** | Flash-Next **minimum is 3** cards. `#vllm-rdna` (Sep 24): start with **`PP=3` + `TP=2`** or **`PP=6`**; keep **TP power-of-2** (avoid `PP=2` + `TP=3` as the first try). Clone HEAD + [host venv](host-venv.md) — Hub tags lag. Disagg prefill/decode across switches is open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) (**Needs verify**). |
@@ -54,6 +54,7 @@ Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx10
 | Model | Cards | Stack | Notes |
 |---|---|---|---|
 | [`cyankiwi/Qwen3.8-27B-AWQ-INT4`](https://huggingface.co/cyankiwi/Qwen3.8-27B-AWQ-INT4) | 1–4× | Hub `-extras` or recipe preset | Current day-to-day **27B** pick in `#vllm-rdna` (Sep 13 2026). compressed-tensors AWQ. |
+| [`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw) | **2×** | `rdna_extras` HEAD `RECIPE=27b-hi2-tp2` | Merged `#171` (15 Nov). **Not** Hub. Second-host `#benchmarks` (20 Nov) — [community table](#community-2x-hi2-tp2). |
 | [`btbtyler09/Qwen3.8-27B-GPTQ-4bit`](https://huggingface.co/btbtyler09/Qwen3.8-27B-GPTQ-4bit) | 2×+ | Recipe `preset:qwen38-27b-gptq` or Hub `-extras` | Recipe **reference** preset; native GPTQ → `RDNA2W4A16` on `-extras`. |
 | [`Pilcothink/Qwen3.8-27B-MixedInt4-AutoRound`](https://huggingface.co/Pilcothink/Qwen3.8-27B-MixedInt4-AutoRound) | 2× | Recipe builds/ | AutoRound MixedInt4 sibling in the recipe book. |
 | [`Intel/Qwen3.5-122B-A10B-int4-AutoRound`](https://huggingface.co/Intel/Qwen3.5-122B-A10B-int4-AutoRound) | 3–4× | Recipe builds/ (not a one-line preset) | MoE 122B — needs recipe wrapper / weight prep; see build `BUILD.md`. |
@@ -163,6 +164,35 @@ recipe preset. This table is only the **two-card / source-build** snapshot.
 [Flash-Next Swift packs](flash-next.md#swift-15-flash-next)) on the same card count was **~48 t/s**
 single-stream and **~70 t/s** across two instances. **Community / Needs verify.** Concurrency
 notes for wvSplitK vs stacked LLMM1: [troubleshooting](../troubleshooting/vllm.md#wvsplitk-concurrency).
+
+### Community 2× HI2 TP=2 (`#benchmarks`, 20 Nov) {#community-2x-hi2-tp2}
+
+`#benchmarks` (20 Nov): a **Haswell-era X99** host served
+[`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw)
+with HEAD recipe **`27b-hi2-tp2`** (MTP=0) via `tools/rdna/port_v031/serve_validate.sh`,
+**MAXLEN=32768**, **MAXBAT=256**. **2× V620**, Ubuntu 24.04, kernel **7.0.0-34-generic**,
+**ROCm 7.2.4** (HIP 7.2 / torch 2.14.1+rocm7.2 / Triton 3.8.0), PCIe **3.0** x8+x16,
+`rdna_extras` pin `1e1cac5340`. **Community / Needs verify.** This is **not** the `#171`
+author-host 7.14 scoreboard — decode at 1k c=1 is close; **prefill and TTFT are slower**.
+Prefer **ROCm 7.2.0 or 7.14.0** for TP
+([pin](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140)). Do not copy that
+host’s env paste as a recipe (`VLLM_USE_BREAKABLE_CUDAGRAPH=1` is a Flash-Next anti-pattern
+and may not belong on HI2 either — use `PRINT=1` on `serve_rdna.sh`).
+
+| Cell | Community PP / TG (tok/s) | TTFT | `#171` MTP=0 ballpark (author-host) |
+|---|---|---|---|
+| 1k × 512, c=1 | **463** / **44.1** (agg 37.1) | 2.21 s | PP ~737 / decode ~45.2 / TTFT ~1.39 s |
+| 1k × 512, c=8 | **179** / **16.2** (agg **110**) | 5.73 s | output ~135–148 tok/s |
+| 16k × 1k, c=1 | **441** / **32.9** (agg 15.0) | 37.2 s | PP ~720 / decode ~34.9 / TTFT ~22.8 s |
+| 16k × 1k, c=8 | **209** / **3.94** (agg 24.0) | 78.4 s | output ~29–35 tok/s |
+
+Community probes on that boot: prefix-cache TTFT **2.0×** (4.28 s → 2.12 s), concurrency
+determinism **45/48** bit-identical (0 failures), **0** amdgpu faults. A 261-token PPL of
+**5.73** is a **different probe** than `#171` long-context PPL **~3.66** — not a quality
+retraction. Pack author: a same-size quality pass is still in flight.
+
+Day-to-day HI2 path is still clone HEAD + [`serve_rdna.sh`](serve-scripts.md)
+`RECIPE=27b-hi2-tp2`. **Not** Hub.
 
 ---
 
