@@ -70,9 +70,12 @@ least one host; the Triton wheel for that userspace is **unconfirmed**. `#vllm-r
 (30 Oct): maintainer called **ROCm 10 and 7.14 the same** for day-to-day serving;
 another host is already serving on 10 with no issues so far. That is **not** a
 reason to wipe a working 7.14 box. One **10.1** host-venv attempt failed before a
-clean 7.14 retry — **Needs verify**, not a 10.1 ban. Day-to-day gfx1030 multi-GPU
-advice is still: **prefer 7.14.0** (or 7.2.0) unless you are deliberately
-lab-testing 10.x.
+clean 7.14 retry — **Needs verify**, not a 10.1 ban. `#vllm-rdna` (16 Nov):
+maintainer still **has not switched** the day-to-day vLLM box to ROCm 10
+(**virtually no gain**, TunableOp redo). Community llama.cpp **did** see a ROCm
+10 improvement — not a vLLM pin. Same thread: a **10.1** from-source **PP3**
+serve spit **gibberish**. Day-to-day gfx1030 multi-GPU advice is still:
+**prefer 7.14.0** (or 7.2.0) unless you are deliberately lab-testing 10.x.
 
 ## Notes & gotchas
 

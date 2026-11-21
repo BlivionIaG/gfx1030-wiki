@@ -18,9 +18,15 @@ path blindly. Community: **ROCm 10 serves**; the maintainer has **not** pinned a
 Triton wheel for that userspace yet. `#vllm-rdna` (30 Oct): **ROCm 10 and 7.14**
 were called the **same** for day-to-day serving — do not reinstall just to chase
 10.x. One **10.1** host-venv attempt failed (`libnuma` / optional HIP package
-path mess) before a clean 7.14 retry — **Needs verify**. Stay on the bake pins
-below unless you are A/B-ing 10.x. TunableOp already has a thin ROCm 10 profile —
+path mess) before a clean 7.14 retry — **Needs verify**. `#vllm-rdna` (16 Nov):
+maintainer still sees **no vLLM gain** on 10.x; a **10.1** from-source **PP3**
+host produced **gibberish**. Prefer GHCR `nightly-rocm7.14.0` for current HEAD.
+Stay on the bake pins below unless you are A/B-ing 10.x. TunableOp already has a
+thin ROCm 10 profile —
 [serve scripts](serve-scripts.md#rocm-10-and-rocblas-56).
+`#general` (9–10 Nov): a **Gentoo** host compiled the fork and served the
+recommended Flash-Next AWQ-W4A16 pack on **4× V620** (EPYC 7663, 128 GB RAM).
+First-run tok/s are **not** a recipe. **Needs verify.**
 
 The image bake lists seven gfx targets. A gfx1030-only venv can set `PYTORCH_ROCM_ARCH=gfx1030`.
 

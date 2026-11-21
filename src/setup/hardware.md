@@ -37,6 +37,31 @@ per dollar) — mixed decode gains were small and **prefill collapsed**. Prefer 
 
 All of these are on the **officially supported** list for recent ROCm releases on Linux.
 
+### Stock V620 VBIOS versions {#v620-vbios}
+
+`#vllm-rdna` (9 Nov): two **stock** V620 part numbers show up in the wild and **mix** on the same
+host. Identify with `rocm-smi --showvbios` (P/N) — that does not flash anything.
+
+| VBIOS P/N | Community build | Notes |
+|---|---|---|
+| `113-D6030500-100` | 04/08/22, `020.001.000.071.018253` | Older stock (“500”) |
+| `113-D6030600-100` | 06/05/22, `020.001.000.071.018311` | Newer stock (“600”). `amdvbflash -biosfileinfo`: **NAVI21 GLXL DC D60306 GDDR6 32GB HEADLESS**, device ID **73A1**, SSID **0E34**, SVID **1002** |
+
+Community compared the April **500** and June **600** images: **perf tables are the same**. The
+~336-byte delta is mostly CRC + RSA signature. **Do not flash** 500→600 as an “upgrade.” Only a
+**newer-than-June-2022** stock image would be worth collecting. Mixed 500/600 cards: no issues
+reported.
+
+Dump a backup (still not a flash) with AMD **`amdvbflash`**:
+
+```sh
+sudo ./amdvbflash -i
+sudo ./amdvbflash -s 0 /path/to/v620-backup.rom
+```
+
+A public **D60306** dump is [`baldpope/uncategorized` `amd_v620/GD25Q80C.vbios`](https://github.com/baldpope/uncategorized/tree/main/amd_v620).
+Treat it as a community archive, **not** a flash target.
+
 ## AMD BC-250 (`gfx1013`)
 
 Headless mining APU board (Cyan Skillfish). **RDNA2**, reports as **`gfx1013`** — not Navi 21 / `gfx1030`.
@@ -73,9 +98,13 @@ on the official support matrix, but in practice they run gfx1030 kernels once yo
   (prefer `float16`). `#general` (Sep 28 2026): **ComfyUI / image-video** workflows often default
   to **bf16**. On V620 that path is HIP-emulated, so those pipelines are a poor fit — pick **fp16 /
   int8** workflows, or use a card with native bf16. Community also called video generation a
-  CUDA-world problem, not a V620 win. `#general` (30 Oct): **training** on V620 is the same
-  constraint — prefer **FP32** (or a native-bf16 card); community bf16-emulation tests had
-  drawbacks.
+  CUDA-world problem, not a V620 win. `#general` (20 Nov): **music gen** is a narrower
+  exception — public [`franktheglock/yue2-rocm-v620`](https://github.com/franktheglock/yue2-rocm-v620)
+  is a gfx1030 HIP runtime for YuE2-3B (native **FP16** NAR + W4A16/W8A16 GEMV, not vLLM).
+  Community: **~4× realtime** on **1× V620**. Author README: **120 s** 48 kHz stereo in
+  **~25 s**. **Needs verify.** Not an LLM recipe — [resources](../meta/resources.md).
+  `#general` (30 Oct): **training** on V620 is the same constraint — prefer **FP32** (or a
+  native-bf16 card); community bf16-emulation tests had drawbacks.
 
 ## How to check your GPU target
 
@@ -93,3 +122,18 @@ If the output shows `gfx1030`, everything in this wiki applies directly. If it s
 4× V620 behind a PLX switch can fail to **POST** on older workstation BIOS (community: Dell
 Precision T5820 / T7820 / T7920) even when the same kit boots on a modern desktop board. That is
 firmware MMIO High / SR-IOV work — see [Host firmware](./host-firmware.md) — not a ROCm bug.
+`#general` (3 Nov): a **Dell PowerEdge R730** never left **Enumerating PCIe devices** with a
+V620 installed (BIOS A/B did not help). Same thread: a **SuperMicro SYS-2028GR** then POSTed
+— **Needs verify**, not a recipe. `#general` (5 Nov): SYS-2028GR **cannot boot from NVMe**;
+put `/boot` on **SATA**.
+
+## EPYC LRDIMM SKUs (community) {#epyc-lrdimm}
+
+`#general` (2 Nov): on a Gigabyte **MZ32-AR0**, two Samsung LRDIMM SKUs that look like
+the same family did **not** mix. **`M386A4G40DM0-CPB0Q`** (IDT register/buffer)
+trained; **`M386A4G40DM0-CPB2Q`** (Montage buffer) never showed up. BIOS bumps
+(latest Rev1 Rome+Naples, latest Rev3 Rome+Milan) did not help. Community rule of
+thumb: older **quad-bank LRDIMMs** were validated on **Intel**; **EPYC** more
+often wants **3DS / TSV** modules from **128 GB** up. Check the board **QVL**
+and the buffer vendor on the label — do not assume a same-prefix Samsung SKU
+is a drop-in. **Needs verify** on other EPYC boards.

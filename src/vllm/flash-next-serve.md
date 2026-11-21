@@ -29,7 +29,9 @@ For agentic / long-context Flash-Next on **4× V620**, use the Flash-Next vLLM s
 Expect large **host DRAM** for the BF16 n-gram table (~**95 GB** class). INT4 pinned is a
 **~30 GB** table; `#vllm-rdna` (Oct 11) corrected an inflated **~90 GB** host-RAM figure — INT4
 sidecar working set is closer to **~35 GB**. `int4-disk` mmaps shards (`MADV_RANDOM`) so only the
-gather/dequant working set hits RAM. That is **weight** offload, not KV. Native **KV RAM overflow**
+gather/dequant working set hits RAM. That is **weight** offload, not KV. `#vllm-rdna` (5 Nov): an
+**8×** host with **~128 GB** DRAM still needed **`PLE=int4-disk`** for TP=8 / TP=4,PP=2 Flash-Next
+— pinned INT4 PLE plus the 8-rank working set did not fit. Native **KV RAM overflow**
 was broken on one 4× host (Sep 14: **128 GB** not enough); the
 fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
 [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).
@@ -37,8 +39,10 @@ Long-prompt / intermittent stalls: try `VLLM_USE_V2_MODEL_RUNNER=0` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-long-prompt-stalls).
 Throughput and KV tightness: [Flash-Next status](./flash-next.md#qwen38-flash-next-on-vllm).
 
-`#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound.
-EXL3 ~3 bpw is still **experimental** — [Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
+`#vllm-rdna` (Sep 17): there is **no Q3 / GGUF-Q3 path on vLLM**. Stay on W4A16 / AWQ / AutoRound
+for day-to-day. HEAD after 16 Nov has a **UD-Q4_K_XL** GGUF loader (not Q3) —
+[GGUF](#flash-next-gguf). EXL3 ~3 bpw is still **experimental** —
+[Quantization](quantization.md#experimental-exl3-and-quark-vllm-rdna-sep-2026).
 
 ### 4× V620 Flash-Next serve (`rdna_extras` `#17`, Sep 23) {#flash-next-4x-pr17}
 
@@ -222,6 +226,74 @@ c=1 / c=8). `#vllm-rdna` (22 Oct): maintainer still has MTP-2 ahead on agentic l
 community: DFlash2 can win short / single-user, MTP-2 under concurrency. **Fork-source**
 for the recipe; community contrast **Needs verify**. Not Hub.
 
+### 4× V620 Flash-Next LeapQuant (`#168` / `#170`, 14–15 Nov) {#flash-next-leapquant}
+
+**Merged** [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov) +
+[`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov). Opt-in
+**lossy** INT8 GDN state — **not** a replacement for `flashnext-mtp2`. The recipe sets
+`--monokernel` and **512**-token blocks. Pull HEAD **after**
+[`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172) (16 Nov) or GDN models
+do not boot.
+
+```sh
+MODEL=/path/to/flash-next VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-leapquant-mtp2 \
+  PLE=int4 PLE_QUANT_DIR=/path/to/ples_int4
+```
+
+- Flag (after `#170`): `--replayssm-state-dtype leapquant` / launcher
+  `REPLAYSSM_STATE_DTYPE=leapquant`. gfx10x HIP only; default FP32 / block
+  **1024** is unchanged on `flashnext-mtp2`. **Do not** set `VLLM_RDNA_GDN_LEAPQUANT`
+  — the launcher **exits**.
+- Packing `VLLM_RDNA_GDN_LEAPQUANT_PACK=1` is opt-in and a **no-op** at block 512.
+- Author-host TP4 V620 matrix (Flash-Next AWQ, MTP2, MonoKernel, `FULL_AND_PIECEWISE`):
+  **1k/512 c=1 −6.6%** TG aggregate vs FP32; **32k/2048 c=8 +20%** but that cell also
+  changes admission (FP32 preempted 6–10; LeapQuant 0). Short-prompt TTFT **+23%** at 1k.
+  KV pages **+2.44%** (266,945 → 273,456 tokens). `#170` re-measured the same KV figure.
+  **Fork-source**. Two `#168` merge gates (1k c=1 speed, MTP acceptance) were **not met**;
+  owner accepted that cost.
+- **Not** Hub. `#vllm-rdna` (14 Nov): RDNA2-shaped kernels, not a portable CUDA / MI300
+  drop-in. Upstream ReplaySSM GDN decode (`vllm#62004`) is **not** in this tree.
+
+Background: [Quantization](quantization.md#leapquant).
+
+### 4× V620 Flash-Next GGUF (`#169` / `#189`, 16 Nov) {#flash-next-gguf}
+
+**Merged** [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) (loader) with
+[`#174`](https://github.com/opengfx1030/vllm-rdna/pull/174) (plugin seam),
+[`#177`](https://github.com/opengfx1030/vllm-rdna/pull/177) (fast MoE kernel from the
+plugin fork), and [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (image +
+recipe) on 16 Nov. Native `--load-format qwen4exp_gguf` for mixed-quant Flash-Next
+GGUF shards. **Not** Hub. **Not** a Q3 path.
+
+```sh
+MODEL=/path/to/hf-config-dir \
+GGUF_DIR=/path/to/UD-Q4_K_XL \
+VENV=/path/to/venv \
+  bash tools/rdna/serve_rdna.sh RECIPE=flashnext-gguf-mtp0
+```
+
+- `MODEL` is the Hugging Face **config + tokenizer** directory (no weights).
+  `GGUF_DIR` is the GGUF shard folder. Recipe **aborts** if `GGUF_DIR` is unset.
+- Checkpoint in the fork note: Unsloth
+  [`Qwen3.8-Flash-Next-GGUF`](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF)
+  `UD-Q4_K_XL/` (4 shards, ~104 GiB).
+- TP=4, **MTP=0** (the GGUF has no MTP head), text only (`language-model-only`),
+  `MAXLEN=32768`, KV **2 GiB** (~128k tokens). Weights ~**22 GiB/card**. Raise KV /
+  MAXLEN only if the card has room.
+- Needs the plugin fork [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin)
+  `rdna_extras`, built for **gfx1030**. The **PyPI** plugin drops experts **256+** in
+  its MMQ kernel (Flash-Next has **512** experts) — PPL **9.79** vs **4.80**, and
+  large batches get sliced (16k TTFT **21.4 s** vs **8.2 s**). The GHCR HEAD image
+  after `#189` installs the fork (pinned `GGUF_PLUGIN_REF`). Host venv: clone +
+  `PYTORCH_ROCM_ARCH=gfx1030 pip install --no-build-isolation --no-deps .`
+- Author-host 4× V620, MTP=0, fork plugin: PPL **4.80** (AWQ 4.80–4.88), 1k c=1
+  TTFT **0.54 s** / ITL **20.3 ms**, 16k c=1 TTFT **8.16 s** (~2008 tok/s), 1k/512
+  c=8 **186.9** tok/s. **Fork-source**. No vision / MTP / TP2 / TP8 claim.
+- Note: [`docs/rdna2/gguf-flashnext-2026-11-16.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/gguf-flashnext-2026-11-16.md).
+  PPL ~10 or a boot fault in `moe_q5_1` / `moe_vec_q` —
+  [GGUF plugin](../troubleshooting/vllm-flash-next.md#flash-next-gguf-plugin).
+
 ### 2× V620 Flash-Next MoE offload (`#146`, 28 Oct) {#flash-next-2x-moe-offload}
 
 **Merged** [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct). Resident
@@ -241,6 +313,14 @@ PRINT=1 MODEL=/path/to/flash-next PLE_QUANT_DIR=/path/to/ples_int4 \
 - Default layout: **TP=2 / EP=2**, `--monokernel`, **96** expert slots per layer/rank,
   native CPU KV tier (`KV_OFFLOAD_GB`; `0` disables KV offload for an expert-only A/B).
 - Slot policy knobs: `SLOTS`, `POLICY` (`lfu_lru` or `lru`), `DECAY`.
+  `#vllm-rdna` (8–9 Nov): this is the fork’s expert-residency cache. It is **not**
+  upstream `--enable-eplb`.   Community **`--enable-eplb`** with
+  `num_redundant_experts: 64` ate **~200–250k** context on an 8× host; **8** and
+  **32** replicas also failed to pay for the KV loss. Freezing a soak-learned
+  layout (no live EPLB) is **local WIP**, not this launcher. `#vllm-rdna`
+  (12 Nov): **400B** traces still ~**22%** linear rank delta (drafter ~**27%**);
+  a local rebalance evened per-card power — still not this launcher —
+  [8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
 - Offload launcher defaults `VLLM_RDNA2_W4A16_DETERMINISTIC_DENSE=1` (Q32 dense
   accumulation). Resident 4× recipes keep their existing default.
 - Design notes: [`docs/rdna2/moe-offloading-target.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/moe-offloading-target.md).
@@ -394,6 +474,9 @@ on 32 GB cards. `max_pixels=1605632` keeps images up to about **1424×1424**.
 image**. Runtime is a second OOM: vLLM may **not reserve** vision memory, so a **tight KV** plus an
 image can OOM after a clean start. `#general` (Sep 21): vision + **PP3** is especially tight. Keep
 `--language-model-only --skip-mm-profiling` if you do not need images.
+`#general` (5 Nov): on an **8×** dual-PLX host, **enabling vision crashed** a
+TP8 Flash-Next serve; **`--language-model-only`** then stayed up. **Needs
+verify** — [vision + TP8](../troubleshooting/vllm-flash-next.md#flash-next-vision-tp8).
 
 Maintainer QA playbook (not a second wiki): [`BlivionIaG/vllm-rdna-qa`](https://github.com/BlivionIaG/vllm-rdna-qa).
 
@@ -428,6 +511,14 @@ Recipe facts (fork comments + `#general` 13 Oct maintainer paste):
 
 `#vllm-rdna` (17 Oct): later HEAD merges were **not re-benched** against this 13 Oct table —
 treat the numbers as a snapshot, not a current HEAD guarantee.
+
+`#vllm-rdna` (16 Nov): maintainer had **not re-tested PP3 in a while**. Dense INT8
+mode **may** misbehave on PP3 (**Needs verify**). A host **ROCm 10.1** from-source
+PP3 serve **spit gibberish**. Prefer org GHCR
+`ghcr.io/opengfx1030/vllm-rdna:nightly-rocm7.14.0` (HEAD after `#172`) over a 10.x
+host venv for PP3. Maintainer: **no vLLM gain** moving the day-to-day box to ROCm
+10 (TunableOp redo). Community llama.cpp **did** see a ROCm 10 bump — not a vLLM
+recipe.
 
 Author-host 16k/1k (`#general` 13 Oct, **Community** — not wiki-tested):
 
@@ -526,7 +617,7 @@ fix. **GLM-5.3** on the same fork was asked and **not answered**. See
 ## Related
 
 - [Flash-Next status](./flash-next.md) — throughput, KV, AutoRound
-- [Serve scripts](./serve-scripts.md) — `RECIPE=flashnext-mtp2` and the other in-tree configs
+- [Serve scripts](./serve-scripts.md) — `RECIPE=flashnext-mtp2`, `flashnext-leapquant-mtp2`, `flashnext-gguf-mtp0`, and the other in-tree configs
 - [Hub `-extras` TP4](./recipes.md#hub--extras-tp4-qwen38-27b-awq) — the non-Flash-Next 27B block
 - [Configuration](./configuration.md)
 - [vLLM forks](./fork.md)

@@ -184,8 +184,45 @@ plus block scales, an optional smoother, and an **order-16 Hadamard**; you set a
 **quality target** and the tool reports the bit rate (`--target-bpw 3.0` is the
 compact recipe). HIP kernels and the vLLM loader live in the **vLLM RDNA2 fork**,
 not in the hi2 repo. `#vllm-rdna` (30 Oct): **3 bpw** was called a bit
-aggressive; **3.5 bpw** may hold quality better but QAD is slow. There is **no**
-vLLM `RECIPE=` / Hub bake yet. Do not treat hi2 as a serve path.
+aggressive; **3.5 bpw** may hold quality better but QAD is slow. `#hi2` (1 Nov):
+public
+[`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw)
+is a **~15 GiB** 27B pack (HF may mis-report the parameter count). Author card:
+**66 % INT2 / 34 % INT4**, measured **3.012 bpw**; tool-call / first-tool match
+is weaker than **AWQ INT4** at this rate (community: 3.2 bpw may be the next
+try). `#vllm-rdna` (12 Nov): TP4 / TP8 hi2 export ranks were **future work**.
+Merged [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov): HEAD
+recipes **`27b-hi2-tp2`** (MTP=0) and **`27b-hi2-tp2-mtp2`** (MTP=2) serve that
+pack on **2× V620**. Speed switches stay **off in code** and **on in those two
+recipes** — [serve scripts](serve-scripts.md). Guide:
+[`docs/rdna2/hi2-27b-tp2-serving.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/hi2-27b-tp2-serving.md).
+**Not** Hub. Fork-source numbers are **2×** only; do not paste them onto 4× / 8×.
+Do not treat hi2 as a Hub day-to-day path — kernels stay on the RDNA2 fork, not a
+second clone.
+
+`#benchmarks` (20 Nov): a **second 2× V620** host (Haswell-era **X99**, PCIe **3.0** x8+x16,
+**ROCm 7.2.4**) booted `RECIPE=27b-hi2-tp2` with **MAXBAT=256**. Single-stream decode sat next
+to the `#171` scoreboard (~**44** vs ~**45** tok/s at 1k/512 c=1); **prefill and TTFT** were
+slower. **Community / Needs verify** — not a retraction of the author-host 7.14 table. Prefer
+**7.2.0 or 7.14.0** for TP — [ROCm pin](../setup/installing-rocm.md#multi-gpu-pin-rocm-720-or-7140).
+Pack author: a same-size quality pass is still in flight. — [community table](recipes.md#community-2x-hi2-tp2).
+
+`#vllm-rdna` (12–15 Nov): **oQ6e** Flash-Next packs are public on Hugging Face (search
+[`Qwen3.8-Flash-Next-oQ6e`](https://huggingface.co/models?search=Qwen3.8-Flash-Next-oQ6e);
+one listed pack is
+[`mlx-community/Qwen3.8-Flash-Next-oQ6e-mtp`](https://huggingface.co/mlx-community/Qwen3.8-Flash-Next-oQ6e-mtp)).
+Community described the format as an MLX-oriented higher-accuracy quant (often compared to
+~8–10 bpw naive) aimed at **TP8**, **not** as a Hub recipe. gfx1030 HIP kernels were **not**
+a serve path: first inference ran at about **10 tok/s prefill**, then later MLX-side
+tinkering. `#vllm-rdna` (16 Nov): draft
+[`#178`](https://github.com/opengfx1030/vllm-rdna/pull/178) is still **open** (native oQ6e
+kernels); community TP8/MTP2 benches (~680–708 tok/s prefill / ~68–69 decode on one host)
+are **Needs verify**, not a recipe. Stay on GPTQ/AWQ (or documented EXL3/hi2 / GGUF
+caveats) until a public fork recipe exists.
+
+HEAD after 16 Nov also serves Unsloth **UD-Q4_K_XL** Flash-Next GGUF
+(`RECIPE=flashnext-gguf-mtp0`) — [GGUF](flash-next-serve.md#flash-next-gguf). That is
+**not** oQ6e.
 
 Prefer GPTQ/AWQ on published images until EXL3/Quark land in a tagged Docker build.
 
@@ -214,6 +251,45 @@ cannot pack the record **refuse** the dtype up front. Default FP16 KV is unchang
 `#vllm-rdna` (21 Oct): maintainer priority for longer context is still restoring the
 **INT8** KV HIP path ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)), not
 replacing day-to-day FP16 with experimental packs. Snapshot: [Fork progress](fork-progress.md).
+
+## LeapQuant (GDN recurrent state, HEAD `#168`) {#leapquant}
+
+[LeapQuant](https://arxiv.org/abs/2609.38166) stores GDN / KDA **recurrent state** as an INT8
+blob instead of FP32. Paper speedups are **NVIDIA**. Upstream RFC
+[`vllm#64725`](https://github.com/vllm-project/vllm/issues/64725) is Triton / CUDA + MI355X —
+**not** gfx1030 HIP, and MTP is a non-goal of that RFC.
+
+Merged [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov 2026) is the
+**fork HIP** path: **lossy**, gfx10x only, no Triton. Default stays FP32 with
+**1024**-token blocks. MTP2, MonoKernel, `FULL_AND_PIECEWISE`, and prefix caching
+stay enabled. Recipe `flashnext-leapquant-mtp2` uses **512**-token blocks and
+`--monokernel`. `#vllm-rdna` (14 Nov): the kernels are **RDNA2-shaped**, not a portable
+MI300 / CUDA port. Upstream ReplaySSM GDN decode
+([`vllm#62004`](https://github.com/vllm-project/vllm/pull/62004)) is **not** in this tree.
+
+Merged [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov) **replaces**
+the `#168` env `VLLM_RDNA_GDN_LEAPQUANT` with `--replayssm-state-dtype leapquant`
+(launcher `REPLAYSSM_STATE_DTYPE=leapquant`). There is **no alias**. The launcher
+**exits** if the old env is still set. Opt-in page packing
+`VLLM_RDNA_GDN_LEAPQUANT_PACK=1` **gains nothing** at the shipped **512**-token
+block. KV capacity vs `#168` is unchanged on that recipe (**+2.44%** vs FP32
+MTP-2, not a 2× KV win). Merged [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172)
+(16 Nov): after `#170` + `#171` landed together, `import …gdn_attn` raised
+`cannot import name 'leapquant_gdn_enabled'` and **no GDN model booted** (Flash-Next
+and 27B / HI2). Pull HEAD **after `#172`**.
+
+This is **not** fork INT4 KV (`int4_fp16_block`) and **not** INT8 decode shadows. **Not** in
+Hub **`v0.31.0-extras`**. Day-to-day stays `flashnext-mtp2`. Serve line:
+[LeapQuant](flash-next-serve.md#flash-next-leapquant).
+
+`#general` (12–13 Nov) community TP4 overnight run (before `#168`) saw **almost no gain at
+low concurrency** — that matches the PR matrix **1k c=1 −6.6%** TG aggregate. The same
+matrix reports **32k/2048 c=8 +20%**, but that run changes **block size and admission
+together** (FP32 preempted; LeapQuant did not). Owner accepted the 1k c=1 loss. KV capacity
+**+2.44%** (266,945 → 273,456 tokens) — **not** a 2× KV win. **Fork-source**.
+
+Use `RECIPE=flashnext-leapquant-mtp2` on HEAD after `#172`. Do **not** export
+`VLLM_RDNA_GDN_LEAPQUANT`. Links: [resources](../meta/resources.md#upstream-projects).
 
 ## Intel AutoRound W4A16 (Flash-Next, `#vllm-rdna` Sep 2026)
 

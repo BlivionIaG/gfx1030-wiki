@@ -50,12 +50,18 @@ Copy one and change only the deltas to add a config.
 |---|---|---|
 | `flashnext-mtp2` | Flash-Next AWQ-W4A16, **MTP=2**. Recipe note (27 Sep 2026): MTP=2 wins at **8×16k / 1k, c=8**. Daily 4× path. | TP=4, port **18096**, API server, `MAXLEN=262144`, block size **1024**, KV **4026531840**, `COMPILE_MODE=3`, `FULL_AND_PIECEWISE`, `ATTN=fa`, V2 runner. `#107` (16 Oct): `GPU_MAX_HW_QUEUES=4` on Flash-Next **TP4** recipes (launcher default stays **2**). `#130` (19 Oct): HIP set **on** by default (not Hub). Opt-in MonoKernel: `EXTRA_ARGS="--monokernel"` — [serve](flash-next-serve.md#flash-next-monokernel). |
 | `flashnext-dflash2` | Flash-Next AWQ-W4A16 + **DFlash2** BF16 drafter. Merged [`#132`](https://github.com/opengfx1030/vllm-rdna/pull/132) (21 Oct). **Not** Hub. MTP-2 still faster in the PR A/B. | Same TP4 / graphs family as `flashnext-mtp2`. Default **3** draft tokens; `DFLASH_TOKENS=2` for the measured 16k c=8 ladder. Recipe sets `EXTRA_ARGS=--monokernel`. — [DFlash2](flash-next-serve.md#flash-next-dflash2). |
+| `flashnext-leapquant-mtp2` | Flash-Next AWQ-W4A16 + **LeapQuant** INT8 GDN state. Merged [`#168`](https://github.com/opengfx1030/vllm-rdna/pull/168) (14 Nov) + [`#170`](https://github.com/opengfx1030/vllm-rdna/pull/170) (15 Nov). **Opt-in, lossy.** **Not** Hub. Daily path stays `flashnext-mtp2`. Pull HEAD after [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172). | Same TP4 / MTP=2 / `FULL_AND_PIECEWISE` family, but **block size 512** and `REPLAYSSM_STATE_DTYPE=leapquant`. Recipe sets `EXTRA_ARGS=--monokernel`. Do **not** export `VLLM_RDNA_GDN_LEAPQUANT`. — [LeapQuant](flash-next-serve.md#flash-next-leapquant). |
+| `flashnext-gguf-mtp0` | Flash-Next **UD-Q4_K_XL GGUF** (`--load-format qwen4exp_gguf`). Merged [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) / [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (16 Nov). **Not** Hub. MTP=0, text only. | Port **18096**, TP=4, `MAXLEN=32768`, KV **2 GiB**. **`GGUF_DIR` required** (shard folder). `MODEL` is the HF config/tokenizer dir, not the GGUF. Needs [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) (GHCR nightly after `#189` has it). — [GGUF](flash-next-serve.md#flash-next-gguf). |
 | `flashnext-mtp0` | Same family, **MTP=0**. Recipe note: MTP=0 wins at **8×1k / 512, c=8** (short prompts). | Same ports and graphs as `flashnext-mtp2`, with `MTP=0`. |
 | `flashnext` | Flash-Next **production** stack: tools + reasoning, six in-flight sequences. Separate from `flashnext-mtp0`. | Port **18094**, `--host 0.0.0.0`, CLI entry, KV **7000000000**, `gpu-memory-utilization 0.90`, block size **1024**, `ATTN=fa`, V2 runner. |
 | `flashnext-exl3` | Flash-Next **EXL3** ([`turboderp/Qwen3.8-Flash-Next-exl3`](https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3)). Merged [`#117`](https://github.com/opengfx1030/vllm-rdna/pull/117) (17 Oct). **Not** Hub. | Port **18094**, TP=4, **MTP=0**, `PLE=exl3`, expert-parallel on, `FULL_AND_PIECEWISE`, AOT compile **off**. Drafts `#122`/`#123`/`#124` for MTP/vision/MoE. |
-| `flashnext-pp3` | Flash-Next AWQ-W4A16, **PP=3 / TP=1**, MTP=0. Merged [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96) (13 Oct). **Not** in Hub `v0.31.0-extras`. | Port **18096**, partition **16,16,16**, `MAXLEN=262144`, `KV=auto`, `GMEM=0.95`, SEQS=8, MAXBAT=2048, dense INT8 **ONLY**, text-only. [PP3](flash-next-serve.md#flash-next-3x-pp3). |
+| `flashnext-pp3` | Flash-Next AWQ-W4A16, **PP=3 / TP=1**, MTP=0. Merged [`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96) (13 Oct). **Not** in Hub `v0.31.0-extras`. | Port **18096**, partition **16,16,16**, `MAXLEN=262144`, `KV=auto`, `GMEM=0.95`, SEQS=8, MAXBAT=2048, dense INT8 **ONLY**, text-only. `#vllm-rdna` (16 Nov): PP3 **not recently re-tested**; dense INT8 may misbehave; prefer GHCR `nightly-rocm7.14.0`. [PP3](flash-next-serve.md#flash-next-3x-pp3). |
 | `flashnext-pp3-mtp2` | Same layout, **MTP=2**. Needs a W4A16 quantized drafter (`tools/rdna/quant_mtp_experts.py`). | Port **18097**, partition **17,17,14**, SEQS=4, MAXBAT=**2112**, `GMEM=0.975`. Use up to ~4 streams. |
+| `flashnext-tp4pp2-mtp2` | Flash-Next AWQ-W4A16, **TP=4 / PP=2**, MTP=2. HEAD recipe (not Hub). Dual-switch 8× layout: TP/EP stay inside one switch. | Port **18099**, `PP_PARTITION=24,24`, KV **13 GiB**, MAXBAT=2048. The file ships a **host-specific** `PCI_BUSES` list — **replace it**; do not copy another host’s BDFs. Community 15 Nov 8× snapshot used partition **26,22** at **150 W / 1900 MHz** — **Community**, not this file. |
+| `flashnext-tp8-mtp2` | Flash-Next AWQ-W4A16, **TP=8**, MTP=2. HEAD recipe (not Hub). | Same family as `flashnext-mtp2` scaled to 8 ranks. Same `PCI_BUSES` hygiene as TP4×PP2. 8× still **Needs verify** as a day-to-day path — [recipes](recipes.md). |
 | `27b-awq` | Qwen3.8-27B AWQ INT4, compressed-tensors **W4A16**. HEAD after [`#140`](https://github.com/opengfx1030/vllm-rdna/pull/140) (26 Oct): recipe defaults **`W4A8=1`** (`VLLM_RDNA2_W4A8_SDOT4` — int8-activation prefill for M≥33; decode stays W4A16). Hub bake may still default off — check `PRINT=1`. | Port **18210**, MTP=0, KV **8000000000**, no `MAXLEN` (the checkpoint’s own context). `language-model-only`. Prefill `MAXBAT` derived from KV/SSM dtype on HEAD. Set `W4A8=0` to force W4A16 prefill. |
+| `27b-hi2-tp2` | Qwen3.8-27B **HI2** 3.0 bpw (`rdna_hint_flex`). Merged [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov). **2× V620 / TP=2.** **Not** Hub. `#benchmarks` (20 Nov): second 2× host booted it (ROCm **7.2.4**, **MAXBAT=256**) — decode ~matched `#171`, prefill slower. Prefer 7.2.0 / 7.14.0. | Port **18211**, MTP=0, `MAXLEN=262144`, KV **16 GiB**, `language-model-only`. Switches **off in code**, **on in this recipe**. Pull HEAD after `#172`. Guide: [`hi2-27b-tp2-serving.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/hi2-27b-tp2-serving.md). [Community table](recipes.md#community-2x-hi2-tp2). |
+| `27b-hi2-tp2-mtp2` | Same HI2 pack, **MTP=2**. Same PR. | Same as `27b-hi2-tp2` except `MTP=2`. PR: MTP helps **c=1**; **no throughput gain at c=8** and a long ITL tail. |
 | `27b-exl3` | Qwen3.8-27B EXL3 **3.00bpw mul1**. **Eager** bring-up (`EAGER=1`): no torch.compile / CUDA graphs until you turn that off. | Port **18105**, `MAXLEN=20480`, KV **6000000000**. `HIP_VISIBLE_DEVICES=4,5,6,7` (second PLX on an 8-GPU chassis). On a 4-card host set `HIP_VISIBLE_DEVICES=0,1,2,3`. |
 | `dsv4-flash` | DeepSeek-V4-Flash (K128): fp8 dense + MXFP4 experts. **Needs verify.** | Port **18300**, TP=4, `MAXLEN=32768`, KV **6000000000**, `ATTN=none`, `--kv-cache-dtype fp8`. This recipe **does** set `VLLM_USE_BREAKABLE_CUDAGRAPH=1` (piecewise needs it on that model). |
 | `full` | The old `serve_gfx1030_full.sh` config (FA-RDNA2 + W4A16 + HIP KV + HIP GDN, breakable `FULL_AND_PIECEWISE`). | TP=**2**, devices `0,1`, `MAXLEN=200000` (floor **32768**), KV **7000000000**. `HOST` is empty so vLLM binds its default address. |
@@ -78,6 +84,12 @@ that contains `META.json`, from
 Docker: `-v /path/to/ples_int4:/ples_int4 -e VLLM_PLE_QUANT_DIR=/ples_int4` and,
 for disk mode, `-e VLLM_PLE_CPU_OFFLOAD=1`. First-time path: [Onboard](onboarding.md).
 See [Flash-Next serve lines](flash-next-serve.md).
+
+`#vllm-rdna` / `#general` (5 Nov): on an **8× V620** host with **~128 GB** DRAM
+(community: Tyan **S8030**), `PLE=int4` **in RAM** blocked **TP=8** and
+**TP=4,PP=2** Flash-Next. `PLE=int4-disk` was the workaround. INT4-in-RAM is
+still fine on 4× hosts with tens of GB free; 8-card world size plus the n-gram
+table is what ran out. **Needs verify** on a second 8-card host.
 
 ### Do not paste these onto Flash-Next
 
@@ -221,6 +233,11 @@ Solver IDs are build-specific. The helper
 - Lookup is read-only (`PYTORCH_TUNABLEOP_TUNING=0`). The helper does not write rows to `/tmp` or the process CWD. If no profile matches, it uses a legacy `rocblas-<hash>/` folder when that folder exists, then `$HOME/.cache/tunableop/tunableop_results.csv`.
 - `TUNABLEOP=0` turns lookups off (`PYTORCH_TUNABLEOP_ENABLED=0`) for an A/B against the heuristic.
 - `PRINT=1` reports which profile it would pick, including “NOT registered” if `TUNABLEOP_PROFILE` is unknown.
+- Merged [`#173`](https://github.com/opengfx1030/vllm-rdna/pull/173) (16 Nov): per-rank CSVs of
+  `rocm7.14-rocblas5.5` (and the HI2 TP2 profile) now **agree per key**. Pre-fix, 531 of 3,330
+  keys named different rocBLAS solutions on different ranks, so a 1023-row router GEMM could
+  pick different top-k experts. Data-only; `rocm10-rocblas5.6` already agreed. —
+  [rank agreement](../troubleshooting/vllm.md#tunableop-rank-agreement).
 
 ### ROCm 10 and rocBLAS 5.6
 
@@ -315,3 +332,4 @@ trailing `KEY=value`:
 - [Flash-Next serve lines](flash-next-serve.md) — graph modes and PLE
 - [Environment variables](../reference/env-vars.md)
 - [TunableOp mismatch](../troubleshooting/vllm.md#tunableop-rocblas-mismatch)
+- [TunableOp rank agreement](../troubleshooting/vllm.md#tunableop-rank-agreement) (`#173`)
