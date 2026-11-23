@@ -140,10 +140,10 @@ MODEL=/path/to/Qwen3.8-Flash-Next-AWQ VENV=/path/to/venv-7.14.0 \
 
 | Cards | Start here |
 |---|---|
-| **1×** | Hub Path A: **Qwen3.8-27B AWQ** or a MoE (e.g. Qwen3.6 **35B-A3B**). Flash-Next is **not** a 1-card path. |
+| **1×** | Hub Path A: **Qwen3.8-27B AWQ** or a MoE (e.g. Qwen3.6 **35B-A3B**). HEAD Inkling-2-Mini: `RECIPE=inkling2-mini-tp1` — [Inkling](inkling.md). Flash-Next is **not** a 1-card path. |
 | **2×** | Path A/B with `--tensor-parallel-size 2` / recipe TP=2. Flash-Next usually wants more cards or [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4). |
 | **4×** | Best Flash-Next layout: **TP=4**, Path B `RECIPE=flashnext-mtp2` (or Hub Path A with PLE mounts). |
-| **8×** | Not the default Flash-Next recipe. Community **GLM-5.3-Flash** notes — [Recipes](./recipes.md#glm-53-flash). |
+| **8×** | Not the default Flash-Next recipe. HEAD `flashnext-tp4pp2-mtp2` / `flashnext-tp8-mtp2` exist (replace `PCI_BUSES`). Community production snapshot — [Recipes](./recipes.md#community-8x-flashnext). **GLM-5.3-Flash** is a separate local-0.30 path — [Recipes](./recipes.md#glm-53-flash). |
 
 Full matrix: [Recipes](./recipes.md). Workload fit: [What fits on V620](../choose-a-stack.md#what-fits-well-on-v620).
 

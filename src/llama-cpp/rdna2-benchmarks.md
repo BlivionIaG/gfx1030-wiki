@@ -101,6 +101,15 @@ DeltaNet sibling fusion. MTP works up to 6 with minimal hit on low acceptance.
 See [Power Tuning](../tuning/power.md) for the 140 W cap. Long-context PP HIP crash fix tracks
 [ROCm/rocm-systems#4817](https://github.com/ROCm/rocm-systems/issues/4817).
 
+## Inkling-2-Mini GGUF (community, 21–22 Nov)
+
+`#general` (21–22 Nov): community **1× V620** llama.cpp on Unsloth **Q4_K_XL**
+(~17–20 GB class) quoted **~90** tok/s decode at 4k, **~50** at 230k, later
+**~2k** tok/s prefill after raising `--batch-size` / `--ubatch-size`. Native
+HIP NVFP4 serving is the vLLM HEAD recipes, not this GGUF requant.
+**Community / Needs verify.** No wiki command line —
+[Inkling](../vllm/inkling.md#llamacpp-gguf).
+
 ### Environment used for PR #10 results
 
 ```bash

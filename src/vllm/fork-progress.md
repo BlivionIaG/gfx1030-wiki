@@ -2,7 +2,8 @@
 
 > **WIP snapshot:** Readable status of
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`.
-> Dated **17 Nov 2026** from public merges + `#vllm-rdna` / `#announcements`.
+> Dated **23 Nov 2026** from public merges + `#vllm-rdna` / `#announcements` /
+> `#benchmarks` / `#general`.
 > Kernel file lists and older chronicle rows stay on [Fork landscape](fork.md).
 > See [Verification status](../reference/verification.md#vllm-fork-progressmd).
 
@@ -96,6 +97,8 @@ readiness). No new Hub extras tag. Author: prefill looked better on 0.32 than
 | [`#173`](https://github.com/opengfx1030/vllm-rdna/pull/173) (16 Nov) | TunableOp **rank files agree per key** | Data-only. Pre-fix, 531 keys disagreed across ranks (1023-row router GEMM). `rocm10-rocblas5.6` already agreed. [Rank agreement](../troubleshooting/vllm.md#tunableop-rank-agreement). |
 | [`#175`](https://github.com/opengfx1030/vllm-rdna/pull/175) / [`#176`](https://github.com/opengfx1030/vllm-rdna/pull/176) (16 Nov) | Lean **EPLB** study + opt-in load counters | Decode EPLB / placement **no-go** at TP4/EP4 (ITL gain **0.02–0.19%**). Counters: `VLLM_RDNA_EPLB_STATS_DIR` (unset = off). Still skip upstream `--enable-eplb`. |
 | [`#169`](https://github.com/opengfx1030/vllm-rdna/pull/169) / [`#174`](https://github.com/opengfx1030/vllm-rdna/pull/174) / [`#177`](https://github.com/opengfx1030/vllm-rdna/pull/177) / [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189) (16 Nov) | Flash-Next **GGUF** `RECIPE=flashnext-gguf-mtp0` | `--load-format qwen4exp_gguf`, UD-Q4_K_XL, MTP=0. Needs [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) (image after `#189`). **Not** Hub. [GGUF](flash-next-serve.md#flash-next-gguf). |
+| [`#195`](https://github.com/opengfx1030/vllm-rdna/pull/195) (22 Nov) | **Inkling-2-Mini** native HIP — `RECIPE=inkling2-mini-tp{1,2,4}` | NVFP4/MXFP8 in-GEMM dequant, vision, prefix cache, 1M ctx at TP=2/4. **Not** Hub. [Inkling](inkling.md). |
+| [`#196`](https://github.com/opengfx1030/vllm-rdna/pull/196) (23 Nov) | Inkling pipelined prefill attention tile + DSpark recipes | `inkling2-mini-tp1-dspark` / `-dspark-adaptive` / `tp2-dspark`. Adaptive K is TP=1 greedy. **Not** Hub. |
 
 ## Open backlog (selected)
 
@@ -122,7 +125,7 @@ Do **not** treat drafts as recipes. Full list:
 `rdna_extras` (bf16→fp16 cast, logits all-gather, EP routing). In-tree
 `RECIPE=dsv4-flash` still **Needs verify** — [serve](flash-next-serve.md#deepseek-v4-flash).
 
-## Practical defaults (17 Nov)
+## Practical defaults (23 Nov)
 
 | Goal | Prefer |
 |---|---|
@@ -138,6 +141,7 @@ Do **not** treat drafts as recipes. Full list:
 | Spec draft A/B | Native **MTP-2** first; `flashnext-dflash2` for short/single-user experiments |
 | LeapQuant GDN experiment (HEAD) | `RECIPE=flashnext-leapquant-mtp2` (`#168`/`#170`, after `#172`) — opt-in, lossy; 1k c=1 is slower. Stay on `flashnext-mtp2` unless you are A/B'ing. Do not set `VLLM_RDNA_GDN_LEAPQUANT`. |
 | 2× 27B HI2 (HEAD) | `RECIPE=27b-hi2-tp2` (or `-mtp2` for c=1). **Not** Hub. |
+| Inkling-2-Mini (HEAD) | `RECIPE=inkling2-mini-tp1` (1×) or `-tp2` / `-tp4`. DSpark is opt-in. **Not** Hub. README still **v0.33.0** — ignore Discord “0.34” until that changes. |
 
 ## Related
 

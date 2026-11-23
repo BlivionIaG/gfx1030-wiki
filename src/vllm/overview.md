@@ -17,6 +17,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | **First serve on a V620** (Docker or fork + launcher) | [Onboard on V620](./onboarding.md) |
 | Pull an image and run your first model | [Running (Docker)](./running.md) |
 | Which image / model / card count (27B, presets) | [Recipes](./recipes.md) |
+| Inkling-2-Mini (1–4×, HEAD `#195`/`#196`) | [Inkling-2-Mini](./inkling.md) |
 | GLM-5.3-Flash on 8× (local 0.30 fork) | [Recipes — GLM-5.3-Flash](./recipes.md#glm-53-flash) |
 | Qwen3.8 Flash-Next (benchmarks and serve lines) | [Flash-Next](./flash-next.md) |
 | Flash-Next MonoKernel (`--monokernel`, HEAD) | [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |

@@ -84,6 +84,12 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_CACHE_ROOT` | `/path/to/vllm-cache` | Persistent vLLM compile cache root (Docker volume). |
 | `SAFETENSORS_FAST_GPU` | `1` | Faster safetensors → GPU weight load (common in `#vllm-rdna` / some Dockerfiles). |
 | `TORCHINDUCTOR_COMPILE_THREADS` | `1` | Limit inductor threads (stability during first-boot compile). |
+| `VLLM_INKLING2_PREFILL_BM` | `1` | Inkling-2-Mini HEAD (`#195`/`#196`). Default **on**. Leave on unless A/B’ing. **Not** Hub. [Inkling](../vllm/inkling.md). |
+| `VLLM_INKLING2_FUSE_GLUE` | `1` | Same recipe family. Default **on**. |
+| `VLLM_INKLING2_DECODE_FUSED` | `1` | Same. Default **on**. |
+| `VLLM_INKLING2_FUSE_ATTN_CHAIN` | `1` | Same. Default **on**. |
+| `VLLM_INKLING2_PREFILL_ATTN_TILE` | `0` | Pipelined prefill attention tile (`#196`). `0` is the shipped tile. |
+| `VLLM_INKLING2_PREFILL_INT8` | `1` | Experimental Inkling prefill INT8. **Changes quality.** Off in recipes. |
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
 

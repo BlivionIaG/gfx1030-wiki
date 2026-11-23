@@ -31,7 +31,10 @@ Expect large **host DRAM** for the BF16 n-gram table (~**95 GB** class). INT4 pi
 sidecar working set is closer to **~35 GB**. `int4-disk` mmaps shards (`MADV_RANDOM`) so only the
 gather/dequant working set hits RAM. That is **weight** offload, not KV. `#vllm-rdna` (5 Nov): an
 **8×** host with **~128 GB** DRAM still needed **`PLE=int4-disk`** for TP=8 / TP=4,PP=2 Flash-Next
-— pinned INT4 PLE plus the 8-rank working set did not fit. Native **KV RAM overflow**
+— pinned INT4 PLE plus the 8-rank working set did not fit. HEAD recipes
+`flashnext-tp8-mtp2` and `flashnext-tp4pp2-mtp2` exist (`PCI_BUSES` is
+host-specific). Community 8× production numbers:
+[recipes](recipes.md#community-8x-flashnext). Native **KV RAM overflow**
 was broken on one 4× host (Sep 14: **128 GB** not enough); the
 fix **merged** as [`#24`](https://github.com/opengfx1030/vllm-rdna/pull/24) (27 Sep) —
 [KV offload](../troubleshooting/vllm.md#upstream-kv-offload-tanks-decode).

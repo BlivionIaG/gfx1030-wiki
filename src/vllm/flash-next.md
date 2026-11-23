@@ -8,7 +8,7 @@
 
 | Section | What it answers |
 |---|---|
-| [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
+| [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4× / 8×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
 | [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [LeapQuant](./flash-next-serve.md#flash-next-leapquant), [GGUF](./flash-next-serve.md#flash-next-gguf), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
@@ -90,6 +90,13 @@ path on vLLM (HEAD GGUF is **UD-Q4_K_XL**, not Q3).
 **`PP=3` + `TP=2`** (six GPUs) or **`PP=6`**. Prefer **power-of-2 tensor parallel** over `PP=2` +
 `TP=3`. Disaggregated prefill/decode (two model loads) is a separate WIP — open
 [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23). **Needs verify** — no published 6× table.
+
+**8× V620:** not the day-to-day recipe. HEAD ships `flashnext-tp8-mtp2` and
+`flashnext-tp4pp2-mtp2` (`PP_PARTITION=24,24`) — replace host-specific
+`PCI_BUSES`. Community production on dual-PLX used **TP=4 × PP=2 (26,22)** —
+[community 8×](./recipes.md#community-8x-flashnext),
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+**Needs verify** on a second host.
 
 `#vllm-rdna` (Sep 19): **pipeline parallel 4** on Flash-Next was reported to hit **~1950 tok/s**
 prefill at 32k while **decode collapsed**. The same host dropped PP4 and continued on **TP=4**

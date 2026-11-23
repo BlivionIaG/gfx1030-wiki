@@ -248,16 +248,29 @@ for 4× TP4 unless you are on PP3. **Needs verify.**
 `#vllm-rdna` (6 Nov): on dual-**PLX88096** **8× V620**, community expected
 **TP=8** to win **decode** and saw **better prefill** on **TP=4,PP=2**. That
 matches the usual “TP inside a switch, PP between switches” split —
-[PLX](../tuning/p2p.md#plx--pcie-switches) — but **neither** layout is a
-recipe yet. Both still crashed some hosts (vision-on, MTP=2 transients,
-cross-switch hop). A BMC with **no** PCIe log does not clear the host; check
-`dmesg` / AER — [IOMMU drop](./general.md#iommu-psu-group-drop).
+[PLX](../tuning/p2p.md#plx--pcie-switches). HEAD now ships
+`flashnext-tp8-mtp2` and `flashnext-tp4pp2-mtp2` (`PP_PARTITION=24,24`, KV
+**13 GiB**) — replace the host-specific `PCI_BUSES` list; **not** Hub. Both
+layouts still crashed some hosts (vision-on, MTP=2 transients, cross-switch
+hop). A BMC with **no** PCIe log does not clear the host; check `dmesg` / AER
+— [IOMMU drop](./general.md#iommu-psu-group-drop).
 
 `#vllm-rdna` / `#general` (7–8 Nov): two hosts then stayed up on **both**
 layouts at **~120 W** and **~1900 MHz** core. Decode barely dropped versus
 higher clocks. A **4×** host at **250 W** / **2300 MHz** is a different
-power envelope — do not copy 8× caps onto 4×. Still **Needs verify**. Not a
-recipe — [power](../tuning/power.md#slot-power-and-psu-transients).
+power envelope — do not copy 8× caps onto 4×. Still **Needs verify**. Day-to-day
+8× is still not the default path — [power](../tuning/power.md#slot-power-and-psu-transients).
+
+`#benchmarks` (22 Nov, recorded 13 Nov UTC, **Community**): the same dual-PLX
+class of host posted a live Flash-Next AWQ-W4A16
+**TP=4 × PP=2 (26,22)** snapshot — MTP=2, **MAXBAT=2048**, KV **15 GiB**,
+dense INT8 **on**, **150 W / 1900 MHz**, ECC off. Partition and KV size
+differ from the in-tree `24,24` / 13 GiB file. 2k/8k/16k c=1 TTFT
+**0.613 / 1.876 / 3.260 s**; prefill **3188 / 4032 / 4614** tok/s; decode
+**138.6 / 129.2 / 130.4** tok/s. Aggregate decode **c=1 117.9 / c=4 185.0 /
+c=8 335.3** tok/s. MTP accept length **2.31–2.78**. **Needs verify** on a
+second 8× host. Do not copy PCI bus lists. Full table:
+[community 8× production](../vllm/recipes.md#community-8x-flashnext).
 
 `#vllm-rdna` (8 Nov): upstream vLLM **`--enable-eplb`** with
 `num_redundant_experts: 64` **ate ~200–250k** context on one 8× host

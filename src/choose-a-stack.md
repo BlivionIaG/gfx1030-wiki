@@ -26,6 +26,7 @@ looks fine):
 | Workload | Community take |
 |---|---|
 | **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) | Sweet spot on 1–4× V620 |
+| **Inkling-2-Mini** | **1×** fits on a V620 via vLLM HEAD (`RECIPE=inkling2-mini-tp1`). Native NVFP4/MXFP8 HIP — not Hub 0.31. llama.cpp GGUF is a separate community path. — [Inkling](./vllm/inkling.md) |
 | Dense **27B** | Usable; expect mediocre PP vs newer silicon |
 | **Flash-Next** | Promising on **4×** V620 via [vLLM Flash-Next](./vllm/flash-next.md); not a 1-card path. `#vllm-rdna` (5 Nov): **2×** with only **~16 GB** host RAM still wants **27B**, not Flash-Next |
 | **GLM-5.3-Flash** / DeepSeek-class large MoE | **Not 1–2 cards.** Public [`zai-org/GLM-5.3-Flash`](https://huggingface.co/zai-org/GLM-5.3-Flash) is **320B / 18B active**. `#general` (25 Oct): 1× V620 + host-RAM offload is a poor fit (community Maya snapshot ~200 PP / ~13 TG — **Needs verify**). Community vLLM path is **8×** — [recipes](./vllm/recipes.md#glm-53-flash). `#general` (9 Nov): **4×** experimental HIP path is [Cilla](https://github.com/crispyging/cilla-v620) (Maya fork) — not vLLM, and not a 1-card offload fix. |

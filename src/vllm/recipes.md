@@ -29,7 +29,7 @@ Mounting host ROCm into it is a common break (recipe `TROUBLESHOOTING.md`).
 
 | Cards | Community starting point (`#vllm-rdna`) |
 |---|---|
-| **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). **GLM-5.3-Flash** is an **8×** community path, not 1-card even with 256 GB host RAM — [GLM-5.3-Flash](#glm-53-flash). |
+| **1× V620 (32 GB)** | Prefer **MoE** (e.g. Qwen3.6 **35B-A3B**, Ornith-class, **Inkling-2-Mini**) over dense 27B when prefill matters. Dense **Qwen3.8-27B AWQ** works for day-to-day chat; expect weaker PP than MoE. HEAD `RECIPE=inkling2-mini-tp1` serves native NVFP4/MXFP8 on one card — [Inkling](inkling.md). **Not** Hub. **Flash-Next is not a 1-card path** without heavy CPU/DRAM offload (weights ~60+ GB class + PLE). **GLM-5.3-Flash** is an **8×** community path, not 1-card even with 256 GB host RAM — [GLM-5.3-Flash](#glm-53-flash). |
 | **2× V620** | Recipe **TP=2** presets for 27B GPTQ / AWQ / MixedInt4, or Hub `-extras` / a [host-venv](host-venv.md) clone with `--tensor-parallel-size 2`. HEAD after [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov): **HI2** `RECIPE=27b-hi2-tp2` / `27b-hi2-tp2-mtp2` for [`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw) — [serve scripts](serve-scripts.md). **Not** Hub. `#benchmarks` (20 Nov): a second 2× host booted that recipe — [community table](#community-2x-hi2-tp2). `#vllm-rdna` (Sep 26): one host built `vllm-rdna` from source and served **cyankiwi 27B AWQ-INT4** TP=2 — [community table](#host-venv-tp2-qwen38-27b-awq). `#vllm-rdna` (Oct 6): **Qwen3.8-27B fp16** TP=2 + MTP **~40–48 t/s** single-stream; a **Swift 1.5** 27B tune on the same layout **~48 t/s** single / **~70 t/s** across two instances — **not** Flash-Next. `#vllm-rdna` (5 Nov): with only **~16 GB** host RAM, community still pointed at **Qwen3.8 27B**, not Flash-Next (PLE + experts want tens of GB DRAM). **Flash-Next** on 2 cards still needs host RAM for experts: HEAD after [`#146`](https://github.com/opengfx1030/vllm-rdna/pull/146) (28 Oct) has `tools/rdna/mono/serve_offload.sh` — [2× offload](flash-next-serve.md#flash-next-2x-moe-offload). That is **not** a Hub / `serve_rdna.sh` recipe. llama.cpp RAM/MoE offload remains the non-HEAD path (`#vllm-rdna` Sep 14) — [llama.cpp 2×](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4). |
 | **3× V620** | vLLM **tensor parallel needs an even world size**. Use **pipeline parallel 3** (`PP=3`, `TP=1`). Current `rdna_extras` HEAD: `RECIPE=flashnext-pp3` / `flashnext-pp3-mtp2` — [PP3 recipes](./flash-next-serve.md#flash-next-3x-pp3). Hub **`v0.31.0-extras`** (11 Oct) **lags** those recipes. `#vllm-rdna` (16 Nov): PP3 **not recently re-tested**; prefer GHCR `nightly-rocm7.14.0` after `#172`. Older pins corrupted PP3 output — [corruption](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption). Pin `b33f9b6` (Sep 19) boots graphs but dies on small captured prefill — [KeyError](../troubleshooting/vllm-flash-next.md#flash-next-pp3-graph-keyerror). llama.cpp can still report TP across three cards (TP3 has [crash notes](../llama-cpp/rdna2-serving.md#notable-limits)). |
 | **4× V620** | Best vLLM path for **Flash-Next** is still **TP=4**. Prefer **latest `rdna_extras`** with merged [`vllm-rdna#17`](https://github.com/opengfx1030/vllm-rdna/pull/17) (23 Sep) — [fast stack](./flash-next-serve.md#flash-next-4x-pr17). `#vllm-rdna` (Sep 19): **PP=4** can look great on 32k prefill then **tank decode**. `#vllm-rdna` (Sep 21): `#15`-only public merge reproduced **~1.1–1.45k** PP. Prefer TP4 over PP4. Hub **`v0.31.0-extras`** is the current extras bake. **Needs verify** on a second host. Same **gfx1030** class: `#benchmarks` (Oct 10) **4× W6800X Duo**, vLLM **0.30.0** TP4, Qwen3.8-27B **fp16**, ALU **0.9.4**, **MTP-2** — [community table](../troubleshooting/vllm.md#w6800x-duo-alu-093). Not a V620 serve line. |
@@ -44,6 +44,31 @@ of llama.cpp **layer split** (`-sm layer`); **`--tensor-parallel-size N`** is th
 cards). Prefer **power-of-2 TP**. Flash-Next on four cards still wants **TP=4**, not PP=4
 (PP=4 can look great on long prefill then **tank decode** — table above).
 
+### 8× Flash-Next community production {#community-8x-flashnext}
+
+HEAD recipes `flashnext-tp4pp2-mtp2` (`PP_PARTITION=24,24`, KV **13 GiB**) and
+`flashnext-tp8-mtp2` exist — replace the host-specific `PCI_BUSES` list; **not** Hub.
+`#benchmarks` (22 Nov, recorded 13 Nov UTC, **Community**): an **8× V620** dual-**PLX88096**
+host (Tyan S8030 / EPYC 7532 class) posted a live Flash-Next AWQ-W4A16 **TP=4 × PP=2
+(26,22)** snapshot — MTP=2, **MAXBAT=2048**, KV **15 GiB**, dense INT8 **on**,
+**150 W / 1900 MHz**, ECC off. That partition and KV size are **not** the in-tree
+`24,24` / 13 GiB file. Same-host 15 Nov config note:
+[8× TP vs PP](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+
+Cold TTFT / prefill (vs that host’s earlier baseline 02):
+
+| Cell | TTFT | Prefill | Decode / req |
+|---|---:|---:|---:|
+| 2k c=1 | 0.613 s | 3188 tok/s | 138.6 |
+| 8k c=1 | 1.876 s | 4032 tok/s | 129.2 |
+| 16k c=1 | 3.260 s | 4614 tok/s | 130.4 |
+
+Aggregate decode: **c=1 117.9** / **c=4 185.0** / **c=8 335.3** tok/s. MTP accept
+length **2.31–2.78**. Agentic c=1 **73.8** tok/s agg (3/3 tool calls); c=4 **165.1**
+(12/12); 8-session harness c=8 **346.5** tok/s agg. Vision sanity passed. **Needs
+verify** on a second 8× host. Do not copy PCI bus lists or systemd unit names from
+Discord.
+
 ### Gemma 4 note
 
 Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx1030 vLLM paths
@@ -53,6 +78,7 @@ Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx10
 
 | Model | Cards | Stack | Notes |
 |---|---|---|---|
+| [`thinkingmachines/Inkling-2-Mini`](https://huggingface.co/thinkingmachines/Inkling-2-Mini) | **1–4×** | `rdna_extras` HEAD `RECIPE=inkling2-mini-tp1` (or `-tp2` / `-tp4`) | Merged `#195`/`#196` (22–23 Nov). Native NVFP4/MXFP8 HIP. **Not** Hub. [Inkling](inkling.md). |
 | [`cyankiwi/Qwen3.8-27B-AWQ-INT4`](https://huggingface.co/cyankiwi/Qwen3.8-27B-AWQ-INT4) | 1–4× | Hub `-extras` or recipe preset | Current day-to-day **27B** pick in `#vllm-rdna` (Sep 13 2026). compressed-tensors AWQ. |
 | [`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw) | **2×** | `rdna_extras` HEAD `RECIPE=27b-hi2-tp2` | Merged `#171` (15 Nov). **Not** Hub. Second-host `#benchmarks` (20 Nov) — [community table](#community-2x-hi2-tp2). |
 | [`btbtyler09/Qwen3.8-27B-GPTQ-4bit`](https://huggingface.co/btbtyler09/Qwen3.8-27B-GPTQ-4bit) | 2×+ | Recipe `preset:qwen38-27b-gptq` or Hub `-extras` | Recipe **reference** preset; native GPTQ → `RDNA2W4A16` on `-extras`. |
