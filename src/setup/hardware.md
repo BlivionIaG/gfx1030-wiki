@@ -104,7 +104,9 @@ on the official support matrix, but in practice they run gfx1030 kernels once yo
   Community: **~4× realtime** on **1× V620**. Author README: **120 s** 48 kHz stereo in
   **~25 s**. `#general` (21–22 Nov): an early clone hit **`hipErrorIllegalAddress`**;
   the public repo then landed HIP fixes — **pull latest** before filing a
-  gfx1030 bug. **Needs verify.** Not an LLM recipe — [resources](../meta/resources.md).
+  gfx1030 bug. `#music-generation` (23 Nov): HEAD also has **From Audio**
+  analysis (style / cover / lyrics) and an **instrumental LoRA** mode.
+  **Needs verify.** Not an LLM recipe — [resources](../meta/resources.md).
   `#general` (30 Oct): **training** on V620 is the same constraint — prefer **FP32** (or a
   native-bf16 card); community bf16-emulation tests had drawbacks.
 

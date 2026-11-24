@@ -43,6 +43,15 @@ Public HEAD (2 Nov) keeps PLE inside **FULL** decode graphs and breaks only
 **`v0.31.0-extras`**. `--enforce-eager` is a temporary A/B, not the day-to-day path.
 See [GHCR nightly](../vllm/running.md#ghcr-nightly).
 
+### 0.33 long-run crash (one host) {#033-long-run-crash}
+
+`#vllm-rdna` (24 Nov): one host called HEAD **not production-ready** after an
+**~18 h** inference crash. They were on **v0.33** (not 0.34), serving a
+**Qwen3.8-27B** tune. No public log, no known commit, and no second-host
+reproduction. **Needs verify** — do not treat this as a Hub or Flash-Next
+retraction. Confirms people are still on **0.33**; Discord “0.34” remains
+unconfirmed — [Inkling](../vllm/inkling.md).
+
 ### `TORCHINDUCTOR_CACHE_DIR` survives `VLLM_DISABLE_COMPILE_CACHE` {#torchinductor-cache-survives-vllm-disable-compile-cache}
 
 `rdna_extras` (1 Oct, EXL3 27B mul1 TP=4): piecewise `assert_size_stride` kept failing after a

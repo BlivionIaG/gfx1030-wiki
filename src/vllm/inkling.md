@@ -21,7 +21,10 @@ still landing. `#general` (21–22 Nov) also had a **llama.cpp GGUF** path —
 
 Public `rdna_extras` README on 23 Nov still names upstream **vLLM v0.33.0**.
 `#vllm-rdna` / `#general` (21 Nov) said “0.34.0 based now” — **do not** treat
-HEAD or Hub as 0.34 until the README / a release says so.
+HEAD or Hub as 0.34 until the README / a release says so. `#vllm-rdna` (24 Nov):
+the host that reported an **~18 h** crash was still on **0.33**, serving a
+**Qwen3.8-27B** tune — **Needs verify**, not a recipe retraction.
+[Troubleshooting](../troubleshooting/vllm.md#033-long-run-crash).
 
 ## Recipes
 
@@ -75,6 +78,19 @@ from ~1800 to ~730 tok/s; decode from ~54 to ~36 tok/s (`#196`). Prefix cache
 Known limits from the PRs: serving tables are mostly **c=1**; adaptive K at
 TP=2 is **not** a recipe; DSpark spends KV on a replicated draft; a rare
 engine-exit abort (~2/50) has no root cause yet.
+
+## vs Flash-Next
+
+`#general` (23 Nov): on **4× V620** hosts, community still prefers
+**Flash-Next** for day-to-day. Inkling-2-Mini is the **1×** looping-MoE path
+(HEAD also has TP=2/4) — **not** a QFN replacement. Same thread: more mileage
+from **TP2 Flash-Next INT4 MoE offload** than from switching a 4-card QFN box
+to Inkling. Independent **BetterBench 0.6.1** weighted decode (same day,
+**Community**): **~56** tok/s TP=1 / **~79** tok/s TP=2 — same ballpark as the
+author-host short-agent numbers above. Not wiki-tested.
+
+`#strata` (23–24 Nov): **Inkling-2-Mini on Strata** only used **2 GPUs** on a
+4-card host and was slow. Use these vLLM HEAD recipes, not Strata, for Inkling.
 
 ## llama.cpp GGUF {#llamacpp-gguf}
 
