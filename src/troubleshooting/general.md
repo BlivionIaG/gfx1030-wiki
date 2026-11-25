@@ -29,6 +29,11 @@ See [HSA_OVERRIDE](../setup/hsa-override.md). If building from source, use `PYTO
 export TORCH_BLAS_PREFER_HIPBLASLT=0
 ```
 
+`#general` (24–25 Nov): community still hits hipBLASLt vs rocBLAS mismatches on
+gfx1030. A public [`BlivionIaG/rocm-libraries` `gfx1030-unified`](https://github.com/BlivionIaG/rocm-libraries/tree/gfx1030-unified)
+branch exists for hipBLASLt bring-up — **Needs verify**, not a replacement for
+the rocBLAS workaround above. See [Installing ROCm](../setup/installing-rocm.md).
+
 ## BF16 is extremely slow
 
 Force **FP16** everywhere (`--dtype float16` in vLLM, `dtype=torch.float16` in PyTorch). See

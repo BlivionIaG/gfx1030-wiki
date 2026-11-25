@@ -88,3 +88,7 @@ serve spit **gibberish**. Day-to-day gfx1030 multi-GPU advice is still:
   discrete card with `HIP_VISIBLE_DEVICES` (see [Reference](../reference/env-vars.md)).
 - **hipBLASLt:** some libraries assume hipBLASLt, which historically had gaps on Navi 21. If a workload
   complains, try `TORCH_BLAS_PREFER_HIPBLASLT=0` (PyTorch) or the workload's equivalent flag.
+  `#general` (24–25 Nov): community still reports hipBLASLt vs rocBLAS fights on gfx1030;
+  a public [`BlivionIaG/rocm-libraries` `gfx1030-unified`](https://github.com/BlivionIaG/rocm-libraries/tree/gfx1030-unified)
+  branch exists for hipBLASLt bring-up. **Both claims stand** — do not drop the rocBLAS
+  workaround until a Hub / fork bake ships that path. **Needs verify.**

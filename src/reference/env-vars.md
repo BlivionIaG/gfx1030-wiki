@@ -90,6 +90,8 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_INKLING2_FUSE_ATTN_CHAIN` | `1` | Same. Default **on**. |
 | `VLLM_INKLING2_PREFILL_ATTN_TILE` | `0` | Pipelined prefill attention tile (`#196`). `0` is the shipped tile. |
 | `VLLM_INKLING2_PREFILL_INT8` | `1` | Experimental Inkling prefill INT8. **Changes quality.** Off in recipes. |
+| `VLLM_INKLING2_LOOPCD_ALPHA` | `0` | Opt-in LoopCD (`#210`, `arXiv:2610.02185`). Default **0** = off (bit-identical). Launcher `LOOPCD_ALPHA`. Modes `hidden` / `logits`. **Not** Hub. [Inkling](../vllm/inkling.md#loopcd). |
+| `VLLM_INKLING2_MOE_OFFLOAD_SLOTS` | `48` | TP=1 expert spill (`#211`). Recipe `inkling2-mini-tp1-offload` (`EXPERT_SLOTS=48`). **TP>1 refused.** **Not** Hub. |
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
 

@@ -17,7 +17,7 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | **First serve on a V620** (Docker or fork + launcher) | [Onboard on V620](./onboarding.md) |
 | Pull an image and run your first model | [Running (Docker)](./running.md) |
 | Which image / model / card count (27B, presets) | [Recipes](./recipes.md) |
-| Inkling-2-Mini (1–4×, HEAD `#195`/`#196`) | [Inkling-2-Mini](./inkling.md) |
+| Inkling-2-Mini (1–4×, HEAD `#195`–`#211`) | [Inkling-2-Mini](./inkling.md) |
 | GLM-5.3-Flash on 8× (local 0.30 fork) | [Recipes — GLM-5.3-Flash](./recipes.md#glm-53-flash) |
 | Qwen3.8 Flash-Next (benchmarks and serve lines) | [Flash-Next](./flash-next.md) |
 | Flash-Next MonoKernel (`--monokernel`, HEAD) | [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |
@@ -50,8 +50,8 @@ Image tags are **refreshed in place** when fixes land — always `docker pull` b
 you already had that tag.
 
 > **Official source:** Kernel work lives in
-> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = **v0.31.0** as of
-> 11 Oct 2026). Day-to-day serving is Hub **`blivioniag/vllm-rdna:v0.31.0-extras`**. First-time path:
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = **v0.34.0** as of
+> 25 Nov 2026; Hub bake remains **v0.31.0**). Day-to-day serving is Hub **`blivioniag/vllm-rdna:v0.31.0-extras`**. First-time path:
 > [Onboard on V620](./onboarding.md). Older `v0.27.1-extras*` / `v0.28.0-extras*` tags stay on Hub for
 > A/B. `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
 > [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is no longer

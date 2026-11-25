@@ -13,25 +13,31 @@ On gfx1030 the fork dequantizes those packs **inside the GEMM** and converts
 dense attention / `lm_head` **bf16 → fp16 at load**. Serving compute is HIP
 (no rocBLAS, no Triton on the recipe path).
 
-`#vllm-rdna` / `#general` (21 Nov) discussed a V620 port while the PRs were
-still landing. `#general` (21–22 Nov) also had a **llama.cpp GGUF** path —
-[community llama.cpp](#llamacpp-gguf). Prefer the in-tree vLLM recipes on
-**HEAD** (clone + [host venv](host-venv.md), or org GHCR
-[nightly](running.md#ghcr-nightly) after `#196`).
+Public `rdna_extras` README (25 Nov) names upstream **vLLM v0.34.0**. That
+retraces the 21–24 Nov Discord “0.34” talk that the wiki had parked as
+unconfirmed while the README still said 0.33. **Hub bake is still 0.31.**
+GHCR **`:v0.34.0`** is an older snapshot (19 Nov, **no Inkling**) — pull
+`:nightly` / `:nightly-0.34.0-rocm7.14.0` or clone HEAD.
+[Running](running.md#ghcr-nightly).
 
-Public `rdna_extras` README on 23 Nov still names upstream **vLLM v0.33.0**.
-`#vllm-rdna` / `#general` (21 Nov) said “0.34.0 based now” — **do not** treat
-HEAD or Hub as 0.34 until the README / a release says so. `#vllm-rdna` (24 Nov):
-the host that reported an **~18 h** crash was still on **0.33**, serving a
-**Qwen3.8-27B** tune — **Needs verify**, not a recipe retraction.
-[Troubleshooting](../troubleshooting/vllm.md#033-long-run-crash).
+`#vllm-rdna` (24 Nov): the host that reported an **~18 h** crash was still on
+**0.33**, serving a **Qwen3.8-27B** tune — **Needs verify**, not an Inkling
+retraction. [Troubleshooting](../troubleshooting/vllm.md#033-long-run-crash).
+
+Prefer the in-tree vLLM recipes on **HEAD** (clone + [host venv](host-venv.md),
+or org GHCR [nightly](running.md#ghcr-nightly) after `#211`). `#general`
+(21–22 Nov) also had a **llama.cpp GGUF** path — [community llama.cpp](#llamacpp-gguf).
 
 ## Recipes
 
 Files: [`tools/rdna/recipes/inkling2-mini-*.env`](https://github.com/opengfx1030/vllm-rdna/tree/rdna_extras/tools/rdna/recipes).
 Guides: [`inkling2-serving.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/inkling2-serving.md),
-[`inkling2-dspark.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/inkling2-dspark.md),
-[`inkling2-benchmarks.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/inkling2-benchmarks.md).
+[`inkling2-dspark.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/inkling2-dspark.md).
+
+[`#208`](https://github.com/opengfx1030/vllm-rdna/pull/208) (24 Nov) folded the
+old `*-dspark-adaptive` / `tp2-dspark` / `tp4-dspark` files into four recipes.
+[`#211`](https://github.com/opengfx1030/vllm-rdna/pull/211) (25 Nov) added a
+fifth (`inkling2-mini-tp1-offload`) for 16 GiB cards.
 
 ```sh
 MODEL=/path/to/inkling2-mini VENV=/path/to/venv \
@@ -40,12 +46,11 @@ MODEL=/path/to/inkling2-mini VENV=/path/to/venv \
 
 | Recipe | Cards | Notes |
 |---|---|---|
-| `inkling2-mini-tp1` | **1×** | `FULL_AND_PIECEWISE`, prefix cache, one image/prompt. `MAXLEN=180000` (weights ~19 GiB; KV ~32 KiB/token). Model limit is **1,048,576** — use TP=2/4 for that. |
-| `inkling2-mini-tp2` | **2×** | 1M context. TP=1 prefill can still win at short prompts (all-reduce). |
-| `inkling2-mini-tp4` | **4×** | Same 1M cap; faster long-context prefill in the `#195` table. |
-| `inkling2-mini-tp1-dspark` | **1×** | Opt-in DSpark draft. Cuts KV (`MAXLEN=125000` in the file). |
-| `inkling2-mini-tp1-dspark-adaptive` | **1×** | Adaptive K + 32k-id draft vocab. **TP=1 and greedy only.** `MAXLEN=105000`. Build the ids file once with `tools/rdna/inkling2/draft_vocab.py`. |
-| `inkling2-mini-tp2-dspark` | **2×** | Static K=2. Draft vocab is **refused at TP>1**. |
+| `inkling2-mini-tp1` | **1× 32 GB** | Plain decode. `MAXLEN=194000` after [`#209`](https://github.com/opengfx1030/vllm-rdna/pull/209) (was 180k). `SEQS=16`, `FULL_AND_PIECEWISE`, prefix cache, one image/prompt. |
+| `inkling2-mini-tp1-dspark` | **1× 32 GB** | DSpark on. `MAXLEN=135000` (`ADAPTIVE=1` → `125000`). Pass `DRAFT_VOCAB=` for the 32k-id file from `tools/rdna/inkling2/draft_vocab.py`. |
+| `inkling2-mini-tp1-offload` | **1× 16 or 32 GB** | [`#211`](https://github.com/opengfx1030/vllm-rdna/pull/211). TP=1 expert spill (`EXPERT_SLOTS=48`). `MAXLEN=65536`. Simulated 16 GiB peak **12.94 GiB**. Optional `EXPERT_CACHE_COPY=native`. **TP>1 refused.** |
+| `inkling2-mini-tp2` | **2×** | DSpark **on by default** (`MAXLEN=720000`). `DSPARK=0` for the 1M cap (`MAXBAT=320`). `ADAPTIVE=1` / `DRAFT_VOCAB=` work at TP=2 after `#208`. |
+| `inkling2-mini-tp4` | **4×** | DSpark **on by default**; full **1,048,576** still fits. `DSPARK=0` for plain decode. |
 
 Pick the GPU with `HIP_VISIBLE_DEVICES=<index>` — do not copy another host’s
 device list out of the recipe comments. TunableOp is **off** on these recipes
@@ -57,27 +62,51 @@ Default speed switches (leave on unless A/B’ing):
 `VLLM_INKLING2_PREFILL_ATTN_TILE` on (`0` is the shipped tile).
 `VLLM_INKLING2_PREFILL_INT8=1` is experimental and **changes quality**.
 
+### LoopCD (opt-in) {#loopcd}
+
+[`#210`](https://github.com/opengfx1030/vllm-rdna/pull/210) (25 Nov): opt-in
+LoopCD (`arXiv:2610.02185`) for Inkling-2-Mini. Default **`LOOPCD_ALPHA=0`**
+(off; bit-identical). `#general` (24 Nov) discussed the paper the same day the
+PR landed. Not a day-to-day recipe — A/B with
+[`eval_loopcd.py`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/tools/rdna/inkling2/eval_loopcd.py)
+and the explore write-up
+[`docs/explore/loopcd-2610.02185/README.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/explore/loopcd-2610.02185/README.md).
+
+Launcher knobs: `LOOPCD_ALPHA`, `LOOPCD_MODE=hidden|logits`, `LOOPCD_ADAPTIVE`,
+`LOOPCD_BETA`, `LOOPCD_BLEND_BLOCKS`, `LOOPCD_WEAK_PASS` (also `VLLM_INKLING2_LOOPCD_*`).
+Author-host: **hidden** `alpha=0.35` is near-free; **logits** `alpha=0.25`
+adaptive lifted a 20-problem Math+Code set **75% → 90%** and costs ~10% decode.
+**Fork-source**, not wiki-tested.
+
 ## Author-host numbers (Fork-source)
 
-One **V620**, native weights, HTTP c=1 unless noted. After `#196` (pipelined
-prefill attention tile). **Not** wiki-tested.
+One **V620** unless noted. **Not** wiki-tested. Prefill TP=2/4 cells below are
+after [`#205`](https://github.com/opengfx1030/vllm-rdna/pull/205) (24 Nov):
+NVFP4 prefill used to fall back to a less-optimized kernel at TP=2/4 — Discord
+`#general` the same morning.
 
 | Setup | Prefill | Decode |
 |---|---|---|
-| TP=1, 2k prompt | **~1977** tok/s | short agent **~56** tok/s (~18 ms/tok) |
-| TP=1, 16k prompt | **~1798** tok/s | **~52** tok/s after 16k |
-| TP=1, 65k prompt | **~1443** tok/s | — |
-| TP=1 DSpark adaptive + 32k vocab | prefill unchanged | **~1.4×** vs no-draft (held-out mix ~12.5 ms/tok) |
-| TP=2, 65k prompt | **~1385** tok/s | short agent **~80** tok/s |
-| TP=2 / TP=4, ~1.05M prompt (`#195`) | ~3000 s / ~1517 s | **~54 / ~32** ms/tok |
+| TP=1 plain, 1k (`#209`) | — | **~55.5** tok/s (~18 ms) |
+| TP=1 DSpark K=2, 1k (`#209`) | — | **~104** tok/s |
+| TP=1 DSpark adaptive + 32k vocab, 1k RAG (`#209`) | — | **~172** tok/s (~5.8 ms) |
+| TP=1 DSpark adaptive, 16k chat (`#209`) | — | **~161** tok/s |
+| TP=1 DSpark, 1k c=1 (`#207`) | **~2085** tok/s | **~94** tok/s/req (real-text ~70) |
+| TP=1 DSpark, c=8 (`#207`) | — | **~185** tok/s agg |
+| TP=2 1k after `#205` | **~2334** tok/s (was ~1698) | — |
+| TP=2 16k after `#205` | **~2330** tok/s (was ~1635) | — |
+| TP=2 DSpark, 1k c=1 (`#207`) | **~3044** tok/s | **~136** tok/s/req |
+| TP=4 1k after `#205` | **~3884** tok/s (was ~3112) | — |
+| TP=4 DSpark, 1k c=1 (`#207`) | **~3867** tok/s | **~164** tok/s/req |
+| TP=1 offload `#211` (32 GB, native copy) | 1k **~512** / 16k **~645** | b=1 **~19** / b=8 **~65** tok/s |
 
-TP=1 conversation grown to **~144k** with prefix cache: new-token prefill falls
-from ~1800 to ~730 tok/s; decode from ~54 to ~36 tok/s (`#196`). Prefix cache
-**off** at that depth is minutes of TTFT — leave it on.
+TP=1 conversation grown to **~144k** with prefix cache (older `#196` table):
+new-token prefill falls from ~1800 to ~730 tok/s; decode from ~54 to ~36 tok/s.
+Prefix cache **off** at that depth is minutes of TTFT — leave it on.
 
-Known limits from the PRs: serving tables are mostly **c=1**; adaptive K at
-TP=2 is **not** a recipe; DSpark spends KV on a replicated draft; a rare
-engine-exit abort (~2/50) has no root cause yet.
+`#211` offload is slower than resident TP=1. Use it when the card is **16 GB**
+or you want extra KV on 32 GB (`MAXLEN=430000` verified on the author 32 GB
+host). 16 GB simulated peak **12.94 GiB**, KV **~71k**.
 
 ## vs Flash-Next
 
@@ -85,12 +114,18 @@ engine-exit abort (~2/50) has no root cause yet.
 **Flash-Next** for day-to-day. Inkling-2-Mini is the **1×** looping-MoE path
 (HEAD also has TP=2/4) — **not** a QFN replacement. Same thread: more mileage
 from **TP2 Flash-Next INT4 MoE offload** than from switching a 4-card QFN box
-to Inkling. Independent **BetterBench 0.6.1** weighted decode (same day,
-**Community**): **~56** tok/s TP=1 / **~79** tok/s TP=2 — same ballpark as the
-author-host short-agent numbers above. Not wiki-tested.
+to Inkling.
 
-`#strata` (23–24 Nov): **Inkling-2-Mini on Strata** only used **2 GPUs** on a
-4-card host and was slow. Use these vLLM HEAD recipes, not Strata, for Inkling.
+`#general` (24 Nov): at **W4A16**, Inkling Mini is **not** competitive with
+Qwen3.8 Flash-Next and is only barely in the Qwen3.8 **27B** quality band.
+People who like it are usually on **1–2 cards**. Treat as **Opinion /
+Community**. Independent **BetterBench 0.6.1** weighted decode (23 Nov,
+**Community**): **~56** tok/s TP=1 / **~79** tok/s TP=2 — same ballpark as
+the older short-agent numbers. Not wiki-tested.
+
+`#strata` (23–25 Nov): **Inkling-2-Mini on Strata** only used **2 GPUs** on a
+4-card host and was slow (~250 PP / ~40 TG in a later try). Use these vLLM
+HEAD recipes, not Strata, for Inkling.
 
 ## llama.cpp GGUF {#llamacpp-gguf}
 
@@ -100,6 +135,9 @@ context, **~50** at 230k; later **~2k** tok/s prefill after raising
 `--batch-size` / `--ubatch-size` (one host used **16384 / 1024**; another
 OOM’d above **512** ubatch). Native FP4 looping model — GGUF is a requant,
 not the HIP NVFP4 path. **Community / Needs verify.** No wiki command line.
+
+`#general` (24 Nov): a later 1× V620 llama.cpp first-pass (~824 PP / ~29 TG)
+is thinner than that GGUF table — skip it as a recipe.
 
 ## Next
 

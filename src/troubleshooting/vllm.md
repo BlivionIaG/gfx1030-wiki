@@ -49,8 +49,8 @@ See [GHCR nightly](../vllm/running.md#ghcr-nightly).
 **~18 h** inference crash. They were on **v0.33** (not 0.34), serving a
 **Qwen3.8-27B** tune. No public log, no known commit, and no second-host
 reproduction. **Needs verify** — do not treat this as a Hub or Flash-Next
-retraction. Confirms people are still on **0.33**; Discord “0.34” remains
-unconfirmed — [Inkling](../vllm/inkling.md).
+retraction. The crash host was still on **0.33**; public HEAD is now **v0.34.0**
+(25 Nov README) — [Inkling](../vllm/inkling.md).
 
 ### `TORCHINDUCTOR_CACHE_DIR` survives `VLLM_DISABLE_COMPILE_CACHE` {#torchinductor-cache-survives-vllm-disable-compile-cache}
 

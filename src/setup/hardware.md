@@ -20,6 +20,8 @@ Pro cards hide ~2 GB behind ECC. See [Disabling ECC](../tuning/ecc.md) if you wa
 `#general` (Sep 15 2026): versus a **32 GB MI50** (gfx906), community first-pass on V620 was **more
 prefill, less decode** — PP “almost 2×”, TG behind but **not far**. That is a **community** A/B, not
 a wiki bench. Sibling notes: [wiki-gfx906](https://github.com/skyne98/wiki-gfx906).
+`#general` (24–25 Nov): a **16 GB MI50** is a poor prefill host next to 32 GB gfx1030 —
+**Community / Needs verify**, not a gfx1030 recipe.
 
 `#general` (Sep 17 2026): **do not tensor-parallel a V620 with an NVIDIA card** (community example:
 RTX 5090 + V620). Opposite strengths (RDNA2 has no matrix cores; the NVIDIA card has little VRAM
