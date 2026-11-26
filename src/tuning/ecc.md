@@ -16,7 +16,9 @@ and already show the full 16 GB.
 | **Off** | ~32 768 MiB (full 32 GB) |
 
 `#vllm-rdna` (pinned): extra **~2 GB per GPU** if you disable it. Some members keep ECC on for bit-flip
-protection; others disable it for long-context KV cache.
+protection; others disable it for long-context KV cache. `#strata` (7 Nov): that extra VRAM
+also held **more MoE experts resident** on one V620 host (community decode bump — **Needs
+verify**, not a tok/s recipe). Still **memtest first** — the next paragraph.
 
 `#general` (Sep 23): **stress-test VRAM before turning ECC off.** One returned V620 only showed a
 **single correctable ECC error** in `dmesg`; a Vulkan memtest-class load produced **many** errors in

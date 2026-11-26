@@ -70,9 +70,12 @@ least one host; the Triton wheel for that userspace is **unconfirmed**. `#vllm-r
 (30 Oct): maintainer called **ROCm 10 and 7.14 the same** for day-to-day serving;
 another host is already serving on 10 with no issues so far. That is **not** a
 reason to wipe a working 7.14 box. One **10.1** host-venv attempt failed before a
-clean 7.14 retry — **Needs verify**, not a 10.1 ban. Day-to-day gfx1030 multi-GPU
-advice is still: **prefer 7.14.0** (or 7.2.0) unless you are deliberately
-lab-testing 10.x.
+clean 7.14 retry — **Needs verify**, not a 10.1 ban. `#vllm-rdna` (16 Nov):
+maintainer still **has not switched** the day-to-day vLLM box to ROCm 10
+(**virtually no gain**, TunableOp redo). Community llama.cpp **did** see a ROCm
+10 improvement — not a vLLM pin. Same thread: a **10.1** from-source **PP3**
+serve spit **gibberish**. Day-to-day gfx1030 multi-GPU advice is still:
+**prefer 7.14.0** (or 7.2.0) unless you are deliberately lab-testing 10.x.
 
 ## Notes & gotchas
 
@@ -85,3 +88,9 @@ lab-testing 10.x.
   discrete card with `HIP_VISIBLE_DEVICES` (see [Reference](../reference/env-vars.md)).
 - **hipBLASLt:** some libraries assume hipBLASLt, which historically had gaps on Navi 21. If a workload
   complains, try `TORCH_BLAS_PREFER_HIPBLASLT=0` (PyTorch) or the workload's equivalent flag.
+  `#general` / `#strata` (24–26 Nov): community still reports hipBLASLt vs rocBLAS fights on gfx1030;
+  a public [`BlivionIaG/rocm-libraries` `gfx1030-unified`](https://github.com/BlivionIaG/rocm-libraries/tree/gfx1030-unified)
+  branch exists for hipBLASLt + Tensile bring-up (not packaged in a Hub / org extras bake).
+  vLLM **Inkling** recipes do **not** use rocBLAS on the serving path. **Both claims stand** — do
+  not drop the rocBLAS workaround for PyTorch/vLLM GEMM stacks until a Hub bake ships that path.
+  **Needs verify.**

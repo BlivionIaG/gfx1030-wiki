@@ -115,6 +115,24 @@ Then run `v620-p2p-readiness.sh` and `verify-p2p.sh`. Treat a readiness “ACS o
 **incomplete** until you have `amd-smi topology` **P2P ENABLED** and a working TP serve.
 **Needs verify** on a second topology.
 
+`#general` (31 Oct): **adding GPUs** into a **passthrough VM** flipped **P2P
+Request Redirect** and **Relaxed Ordering** **on** (community: ACS bits changed
+when the extra cards appeared). Restoring those controls stopped **IOMMU page
+faults** and a **PSU-group of cards disappearing**. **PP2/TP4** then worked;
+**TP8** still failed. `#general` (2 Nov): **llama.cpp TP8** did not drop cards
+on that host; **vLLM TP8** still did. Re-check ACS **inside the guest** after
+you add or passthrough cards — see
+[IOMMU / PSU-group drop](../troubleshooting/general.md#iommu-psu-group-drop).
+Relaxed Ordering is a **Device Control** bit, not an ACS bit; still A/B it if
+it flipped with the ACS word.
+
+`#general` (3–4 Nov): **P2P Request Redirect** (ACS bit 2) does **not** block
+peer DMA. It **hairpins** the request **up to the root complex and back down**
+— **slower** P2P, not “no P2P.” One community host treated that hairpin as a
+hard fail on a switch fabric; another reports **working P2P in a passthrough
+VM**. Do not assume SR-IOV is required for guest P2P. Still A/B
+`amd-smi topology` + a TP serve. **Needs verify.**
+
 ## When P2P helps — and when it does not
 
 `amd-smi topology` saying **P2P ENABLED** is not the same as faster tokens. Always A/B with
@@ -168,6 +186,26 @@ Fedora 43 AMD validation).
 - **Do not tensor-split across a daisy-chained pair of switches** — that single inter-switch link
   is a TP bottleneck. Prefer TP **inside** one switch and pipeline-parallel **between** switches
   (vLLM can do TP+PP that way; llama.cpp generally cannot).
+- `#general` (4–5 Nov): **dual PLX88096** **8× V620** still **Needs verify**.
+  `NCCL_P2P_LEVEL=pix` only enables **intra-switch** P2P; **TP8** or **TP=4,PP=2**
+  across the two switches forced host-staged DMA (community: KFD **userptr
+  restore** storm) and crashed some hosts even with the TP-inside / PP-between
+  split. A/B llama.cpp TP8 vs vLLM, vision off, `PLE=int4-disk` on ~128 GB —
+  [IOMMU drop](../troubleshooting/general.md#iommu-psu-group-drop).
+- `#vllm-rdna` (7 Nov): on a dual-**PEX88096** **TP=8** host, switch
+  **register counters** did **not** show the inter-switch link saturating
+  (single-digit GB/s in steady traffic; short bursts at launch with LMCache).
+  Treat remaining TP8 pain as **latency / DMA**, not “the x16 uplink is
+  full.” **Needs verify.** `#other` (5 Nov): P2P **config** on those boards
+  was the **same** as a no-switch host — the switch does not replace the
+  usual ACS / `amd-smi` checks.
+- `#general` (7 Nov): BIOS **PCIe 10-bit + ARI** did **not** move tokens on
+  a dual-PLX host. One “switch disappeared” A/B was a **loose SlimSAS**, not
+  the 10-bit bit. Community kernel cmdline that *did* stick:
+  **`pci=pcie_bus_perf`** (let the kernel pick MPS) instead of forcing
+  **MRRS 4096** / **MPS 512** with `setpci`. V620 Max Payload is at least
+  **256 B**; whether higher MPS helps is **Needs verify**. Do not chase
+  10-bit as a serve recipe.
 - Community: ACS often needs extra kernel cmdline fiddling; **`pcie surprise link down`** crashes
   were fixed by putting a small fan on the PLX heatsink (these boards often ship with no airflow
   notes).

@@ -17,10 +17,14 @@ Not sure whether to use vLLM or llama.cpp? Start with [llama.cpp or vLLM](../cho
 | **First serve on a V620** (Docker or fork + launcher) | [Onboard on V620](./onboarding.md) |
 | Pull an image and run your first model | [Running (Docker)](./running.md) |
 | Which image / model / card count (27B, presets) | [Recipes](./recipes.md) |
+| Inkling-2-Mini (1–4×, HEAD `#195`–`#216`) | [Inkling-2-Mini](./inkling.md) |
 | GLM-5.3-Flash on 8× (local 0.30 fork) | [Recipes — GLM-5.3-Flash](./recipes.md#glm-53-flash) |
 | Qwen3.8 Flash-Next (benchmarks and serve lines) | [Flash-Next](./flash-next.md) |
 | Flash-Next MonoKernel (`--monokernel`, HEAD) | [MonoKernel](./flash-next-serve.md#flash-next-monokernel) |
 | Flash-Next DFlash2 (`RECIPE=flashnext-dflash2`, HEAD) | [DFlash2](./flash-next-serve.md#flash-next-dflash2) |
+| Flash-Next LeapQuant (`RECIPE=flashnext-leapquant-mtp2`, HEAD `#168`/`#170`) | [LeapQuant](./flash-next-serve.md#flash-next-leapquant) |
+| Flash-Next GGUF (`RECIPE=flashnext-gguf-mtp0`, HEAD `#169`/`#189`) | [GGUF](./flash-next-serve.md#flash-next-gguf) |
+| 2× 27B HI2 (`RECIPE=27b-hi2-tp2`, HEAD `#171`) | [Quantization](./quantization.md) / [serve scripts](./serve-scripts.md) |
 | Flash-Next **2×** expert offload (`serve_offload.sh`, HEAD `#146`) | [2× MoE offload](./flash-next-serve.md#flash-next-2x-moe-offload) |
 | Env vars, CUDA graphs, Docker Compose | [Configuration](./configuration.md) |
 | GPTQ vs AWQ, KV cache, MTP, INT4 | [Quantization](./quantization.md) |
@@ -46,8 +50,8 @@ Image tags are **refreshed in place** when fixes land — always `docker pull` b
 you already had that tag.
 
 > **Official source:** Kernel work lives in
-> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = **v0.31.0** as of
-> 11 Oct 2026). Day-to-day serving is Hub **`blivioniag/vllm-rdna:v0.31.0-extras`**. First-time path:
+> [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) (`rdna_extras` = **v0.34.0** as of
+> 25 Nov 2026; Hub bake remains **v0.31.0**). Day-to-day serving is Hub **`blivioniag/vllm-rdna:v0.31.0-extras`**. First-time path:
 > [Onboard on V620](./onboarding.md). Older `v0.27.1-extras*` / `v0.28.0-extras*` tags stay on Hub for
 > A/B. `#vllm-rdna` Sep 14–15: Flash-Next commits are **in `rdna_extras`**; the standalone
 > [`leapdragon/vllm-rdna2-qwen`](https://github.com/leapdragon/vllm-rdna2-qwen) branch is no longer

@@ -25,6 +25,33 @@ Mount cache volumes — see [Configuration](../vllm/configuration.md#cache-volum
 
 On multi-GPU AOT cache issues: `VLLM_USE_AOT_COMPILE=0 VLLM_DISABLE_COMPILE_CACHE=1`
 
+### 0.33 nightly: PLE CUDA graphs (NaN / `!!!!`) {#033-nightly-ple-cuda-graphs}
+
+`#vllm-rdna` (1–2 Nov 2026): the first org GHCR **`nightly`** was announced with
+**CUDA graphs broken**. On early **v0.33** HEAD, breakable `FULL_AND_PIECEWISE`
+(`VLLM_USE_BREAKABLE_CUDAGRAPH=1`, used by MoE expert-offload) captured AMD **PLE**
+ops that read per-request metadata. Symptoms:
+
+- second request: **NaNs detected in logits** (offload)
+- Flash-Next: repeating **`!!!!`**
+- PIECEWISE-only boot fault in `_ple_conv_kernel`
+
+Public HEAD (2 Nov) keeps PLE inside **FULL** decode graphs and breaks only
+**PIECEWISE** (mixed/prefill) segments. Recipes stay on `FULL_AND_PIECEWISE`.
+
+**If you pulled nightly on 1 Nov:** pull again after that fix, or fall back to Hub
+**`v0.31.0-extras`**. `--enforce-eager` is a temporary A/B, not the day-to-day path.
+See [GHCR nightly](../vllm/running.md#ghcr-nightly).
+
+### 0.33 long-run crash (one host) {#033-long-run-crash}
+
+`#vllm-rdna` (24 Nov): one host called HEAD **not production-ready** after an
+**~18 h** inference crash. They were on **v0.33** (not 0.34), serving a
+**Qwen3.8-27B** tune. No public log, no known commit, and no second-host
+reproduction. **Needs verify** — do not treat this as a Hub or Flash-Next
+retraction. The crash host was still on **0.33**; public HEAD is now **v0.34.0**
+(25 Nov README) — [Inkling](../vllm/inkling.md).
+
 ### `TORCHINDUCTOR_CACHE_DIR` survives `VLLM_DISABLE_COMPILE_CACHE` {#torchinductor-cache-survives-vllm-disable-compile-cache}
 
 `rdna_extras` (1 Oct, EXL3 27B mul1 TP=4): piecewise `assert_size_stride` kept failing after a
@@ -98,6 +125,16 @@ instead of loading it. A legacy `tunableop/rocblas-<hash>/` folder is still
 honoured when no registered profile matches.
 
 Do not commit a host-specific CSV into the wiki. Do not copy another machine’s library hash.
+
+### TunableOp rank files disagree {#tunableop-rank-agreement}
+
+Merged [`#173`](https://github.com/opengfx1030/vllm-rdna/pull/173) (16 Nov): **data only**.
+Shipped `rocm7.14-rocblas5.5` (and the HI2 TP2 profile) now name **one** rocBLAS
+solution per key on every rank. Pre-fix, 531 of 3,330 keys disagreed, so a
+**1023-row** MoE router GEMM could pick different top-k experts (always the
+odd rank in the study). `rocm10-rocblas5.6` already agreed. Pull HEAD for the
+rewritten CSVs; no launcher change. Note:
+[`docs/rdna2/tunableop-rank-agreement-2026-11-16.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/tunableop-rank-agreement-2026-11-16.md).
 
 ## vLLM picks the wrong platform / doesn't see my Radeon
 
@@ -284,6 +321,12 @@ unconfirmed. **Community / Needs verify.** See [recipes](../vllm/recipes.md#host
 not wiki-tested, **not** a V620 serve recipe. Contrast the Sep 24 **0.29.0 / MTP-0** row
 (~29 → ~19 TG, ~1394 → ~560 PP) in [Verification](../reference/verification.md).
 
+`#vllm-rdna` (16 Nov): a **dual W6800X Duo** host (same gfx1030 class) reported vLLM
+peak **~72** tok/s and **~40** average at 4 concurrent requests, prefill **~1500**
+on short prompts and **~2330** at 200k ingest. Quant / recipe unstated. Maintainer
+pointed at HEAD recipes / LeapQuant. **Community / Needs verify.** Not a V620 serve
+line.
+
 **Concurrency 1**, APC off, **MTP-2**:
 
 | Context | Community PP t/s | Community decode t/s |
@@ -372,6 +415,10 @@ adds experimental native hybrid KV paging — the PR itself says live paging
 no offload while isolating loops.
 
 ## Repeating `!!!!` tokens (clocks / undervolt) {#repeating-exclamation-tokens}
+
+On **0.33 nightly / HEAD** from 1–2 Nov, repeating `!!!!` can also be the
+[PLE CUDA-graph freeze](#033-nightly-ple-cuda-graphs) — check that first if you
+just pulled GHCR `nightly`.
 
 `#vllm-rdna` (27 Oct): a different token-repeat (`!!!!` / `!!!!!!`) showed up while
 hunting the KV-restore loop. One host could **only** reproduce it with **undervolt

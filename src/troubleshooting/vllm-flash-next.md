@@ -96,6 +96,11 @@ does **not** include them. Older Sep 15–16 pins and the Sep 19 `b33f9b6` KeyEr
 historical. A leapdragon image is only a fallback if you cannot clone HEAD. Do not treat an
 arbitrary mid-September org pin as a drop-in for PP3.
 
+`#vllm-rdna` (16 Nov): maintainer had **not re-tested PP3 recently**. Dense INT8
+**may** have a PP3 issue. One **ROCm 10.1** from-source PP3 host produced
+**gibberish**. Prefer GHCR `nightly-rocm7.14.0` after [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172).
+**Needs verify.**
+
 ## Flash-Next PP3 graph KeyError on small prefill (`b33f9b6`) {#flash-next-pp3-graph-keyerror}
 
 `#vllm-rdna` (Sep 19): community test of
@@ -206,6 +211,105 @@ Two different OOM modes (`#vllm-rdna` Sep 17–21 + the in-tree launcher):
 
 Leave `--language-model-only --skip-mm-profiling` if you do not need images. See
 [4× recipe vision notes](../vllm/flash-next-serve.md#flash-next-4x-piecewise).
+
+### Vision + 8× TP8 crash {#flash-next-vision-tp8}
+
+`#general` (5 Nov): on a dual-**PLX88096** **8× V620** host, turning **vision
+on** crashed the whole box during a Flash-Next **TP8** bring-up. The same
+layout with **`--language-model-only`** then stayed up (community first decode
+~**110** t/s; prefill ~**1100** tok/s was called bottlenecked — **Needs
+verify**, not a recipe). A/B vision last on 8-card / cross-switch serves. Also
+check [PLE RAM vs disk](#flash-next-8x-ple-disk) and
+[IOMMU / PSU-group drop](./general.md#iommu-psu-group-drop).
+
+## 8× Flash-Next: PLE in RAM vs `int4-disk` {#flash-next-8x-ple-disk}
+
+`#vllm-rdna` / `#general` (5 Nov): a **Tyan S8030** **8× V620** host with
+**~128 GB** DRAM could not bring up Flash-Next **TP=8** or **TP=4,PP=2** with
+`PLE=int4` **pinned in RAM**. Switching to **`PLE=int4-disk`** (CPU sidecar
+mmap) was the operational fix. Fork comments still treat INT4-in-RAM as a
+**~35 GB** working set — that plus 8 ranks, KV, and the n-gram sidecar is what
+ran out, not a 4× day-to-day path.
+
+**What to do:**
+
+1. On **~128 GB** (or smaller) **8-card** hosts, start with `PLE=int4-disk`
+   + `PLE_QUANT_DIR=…/ples_int4` — [serve scripts](../vllm/serve-scripts.md).
+2. Keep `PLE=int4` (RAM) for 4× hosts with tens of GB free.
+3. If the box **reboots** rather than OOMs, still A/B disk PLE — a host OOM
+   killer can look like a crash. Then [power / IOMMU](./general.md#iommu-psu-group-drop).
+
+`#vllm-rdna` (4 Nov): `VLLM_RDNA_DENSE_INT8_ONLY=1` (on `flashnext-pp3*` recipes)
+caused **token looping** around **~70k** context on one 4× host. Leave it off
+for 4× TP4 unless you are on PP3. **Needs verify.**
+
+## 8× Flash-Next: TP8 vs TP=4,PP=2 {#flash-next-8x-tp-vs-pp}
+
+`#vllm-rdna` (6 Nov): on dual-**PLX88096** **8× V620**, community expected
+**TP=8** to win **decode** and saw **better prefill** on **TP=4,PP=2**. That
+matches the usual “TP inside a switch, PP between switches” split —
+[PLX](../tuning/p2p.md#plx--pcie-switches). HEAD now ships
+`flashnext-tp8-mtp2` and `flashnext-tp4pp2-mtp2` (`PP_PARTITION=24,24`, KV
+**13 GiB**) — replace the host-specific `PCI_BUSES` list; **not** Hub. Both
+layouts still crashed some hosts (vision-on, MTP=2 transients, cross-switch
+hop). A BMC with **no** PCIe log does not clear the host; check `dmesg` / AER
+— [IOMMU drop](./general.md#iommu-psu-group-drop).
+
+`#vllm-rdna` / `#general` (7–8 Nov): two hosts then stayed up on **both**
+layouts at **~120 W** and **~1900 MHz** core. Decode barely dropped versus
+higher clocks. A **4×** host at **250 W** / **2300 MHz** is a different
+power envelope — do not copy 8× caps onto 4×. Still **Needs verify**. Day-to-day
+8× is still not the default path — [power](../tuning/power.md#slot-power-and-psu-transients).
+
+`#benchmarks` (22 Nov, recorded 13 Nov UTC, **Community**): the same dual-PLX
+class of host posted a live Flash-Next AWQ-W4A16
+**TP=4 × PP=2 (26,22)** snapshot — MTP=2, **MAXBAT=2048**, KV **15 GiB**,
+dense INT8 **on**, **150 W / 1900 MHz**, ECC off. Partition and KV size
+differ from the in-tree `24,24` / 13 GiB file. 2k/8k/16k c=1 TTFT
+**0.613 / 1.876 / 3.260 s**; prefill **3188 / 4032 / 4614** tok/s; decode
+**138.6 / 129.2 / 130.4** tok/s. Aggregate decode **c=1 117.9 / c=4 185.0 /
+c=8 335.3** tok/s. MTP accept length **2.31–2.78**. **Needs verify** on a
+second 8× host. Do not copy PCI bus lists. Full table:
+[community 8× production](../vllm/recipes.md#community-8x-flashnext).
+
+`#vllm-rdna` (8 Nov): upstream vLLM **`--enable-eplb`** with
+`num_redundant_experts: 64` **ate ~200–250k** context on one 8× host
+(experts replicated, KV shrinks). `#vllm-rdna` (9 Nov): the same host then
+tried **8** and **32** replicas — still **no** decode win that paid for the
+lost KV after ~1M tokens (linear placement left one card ~**24%** busier).
+That is **not** the fork’s
+[`serve_offload.sh`](../vllm/flash-next-serve.md#flash-next-2x-moe-offload)
+`SLOTS` / `POLICY` cache. Do not start 8× with large redundant-expert counts
+to “fix” uneven MoE. Idle rebalance / JSON restore from that thread is
+**local WIP**, not a public PR. `#vllm-rdna` (10 Nov): after recording a long
+activation soak, the same host froze expert placement (no live EPLB) to get KV
+back; linear layout was still ~**20–25%** imbalanced. `#vllm-rdna` (12 Nov):
+**400B** activation traces still showed ~**22%** best-to-worst rank delta on
+linear mapping (drafter experts ~**27%**). After a **local** rebalance (still
+not a public PR), that host saw **more even per-card power** (2 Hz sampling —
+**Needs verify** whether it calms PSU transients). That freeze / rebalance is
+**local WIP**, not a `serve_rdna.sh` flag. **Needs verify.**
+
+Merged [`#175`](https://github.com/opengfx1030/vllm-rdna/pull/175) (16 Nov): a
+**lean EPLB** study on production **TP4/EP4** Flash-Next measured decode EPLB /
+placement at **0.02–0.19%** ITL — **no-go**. Opt-in counters
+`VLLM_RDNA_EPLB_STATS_DIR` (`#176`) stay **off** unless you are collecting
+those traces. Still do **not** turn on upstream `--enable-eplb`.
+
+## Flash-Next GGUF plugin PPL / boot fault {#flash-next-gguf-plugin}
+
+HEAD after 16 Nov: `RECIPE=flashnext-gguf-mtp0` —
+[GGUF serve](../vllm/flash-next-serve.md#flash-next-gguf).
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| PPL ~**9.8** vs AWQ ~**4.8**; incoherent MoE | PyPI `vllm-gguf-plugin` MMQ kernel drops expert ids **256+** (Flash-Next has **512**) | Use [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) `rdna_extras` (GHCR nightly after `#189`). Do not use the PyPI wheel. |
+| 16k TTFT ~**21 s** instead of ~**8 s**, but PPL is fine | Seam slices large batches onto the per-slot kernel when the plugin lacks `MOE_MMQ_MAX_EXPERTS` | Same fork install. Optional `VLLM_QWEN4EXP_GGUF_MMQ_MAX_EXPERTS=512`. |
+| GPU fault at first CUDA-graph capture (`moe_vec_q`) | Plugin reads `topk_ids == -1` unchecked | HEAD seam (`#174`) routes those slots to expert 0 with weight 0. Pull after `#169`. |
+| Memory fault in `moe_q5_1` at boot | MMQ tile loader reads past packed expert weights | HEAD seam pads **4 KiB** slack when MMQ is allowed (`#174`). |
+
+`#vllm-rdna` (16 Nov) pointed people at GHCR `nightly-rocm7.14.0` for HEAD
+features; GGUF in the image needs a digest **after `#189`**.
 
 ## Flash-Next hybrid KV log overstates capacity {#flash-next-hybrid-kv-overstated}
 

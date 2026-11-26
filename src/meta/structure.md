@@ -28,6 +28,7 @@ src/
     onboarding.md          # Simple V620 happy path (Docker + fork launcher)
     running.md             # Images, docker run, quick start
     recipes.md             # Hub -extras and recipe-container presets
+    inkling.md             # Inkling-2-Mini HEAD recipes (`#195` / `#196`)
     flash-next.md          # Flash-Next status, card counts, AutoRound
     flash-next-serve.md    # Flash-Next serve lines (FULL_AND_PIECEWISE, #17, PP3)
     configuration.md       # Env vars, CUDA graphs, compose
@@ -96,13 +97,15 @@ src/
 | Content type | Location |
 |---|---|
 | Install ROCm, hardware list | `setup/` |
+| Stock V620 VBIOS P/N (500 vs 600) | `setup/hardware.md#v620-vbios` |
 | BIOS / MMIO High / SR-IOV so 4× V620 POSTs | `setup/host-firmware.md` |
 | Power cap, P2P enablement, Pro ECC | `tuning/` |
 | `docker run`, compose, env vars for vLLM | `vllm/` |
 | First V620 vLLM serve (Docker or fork) | `vllm/onboarding.md` |
-| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`; MonoKernel: `#flash-next-monokernel`) |
+| Which image / model / card-count recipe | `vllm/recipes.md` (Flash-Next serve lines: `vllm/flash-next-serve.md`; MonoKernel: `#flash-next-monokernel`; GGUF: `#flash-next-gguf`; Inkling-2-Mini: `vllm/inkling.md`) |
 | Fork `tools/rdna/serve_rdna.sh` recipes | `vllm/serve-scripts.md` |
 | llama.cpp vs vLLM | `choose-a-stack.md` |
+| Cilla / Maya HIP (not vLLM) | `choose-a-stack.md` + `meta/resources.md` |
 | Kernel source, fork branches | `vllm/fork.md` |
 | Hub vs HEAD vs backlog progress | `vllm/fork-progress.md` |
 | Docker image build (vllm-rdna-docker) | `vllm/images.md` |

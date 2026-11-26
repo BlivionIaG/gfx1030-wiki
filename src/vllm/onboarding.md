@@ -4,9 +4,9 @@
 > day-to-day practice in `#vllm-rdna`. See [Verification status](../reference/verification.md#onboardingmd).
 
 Get from a bare V620 host to an OpenAI-compatible `vllm serve` with the community
-[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) fork (`rdna_extras` = upstream
-**vLLM 0.31.0** + RDNA HIP kernels). Prefer this page over the deeper vLLM docs until the first
-request succeeds.
+[`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) fork. Path A uses Hub
+**`v0.31.0-extras`**. `rdna_extras` HEAD is **vLLM 0.34.0** as of 25 Nov 2026 (Path B).
+Prefer this page over the deeper vLLM docs until the first request succeeds.
 
 Not sure vLLM is the right stack? Read [llama.cpp or vLLM](../choose-a-stack.md) first.
 
@@ -32,7 +32,10 @@ Optional but worth it on V620 before long serves: [power cap](../tuning/power.md
 
 `#announcements` (11 Oct 2026): Hub **`v0.31.0-extras`** is the published 0.31 bake (ROCm **7.14**,
 torch **2.12**, Triton **3.7.1**). Older `v0.27.1-extras` / `v0.28.0-extras` tags remain on Hub for
-comparison only.
+comparison only. `#vllm-rdna` (1 Nov): `rdna_extras` HEAD rebased to **v0.33.0**; public
+README (25 Nov) names **v0.34.0**. Path A stays on Hub **0.31**. Org GHCR `nightly` is a
+HEAD snapshot, not the first-serve image —
+[Running](running.md#ghcr-nightly).
 
 ---
 
@@ -138,10 +141,10 @@ MODEL=/path/to/Qwen3.8-Flash-Next-AWQ VENV=/path/to/venv-7.14.0 \
 
 | Cards | Start here |
 |---|---|
-| **1×** | Hub Path A: **Qwen3.8-27B AWQ** or a MoE (e.g. Qwen3.6 **35B-A3B**). Flash-Next is **not** a 1-card path. |
+| **1×** | Hub Path A: **Qwen3.8-27B AWQ** or a MoE (e.g. Qwen3.6 **35B-A3B**). HEAD Inkling-2-Mini: `RECIPE=inkling2-mini-tp1` (32 GB) or `-tp1-offload` (16 GB) — [Inkling](inkling.md). Flash-Next is **not** a 1-card path. |
 | **2×** | Path A/B with `--tensor-parallel-size 2` / recipe TP=2. Flash-Next usually wants more cards or [llama.cpp](../llama-cpp/rdna2-speculative.md#flash-next-2x-iq4). |
 | **4×** | Best Flash-Next layout: **TP=4**, Path B `RECIPE=flashnext-mtp2` (or Hub Path A with PLE mounts). |
-| **8×** | Not the default Flash-Next recipe. Community **GLM-5.3-Flash** notes — [Recipes](./recipes.md#glm-53-flash). |
+| **8×** | Not the default Flash-Next recipe. HEAD `flashnext-tp4pp2-mtp2` / `flashnext-tp8-mtp2` exist (replace `PCI_BUSES`). Community production snapshot — [Recipes](./recipes.md#community-8x-flashnext). **GLM-5.3-Flash** is a separate local-0.30 path — [Recipes](./recipes.md#glm-53-flash). |
 
 Full matrix: [Recipes](./recipes.md). Workload fit: [What fits on V620](../choose-a-stack.md#what-fits-well-on-v620).
 

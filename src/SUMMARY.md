@@ -23,6 +23,7 @@
 - [Onboard on V620](./vllm/onboarding.md)
 - [Running (Docker)](./vllm/running.md)
 - [Recipes (Hub and presets)](./vllm/recipes.md)
+- [Inkling-2-Mini](./vllm/inkling.md)
 - [Flash-Next](./vllm/flash-next.md)
     - [Serve lines](./vllm/flash-next-serve.md)
 - [Configuration](./vllm/configuration.md)

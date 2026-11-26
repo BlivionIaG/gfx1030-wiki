@@ -8,10 +8,10 @@
 
 | Section | What it answers |
 |---|---|
-| [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4×, QSA, KV tightness |
+| [Status by card count](#qwen38-flash-next-on-vllm) | 2× / 3× / 4× / 8×, QSA, KV tightness |
 | [Intel AutoRound](#intel-autoround-flash-next) | W4A16 draft checkpoint and gotchas |
 | [Swift 1.5 Flash-Next](#swift-15-flash-next) | Shorter-reasoning AWQ / AutoRound packs |
-| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
+| [Serve lines](./flash-next-serve.md) | FULL_AND_PIECEWISE, `#17`, PP3, [MonoKernel](./flash-next-serve.md#flash-next-monokernel), [DFlash2](./flash-next-serve.md#flash-next-dflash2), [LeapQuant](./flash-next-serve.md#flash-next-leapquant), [GGUF](./flash-next-serve.md#flash-next-gguf), [INT4 KV](./flash-next-serve.md#flash-next-int4-kv) |
 | [Serve scripts](./serve-scripts.md) | `serve_rdna.sh RECIPE=flashnext-mtp2` and siblings |
 | [Fork progress](./fork-progress.md) | Hub vs HEAD vs open drafts |
 
@@ -60,6 +60,17 @@ turn the `#99` HIP set **on** (QSA / GDN / HC). Hub bake still has the older opt
 kept **native MTP-2 faster**; use DFlash2 only if you want that drafter —
 [DFlash2](./flash-next-serve.md#flash-next-dflash2).
 
+**4× V620 + LeapQuant (`#168` / `#170`, 14–15 Nov):** `RECIPE=flashnext-leapquant-mtp2` is on HEAD
+**after `#172`**. Opt-in **lossy** INT8 GDN state; **not** Hub; 1k c=1 is slower than FP32 MTP-2.
+Do **not** set `VLLM_RDNA_GDN_LEAPQUANT` —
+[LeapQuant](./flash-next-serve.md#flash-next-leapquant).
+
+**4× V620 + GGUF (`#169` / `#189`, 16 Nov):** `RECIPE=flashnext-gguf-mtp0` on HEAD. Unsloth
+**UD-Q4_K_XL** shards, `--load-format qwen4exp_gguf`, MTP=0, text only. Needs the
+[`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin) fork (PyPI
+plugin drops experts 256+). **Not** Hub. Still **no Q3** GGUF path —
+[GGUF](./flash-next-serve.md#flash-next-gguf).
+
 **4× V620 + `rdna_extras` graphs (`#vllm-rdna` Sep 16–25):** on **current HEAD**, prefer
 **`FULL_AND_PIECEWISE`** (compile `mode: 3`) — uniform decode uses the **FULL** CUDA graph (same
 live path as `#17` **`FULL_DECODE_ONLY`**); mixed/prefill use piecewise. See
@@ -73,12 +84,19 @@ decode **corrupt** stayed on **`PIECEWISE`** —
 [FULL-graph corruption](../troubleshooting/vllm-flash-next.md#flash-next-full-graph-corruption) /
 [Sep 17 serve line](./flash-next-serve.md#flash-next-4x-piecewise). Community snapshot on that older
 recipe: **~3331 tok/s** PP / **~73 tok/s** TG @ 16k/1k, c=8 (**Needs verify**). There is **no Q3**
-path on vLLM.
+path on vLLM (HEAD GGUF is **UD-Q4_K_XL**, not Q3).
 
 **6× V620 Flash-Next (`#vllm-rdna` Sep 24):** **minimum 3** cards. Maintainer starting points:
 **`PP=3` + `TP=2`** (six GPUs) or **`PP=6`**. Prefer **power-of-2 tensor parallel** over `PP=2` +
 `TP=3`. Disaggregated prefill/decode (two model loads) is a separate WIP — open
 [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23). **Needs verify** — no published 6× table.
+
+**8× V620:** not the day-to-day recipe. HEAD ships `flashnext-tp8-mtp2` and
+`flashnext-tp4pp2-mtp2` (`PP_PARTITION=24,24`) — replace host-specific
+`PCI_BUSES`. Community production on dual-PLX used **TP=4 × PP=2 (26,22)** —
+[community 8×](./recipes.md#community-8x-flashnext),
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-8x-tp-vs-pp).
+**Needs verify** on a second host.
 
 `#vllm-rdna` (Sep 19): **pipeline parallel 4** on Flash-Next was reported to hit **~1950 tok/s**
 prefill at 32k while **decode collapsed**. The same host dropped PP4 and continued on **TP=4**
