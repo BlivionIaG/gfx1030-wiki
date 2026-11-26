@@ -243,6 +243,10 @@ AWQ-INT4 c=8 **147 → 190** tok/s (bit-identical greedy). **Fork-source** on th
 **`v0.31.0-extras`** may still leave the knobs off — check `PRINT=1`. Set `W4A8=0` to force
 W4A16 prefill. EXL3 still **needs optimizations**. **W8A8**
 was called theoretically the fastest int8 layout, not a current recipe.
+Open [`#221`](https://github.com/opengfx1030/vllm-rdna/pull/221) (26 Nov, `#vllm-rdna`)
+is an opt-in HIP W8A8 dense/HC prefill experiment (flags default off), with an
+author-host 4× Flash-Next claim of **2552 → 3627** tok/s cold PP at 16k —
+**Needs verify**, and that bench excluded the later all-reduce PR. Not merged.
 
 ## INT4 KV cache (`int4_fp16_block`, HEAD)
 

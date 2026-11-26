@@ -119,7 +119,23 @@ is still **0.31**. `#vllm-rdna` / `#general` (21 Nov) “0.34” talk is now
 | [`#214`](https://github.com/opengfx1030/vllm-rdna/pull/214) (25 Nov) | Offload prefetch | `EXPERT_CACHE_COPY=native` and `EXPERT_CACHE_PREFETCH=1` are recipe **defaults**. **Not** Hub. |
 | [`#215`](https://github.com/opengfx1030/vllm-rdna/pull/215) (25 Nov) | RDNA KV-margin floor | Engine default **1 GiB** on gfx10x (CDNA stays 3 GiB). Author-host TP=1 Inkling KV **7.08 → 9.08** GiB; decode **~55.3** unchanged. **Not** Hub. |
 | [`#216`](https://github.com/opengfx1030/vllm-rdna/pull/216) (25 Nov) | LoopCD idle skip | `VLLM_INKLING2_LOOPCD_ENABLE` default **1**; set **0** to strip graph-baked LoopCD launches. **Not** Hub. |
-| [`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217) (25 Nov) | `27b-awq` RDNA2 switches + HI2 MoE | Recipe now sets unfused FA prefill, fused add-norm, in-place GDN, LM-head GEMV. Author-host **2×** 27B AWQ c=8 **147 → 190** tok/s. **Not** Hub. |
+| [`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217) (25 Nov) | `27b-awq` RDNA2 switches + HI2 MoE | Recipe now sets unfused FA prefill, fused add-norm, in-place GDN, LM-head GEMV. Author-host **2×** 27B AWQ c=8 **147 → 190** tok/s. **Not** Hub. `RDNA_AR=1` with `VLLM_RDNA_AR_MAX_KB=256` and `VLLM_RDNA_AR_ONESHOT_KB=256`. |
+
+## On HEAD since 26 Nov (contract only)
+
+`#vllm-rdna` (26 Nov, ~22:00 UTC) asked for lossy kernels to still report how much
+token loss there is, including W8A8 prefill where token-exact is the wrong gate.
+Merged [`#224`](https://github.com/opengfx1030/vllm-rdna/pull/224) (26 Nov 22:16 UTC)
+puts that in the contributing contract: measure token loss
+(`EXACT=1 FAIL_FAST=0 QUALITY=1` on lossy changes), a standard PR template, and
+`tools/rdna/check_pr_contract.py`. The merge parent is `#217`
+(`93c59de2`). Git tip is `11be3e85`. Changed paths are `.github/`,
+`tools/rdna/`, and a contract test.
+
+**Serve pin is unchanged.** Live kernels and recipes are still `#217`
+(`93c59de2`, 25 Nov): ROCm **7.14.0**, torch **2.12.0+rocm7.14.0**, Triton
+**3.7.1**. gfx1030 stays off torch **2.15+** and Triton **3.9+**.
+`RECIPE=27b-awq` still sets `RDNA_AR=1` with both AR caps at **256** KiB.
 
 ## Open backlog (selected)
 
@@ -136,6 +152,8 @@ Do **not** treat drafts as recipes. Full list:
 | EXL3 Flash-Next MTP / vision / MoE cut | Drafts [`#122`](https://github.com/opengfx1030/vllm-rdna/pull/122) / [`#123`](https://github.com/opengfx1030/vllm-rdna/pull/123) / [`#124`](https://github.com/opengfx1030/vllm-rdna/pull/124) | `flashnext-exl3` is MTP=0 for now |
 | DFlash2 BF16 GEMV opts | Draft [`#135`](https://github.com/opengfx1030/vllm-rdna/pull/135) | Follow-up to `#132` |
 | W8A8 sdot4 dense/MoE | Draft [`#93`](https://github.com/opengfx1030/vllm-rdna/pull/93) | Explore — not day-to-day |
+| HIP W8A8 / QSA / MTP MoE prefill | Open [`#221`](https://github.com/opengfx1030/vllm-rdna/pull/221) | `#vllm-rdna` 26 Nov. Opt-in `VLLM_RDNA_DENSE_W8A8_PREFILL`, `VLLM_RDNA_HC_W8A8_DOWN`, `VLLM_RDNA_HC_W8A8_UP` (PR: default **0**), plus a QSA pipe KV fix and grouped unquantized MTP MoE prefill. Author-host 4× V620 Flash-Next cold PP **2552 → 3627** tok/s at 16k and **+32.1%** c=8 — **Needs verify**. Same-day chat: that bench was taken **before** the unpushed all-reduce work, and earlier ~3k prefill runs had severe stalls. **Not** a recipe. |
+| Wave-7 BAR1 P2P AR | Open [`#222`](https://github.com/opengfx1030/vllm-rdna/pull/222) | `#vllm-rdna` 26 Nov (local testing). 128-bit P2P `rdna_ar`, `moe_mxfp8` `BK=192` decode tile, opt-in `VLLM_INKLING2_MOE_OFFLOAD_HYBRID` / `VLLM_INKLING2_MOE_OFFLOAD_PINGPONG` (default **0**). PR: default numeric outputs stay the same. Does **not** replace live `#217` 256 KiB AR on `27b-awq`. Persistent decode MoE monokernel is split into draft [`#223`](https://github.com/opengfx1030/vllm-rdna/pull/223). **Not** a recipe. |
 | Disagg prefill/decode | Open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) | Cross-PLX KV bridge — Needs verify |
 | GLM-5.3 / Glm5Next | Drafts [`#51`](https://github.com/opengfx1030/vllm-rdna/pull/51) / [`#133`](https://github.com/opengfx1030/vllm-rdna/pull/133) | Correctness WIP |
 | Tiered expert budgets + hybrid KV paging | Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148) | `#vllm-rdna` (30 Oct): follow-up to merged `#146`. Live paging **stalls**; PR stays **draft** until mixed-workload gaps look acceptable. **Not** a recipe. |
@@ -151,7 +169,7 @@ Do **not** treat drafts as recipes. Full list:
 | Goal | Prefer |
 |---|---|
 | Docker / least friction | Hub **`v0.31.0-extras`** (still the published bake) |
-| HEAD / 0.34 kernels in Docker | Org GHCR **`nightly`** / `:nightly-0.34.0-rocm7.14.0` — pull a digest **after `#217`** (25 Nov 27B switches / Inkling KV floor), or clone. Do **not** use `:v0.34.0` for Inkling (19 Nov). Anonymous GHCR pull **Needs verify**. |
+| HEAD / 0.34 kernels in Docker | Org GHCR **`nightly`** / `:nightly-0.34.0-rocm7.14.0` — pull a digest **after `#217`** (25 Nov 27B switches / Inkling KV floor), or clone. `#224` (26 Nov) is the token-loss contract only; the kernel pin stays `#217` (`93c59de2`). Do **not** use `:v0.34.0` for Inkling (19 Nov). Anonymous GHCR pull **Needs verify**. Open `#221` / `#222` flags are not serve switches. |
 | 4× Flash-Next day-to-day on HEAD | `RECIPE=flashnext-mtp2` (+ HIP defaults from `#130`) |
 | Faster Flash-Next decode experiment | `EXTRA_ARGS="--monokernel"` — A/B ITL; regenerate TunableOp if PP cliffs |
 | 3× Flash-Next | `RECIPE=flashnext-pp3` or `flashnext-pp3-mtp2` (HEAD only; 16 Nov: not recently re-tested — prefer `nightly-rocm7.14.0`) |

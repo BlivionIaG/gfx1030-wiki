@@ -281,7 +281,10 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
 | Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
 | Inkling-2-Mini `#195`–`#216` | **Fork-source** | Merged 22–25 Nov; five recipes after `#208`/`#211`; `#213`–`#216` follow-ups. Not Hub |
-| 27B AWQ RDNA2 switches `#217` | **Fork-source** | Merged 25 Nov; `27b-awq` + HI2 MoE dispatch. Author-host 2× c=8 147→190 tok/s. Not Hub |
+| 27B AWQ RDNA2 switches `#217` | **Fork-source** | Merged 25 Nov; `27b-awq` + HI2 MoE dispatch. `RDNA_AR=1`, `AR_MAX_KB` / `ONESHOT_KB` **256**. Author-host 2× c=8 147→190 tok/s. Not Hub. Still the serve pin after `#224` |
+| Token-loss contract `#224` | **Fork-source** | Merged 26 Nov 22:16 UTC. Parent `93c59de2`. CI/docs only (tip `11be3e85`). `#vllm-rdna` same hour. ROCm 7.14.0, torch 2.12.0+rocm7.14.0, Triton 3.7.1 unchanged |
+| Open `#221` HIP prefill | **Needs verify** | `#vllm-rdna` 26 Nov. Not merged. Author 4× 16k PP 2552→3627 and +32.1% c=8, taken before the AR follow-up. Not a recipe |
+| Open `#222` Wave-7 AR | **Needs verify** | `#vllm-rdna` 26 Nov, local testing. Not merged. Does not replace `#217` 256 KiB AR. Draft `#223` holds the monokernel split |
 | HEAD v0.34.0 | **Fork-source** | Public README 25 Nov names v0.34.0. Hub bake still 0.31. GHCR `:v0.34.0` is 19 Nov pre-Inkling |
 
 ### `inkling.md`
@@ -522,8 +525,10 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` / `serve-scripts.md` `#171` HI2 | **Fork-source** | `#171` 15 Nov; `27b-hi2-tp2*`; 2× V620. Not Hub. 20 Nov `#benchmarks` second-host boot is **Community / Needs verify** |
 | `vllm/fork.md` / `flash-next-serve.md` GGUF `#169`/`#189` | **Fork-source** | 16 Nov; `flashnext-gguf-mtp0`; plugin fork. Not Hub |
 | `vllm/fork.md` / `inkling.md` / `serve-scripts.md` Inkling `#195`–`#216` | **Fork-source** | 22–25 Nov; five recipes after `#208`/`#211`; `#213`–`#216` KV/offload/LoopCD. Not Hub. README 25 Nov v0.34.0. `#general` 23–24 Nov: not a 4-card Flash-Next replacement |
-| `vllm/fork.md` / `serve-scripts.md` / `quantization.md` `#217` 27B AWQ | **Fork-source** | 25 Nov; unfused FA prefill / in-place GDN / LM-head GEMV on `27b-awq`. Author-host 2× c=8 147→190 tok/s. Not Hub |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 26 Nov Hub vs 0.34 HEAD vs GHCR `#198` vs Inkling `#205`–`#216` vs `#217` 27B vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs backlog |
+| `vllm/fork.md` / `serve-scripts.md` / `quantization.md` `#217` 27B AWQ | **Fork-source** | 25 Nov; unfused FA prefill / in-place GDN / LM-head GEMV on `27b-awq`. `RDNA_AR=1` and both AR caps 256. Author-host 2× c=8 147→190 tok/s. Not Hub. Serve pin after CI-only `#224` |
+| `vllm/fork.md` / `fork-progress.md` `#224` token-loss contract | **Fork-source** | 26 Nov 22:16 UTC. Parent `93c59de2`, tip `11be3e85`. `.github/` + `tools/rdna/check_pr_contract.py`. `#vllm-rdna` same hour. Pins unchanged |
+| `vllm/fork-progress.md` / `quantization.md` open `#221` / `#222` | **Needs verify** | `#vllm-rdna` 26 Nov. `#221` opt-in HIP W8A8 prefill (author 2552→3627 tok/s at 16k, before AR). `#222` Wave-7 BAR1 AR, not the live 256 KiB caps. Draft `#223` is the monokernel split. Not recipes |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 26 Nov Hub vs 0.34 HEAD vs GHCR `#198` vs Inkling `#205`–`#216` vs `#217` 27B vs `#224` CI-only tip vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs open `#221`/`#222` |
 | `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; `#198` 24 Nov `:nightly-0.34.0-rocm7.14.0`; git-tag `:v0.34.0` is 19 Nov pre-Inkling. Anonymous GHCR pull not confirmed |
 | `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `troubleshooting/vllm.md` 0.33 long-run crash | **Community / Needs verify** | `#vllm-rdna` 24 Nov — one ~18 h crash on 0.33 Qwen3.8-27B; HEAD is now 0.34 |
