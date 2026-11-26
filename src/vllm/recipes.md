@@ -78,7 +78,7 @@ Community reports **Gemma 4 ~26B** still fails or is unfinished on current gfx10
 
 | Model | Cards | Stack | Notes |
 |---|---|---|---|
-| [`thinkingmachines/Inkling-2-Mini`](https://huggingface.co/thinkingmachines/Inkling-2-Mini) | **1–4×** | `rdna_extras` HEAD `RECIPE=inkling2-mini-tp1` (or `-tp1-dspark` / `-tp1-offload` / `-tp2` / `-tp4`) | Merged `#195`–`#211` (22–25 Nov). Native NVFP4/MXFP8 HIP. **Not** Hub. `#general` (23–24 Nov): **not** a 4-card Flash-Next replacement; W4A16 quality is behind QFN. [Inkling](inkling.md). |
+| [`thinkingmachines/Inkling-2-Mini`](https://huggingface.co/thinkingmachines/Inkling-2-Mini) | **1–4×** | `rdna_extras` HEAD `RECIPE=inkling2-mini-tp1` (or `-tp1-dspark` / `-tp1-offload` / `-tp2` / `-tp4`) | Merged `#195`–`#216` (22–25 Nov). Native NVFP4/MXFP8 HIP. **Not** Hub. `#general` (23–24 Nov): **not** a 4-card Flash-Next replacement; W4A16 quality is behind QFN. [Inkling](inkling.md). |
 | [`cyankiwi/Qwen3.8-27B-AWQ-INT4`](https://huggingface.co/cyankiwi/Qwen3.8-27B-AWQ-INT4) | 1–4× | Hub `-extras` or recipe preset | Current day-to-day **27B** pick in `#vllm-rdna` (Sep 13 2026). compressed-tensors AWQ. |
 | [`BlivionIaG/Qwen3.8-27B-HI2-3.0bpw`](https://huggingface.co/BlivionIaG/Qwen3.8-27B-HI2-3.0bpw) | **2×** | `rdna_extras` HEAD `RECIPE=27b-hi2-tp2` | Merged `#171` (15 Nov). **Not** Hub. Second-host `#benchmarks` (20 Nov) — [community table](#community-2x-hi2-tp2). |
 | [`btbtyler09/Qwen3.8-27B-GPTQ-4bit`](https://huggingface.co/btbtyler09/Qwen3.8-27B-GPTQ-4bit) | 2×+ | Recipe `preset:qwen38-27b-gptq` or Hub `-extras` | Recipe **reference** preset; native GPTQ → `RDNA2W4A16` on `-extras`. |

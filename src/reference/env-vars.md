@@ -91,7 +91,13 @@ A cheat-sheet of the settings that matter most when running ML workloads on gfx1
 | `VLLM_INKLING2_PREFILL_ATTN_TILE` | `0` | Pipelined prefill attention tile (`#196`). `0` is the shipped tile. |
 | `VLLM_INKLING2_PREFILL_INT8` | `1` | Experimental Inkling prefill INT8. **Changes quality.** Off in recipes. |
 | `VLLM_INKLING2_LOOPCD_ALPHA` | `0` | Opt-in LoopCD (`#210`, `arXiv:2610.02185`). Default **0** = off (bit-identical). Launcher `LOOPCD_ALPHA`. Modes `hidden` / `logits`. **Not** Hub. [Inkling](../vllm/inkling.md#loopcd). |
+| `VLLM_INKLING2_LOOPCD_ENABLE` | `1` | [`#216`](https://github.com/opengfx1030/vllm-rdna/pull/216) (25 Nov). Default **1** keeps per-request LoopCD `vllm_xargs` working. Set **0** to strip the three graph-baked LoopCD launches. **Not** Hub. |
 | `VLLM_INKLING2_MOE_OFFLOAD_SLOTS` | `48` | TP=1 expert spill (`#211`). Recipe `inkling2-mini-tp1-offload` (`EXPERT_SLOTS=48`). **TP>1 refused.** **Not** Hub. |
+| `VLLM_INKLING2_MOE_OFFLOAD_COPY` | `native` | [`#214`](https://github.com/opengfx1030/vllm-rdna/pull/214). Recipe default **native** (`hipMemcpyBatchAsync`). `tensor` is the fallback. Launcher `EXPERT_CACHE_COPY`. **Not** Hub. |
+| `VLLM_INKLING2_MOE_OFFLOAD_PREFETCH` | `1` | Same PR. Async layer-ahead expert prefetch. Launcher `EXPERT_CACHE_PREFETCH`. Default **on**. **Not** Hub. |
+| `VLLM_KV_CACHE_MARGIN_FLOOR_MIB` | `1024` | [`#215`](https://github.com/opengfx1030/vllm-rdna/pull/215). Engine default **1 GiB** on RDNA (gfx10x/11/12); CDNA stays **3 GiB**. Inkling TP=2 recipe pins **2048**; offload pins **1536**. **Not** Hub. |
+| `VLLM_FA_RDNA2_UNFUSED_PREFILL` | `1` | [`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217). `27b-awq` / HI2 TP=2 recipes: rocBLAS GEMM + softmax prefill attention (`head_dim` 256). **Not** Hub. |
+| `VLLM_RDNA_GDN_DECODE_INPLACE` | `1` | Same PR. In-place paged GDN state (fewer launches / extra KV). On `27b-awq` and HI2 TP=2 recipes. **Not** Hub. |
 
 ### llama.cpp RDNA2 fork (`#llamacpp`)
 

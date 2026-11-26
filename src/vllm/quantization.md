@@ -194,7 +194,9 @@ try). `#vllm-rdna` (12 Nov): TP4 / TP8 hi2 export ranks were **future work**.
 Merged [`#171`](https://github.com/opengfx1030/vllm-rdna/pull/171) (15 Nov): HEAD
 recipes **`27b-hi2-tp2`** (MTP=0) and **`27b-hi2-tp2-mtp2`** (MTP=2) serve that
 pack on **2× V620**. Speed switches stay **off in code** and **on in those two
-recipes** — [serve scripts](serve-scripts.md). Guide:
+recipes**. [`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217) (25 Nov)
+copies the same validated 27B RDNA2 switch set onto `RECIPE=27b-awq` and
+tightens HI2 MoE dispatch — [serve scripts](serve-scripts.md). Guide:
 [`docs/rdna2/hi2-27b-tp2-serving.md`](https://github.com/opengfx1030/vllm-rdna/blob/rdna_extras/docs/rdna2/hi2-27b-tp2-serving.md).
 **Not** Hub. Fork-source numbers are **2×** only; do not paste them onto 4× / 8×.
 Do not treat hi2 as a Hub day-to-day path — kernels stay on the RDNA2 fork, not a
@@ -235,8 +237,11 @@ was called **somewhat competitive vs W4A16**. Merged
 [`#140`](https://github.com/opengfx1030/vllm-rdna/pull/140) (26 Oct): `27b-awq` recipe defaults
 **`W4A8=1`** on HEAD (int8-activation prefill GEMMs for M≥33; decode stays W4A16). Author-host
 4× TP4: 16k c=1 PP **860 → 1075** tok/s; c=8 aggregate out **42.5 → 52.3**; paired PPL ~unchanged.
-**Fork-source** on that host; Hub **`v0.31.0-extras`** may still leave the knob off — check
-`PRINT=1`. Set `W4A8=0` to force W4A16 prefill. EXL3 still **needs optimizations**. **W8A8**
+[`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217) (25 Nov) also turns on unfused FA
+prefill, fused add-norm, in-place GDN, and LM-head GEMV on that recipe. Author-host **2×**
+AWQ-INT4 c=8 **147 → 190** tok/s (bit-identical greedy). **Fork-source** on those hosts; Hub
+**`v0.31.0-extras`** may still leave the knobs off — check `PRINT=1`. Set `W4A8=0` to force
+W4A16 prefill. EXL3 still **needs optimizations**. **W8A8**
 was called theoretically the fastest int8 layout, not a current recipe.
 
 ## INT4 KV cache (`int4_fp16_block`, HEAD)

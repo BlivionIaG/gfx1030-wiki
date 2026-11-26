@@ -39,7 +39,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 |---|---|---|
 | Hub `v0.31.0-extras` is day-to-day Docker | **Community** | `#announcements` 11 Oct 2026; Hub tags `v0.31.0-extras` / `v0.31.0-extras-rocm7.14.0` dated 11 Oct. Still the published bake after the 1 Nov 0.33 rebase |
 | `rdna_extras` HEAD = upstream vLLM 0.34.0 + RDNA port | **Fork-source** | Public README 25 Nov names v0.34.0. 1 Nov rebase was 0.32 then 0.33. Hub bake remains 0.31. |
-| Path A 1× also has HEAD Inkling | **Fork-source** | `#195`–`#211`; `RECIPE=inkling2-mini-tp1` / `-tp1-offload`. Not Hub |
+| Path A 1× also has HEAD Inkling | **Fork-source** | `#195`–`#216`; `RECIPE=inkling2-mini-tp1` / `-tp1-offload`. Not Hub |
 | Org GHCR `nightly` | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`. Tag name from author + workflow. Package may need GHCR auth |
 | Path A 27B AWQ docker run | **Community** | Same announcement + prior `#vllm-rdna` day-to-day model pick |
 | Path B `serve_rdna.sh` + `PLE=int4` Flash-Next | **Community** | `#announcements` + `#vllm-rdna` Oct 11 launcher example |
@@ -77,7 +77,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | QSA live-context `#15` ~1.8–2.0k PP / ~54–73 TG (TP4 PP1) | **Needs verify** | `#vllm-rdna` Sep 20 author-host table + merged `opengfx1030/vllm-rdna#15`. Sep 21: other 4× hosts on `#15` only got **~1.1–1.45k** PP. The unpublished recovery is **`#17`** (merged 23 Sep) |
 | Recipe decode ~40–49 vs ~27 without TunableOp | **Community** | Recipe container README / troubleshooting |
 | HI2 `27b-hi2-tp2` second 2× host | **Community / Needs verify** | `#benchmarks` 20 Nov — X99 2× V620, ROCm 7.2.4, MAXBAT=256. 1k c=1 PP **463** / TG **44**; 16k c=1 PP **441** / TG **33**. Decode ~`#171`; prefill not |
-| Inkling-2-Mini HEAD recipes | **Fork-source** | Merged `#195`–`#211` 22–25 Nov. Five files after `#208`/`#211`. Not Hub. [inkling.md](../vllm/inkling.md) |
+| Inkling-2-Mini HEAD recipes | **Fork-source** | Merged `#195`–`#216` 22–25 Nov. Five files after `#208`/`#211`. `#213`–`#216` KV/offload/LoopCD follow-ups. Not Hub. [inkling.md](../vllm/inkling.md) |
 | 8× Flash-Next community production snapshot | **Community / Needs verify** | `#benchmarks` 22 Nov (recorded 13 Nov) — 8× V620 dual-PLX, TP=4×PP=2 (26,22), KV 15 GiB, DENSE_INT8 on, 150 W / 1900 MHz. Not the in-tree `24,24` / 13 GiB file |
 
 ### `configuration.md`
@@ -280,7 +280,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Hub `v0.31.0-extras` feature set | **Fork-source** | `#announcements` 11 Oct |
 | HEAD table (`#94`–`#140`) | **Fork-source** | Merged PR dates on `opengfx1030/vllm-rdna` |
 | Open backlog rows | **Needs verify** | Draft/open PRs — not recipes |
-| Inkling-2-Mini `#195`–`#211` | **Fork-source** | Merged 22–25 Nov; five recipes after `#208`/`#211`. Not Hub |
+| Inkling-2-Mini `#195`–`#216` | **Fork-source** | Merged 22–25 Nov; five recipes after `#208`/`#211`; `#213`–`#216` follow-ups. Not Hub |
+| 27B AWQ RDNA2 switches `#217` | **Fork-source** | Merged 25 Nov; `27b-awq` + HI2 MoE dispatch. Author-host 2× c=8 147→190 tok/s. Not Hub |
 | HEAD v0.34.0 | **Fork-source** | Public README 25 Nov names v0.34.0. Hub bake still 0.31. GHCR `:v0.34.0` is 19 Nov pre-Inkling |
 
 ### `inkling.md`
@@ -295,13 +296,17 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | TP=1 decode / KV `MAXLEN=194000` | **Fork-source** | [`#209`](https://github.com/opengfx1030/vllm-rdna/pull/209) 24 Nov |
 | LoopCD opt-in | **Fork-source / Needs verify** | [`#210`](https://github.com/opengfx1030/vllm-rdna/pull/210) 25 Nov; default alpha 0. `#general` 24 Nov paper chat |
 | `inkling2-mini-tp1-offload` 16 GiB | **Fork-source** | [`#211`](https://github.com/opengfx1030/vllm-rdna/pull/211) 25 Nov; simulated peak 12.94 GiB; TP>1 refused |
+| Offload native copy + prefetch defaults | **Fork-source** | [`#214`](https://github.com/opengfx1030/vllm-rdna/pull/214) 25 Nov |
+| TP=2 DSpark `MAXLEN=760000` | **Fork-source** | [`#213`](https://github.com/opengfx1030/vllm-rdna/pull/213) 25 Nov; `ADAPTIVE=1` → 720000 |
+| RDNA KV-margin floor 1 GiB | **Fork-source** | [`#215`](https://github.com/opengfx1030/vllm-rdna/pull/215) 25 Nov; TP=1 KV 7.08→9.08 GiB, decode ~55.3 unchanged |
+| LoopCD `VLLM_INKLING2_LOOPCD_ENABLE` | **Fork-source** | [`#216`](https://github.com/opengfx1030/vllm-rdna/pull/216) 25 Nov; default 1, set 0 to strip graph launches |
 | Author-host tok/s tables | **Fork-source / Needs verify** | PR bodies + `docs/rdna2/inkling2-benchmarks.md`. Not wiki-tested |
 | llama.cpp GGUF Q4_K_XL ~90 / ~50 / ~2k PP | **Community / Needs verify** | `#general` 21–22 Nov — 1× V620; not the HIP NVFP4 path |
 | HEAD is v0.34.0 | **Fork-source** | Public README 25 Nov. `#vllm-rdna` 24 Nov crash host was still on 0.33 |
 | GHCR `:v0.34.0` is pre-Inkling | **Fork-source** | `#198` 24 Nov; git tag 19 Nov. Prefer `:nightly` / `:nightly-0.34.0-rocm7.14.0` |
 | Not a 4-card Flash-Next replacement | **Community** | `#general` 23–24 Nov — keep QFN as 4× default; W4A16 quality behind QFN / barely 27B band |
 | BetterBench weighted decode ~56 TP1 / ~79 TP2 | **Community / Needs verify** | `#general` 23 Nov BetterBench 0.6.1. Ballpark matches author-host short-agent |
-| Inkling on Strata uses 2 of 4 GPUs | **Community / Needs verify** | `#strata` 23–25 Nov — use vLLM HEAD recipes |
+| Inkling on Strata uses 2 of 4 GPUs | **Community / Needs verify** | `#strata` 23–26 Nov — still 2-GPU locked; use vLLM HEAD recipes; force FP16 prompt GEMMs |
 
 ### `host-venv.md`
 
@@ -327,7 +332,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | Statement | Status | Verify how |
 |---|---|---|
 | `tools/rdna/serve_rdna.sh` is the single entry point; old `serve_gfx1030_*.sh` names are aliases | **Fork-source** | `tools/rdna/` on `rdna_extras` and `rdna_extra/v0.31.0` (moved from `scripts/`) |
-| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `flashnext-dflash2` / `flashnext-leapquant-mtp2` / `flashnext-tp4pp2-mtp2` / `flashnext-tp8-mtp2` / `27b-awq` / `27b-hi2-tp2*` / `27b-exl3` / `dsv4-flash` / `inkling2-mini-tp*` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env`. `flashnext-dflash2` is `#132` (21 Oct); `flashnext-leapquant-mtp2` is `#168`/`#170` (14–15 Nov); HI2 `#171` (15 Nov); Inkling `#195`–`#211` (22–25 Nov); 8× files need host `PCI_BUSES`. Hub lags |
+| Recipe deltas (`flashnext-mtp2` / `mtp0` / `flashnext` / `flashnext-dflash2` / `flashnext-leapquant-mtp2` / `flashnext-tp4pp2-mtp2` / `flashnext-tp8-mtp2` / `27b-awq` / `27b-hi2-tp2*` / `27b-exl3` / `dsv4-flash` / `inkling2-mini-tp*` / `full`) | **Fork-source** | `tools/rdna/recipes/*.env`. `flashnext-dflash2` is `#132` (21 Oct); `flashnext-leapquant-mtp2` is `#168`/`#170` (14–15 Nov); HI2 `#171` (15 Nov); Inkling `#195`–`#216` (22–25 Nov); `#217` 27B AWQ switches; 8× files need host `PCI_BUSES`. Hub lags |
 | MTP=2 wins at 8×16k/1k c=8; MTP=0 wins at 8×1k/512 c=8 | **Fork-source** | Recipe file comments dated 2026-09-27. Tok/s tables stay on [Flash-Next serve lines](../vllm/flash-next-serve.md) |
 | Flash-Next PLE `bf16` / `int4` / `int4-disk` | **Fork-source** | `#announcements` 11 Oct + `serve_rdna.sh` `PLE=`. INT4 table ~30 GB; `#vllm-rdna` Oct 11 corrected inflated ~90 GB host-RAM figure (~35 GB working set). Disk mmap via `VLLM_PLE_CPU_OFFLOAD=1`. Speed at parity on author 4× V620. `#vllm-rdna` 5 Nov: 8× / ~128 GB needed `int4-disk` for TP8 / TP=4,PP=2 — **Community / Needs verify** |
 | Drop `VLLM_USE_BREAKABLE_CUDAGRAPH=1` / do not force `VLLM_RDNA_FUSED_HC=0` on Flash-Next | **Community** | `#vllm-rdna` Oct 10 (agent pastes). `dsv4-flash` still sets breakable graphs. |
@@ -472,7 +477,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `reference/env-vars.md` `GPU_MAX_HW_QUEUES=4` on Flash-Next TP4 | **Fork-source** | `#107` 16 Oct |
 | `reference/env-vars.md` `ROCPROFILER_REGISTER_ENABLED` | **Fork-source / Community** | `#108` 16 Oct |
 | `reference/env-vars.md` `VLLM_ROCM_MONO_DECODE` | **Fork-source** | `#94` 16 Oct |
-| `reference/env-vars.md` `VLLM_INKLING2_*` | **Fork-source** | `#195`/`#196` recipe defaults; `PREFILL_INT8` changes quality; LoopCD `#210`; offload slots `#211` |
+| `reference/env-vars.md` `VLLM_INKLING2_*` | **Fork-source** | `#195`/`#196` recipe defaults; `PREFILL_INT8` changes quality; LoopCD `#210`/`#216`; offload slots `#211`/`#214`; KV floor `#215`; 27B switches `#217` |
 | `reference/env-vars.md` `HSA_KERNARG_POOL_SIZE` | **Community / Needs verify** | `#vllm-rdna` 17 Oct — TP=8 ~14 GB; not a 4× recipe |
 | `vllm/flash-next-serve.md` MonoKernel `#94` ITL table | **Fork-source** | PR `#94` 16 Oct; Hub lags |
 | `vllm/flash-next-serve.md` MonoKernel second-host PP | **Community / Needs verify** | `#vllm-rdna` 16 Oct |
@@ -516,8 +521,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` / `flash-next-serve.md` `#168`/`#170`/`#172` LeapQuant | **Fork-source** | `#168` 14 Nov; `#170` 15 Nov flag; `#172` 16 Nov boot fix. Recipe `flashnext-leapquant-mtp2`. Not Hub |
 | `vllm/fork.md` / `serve-scripts.md` `#171` HI2 | **Fork-source** | `#171` 15 Nov; `27b-hi2-tp2*`; 2× V620. Not Hub. 20 Nov `#benchmarks` second-host boot is **Community / Needs verify** |
 | `vllm/fork.md` / `flash-next-serve.md` GGUF `#169`/`#189` | **Fork-source** | 16 Nov; `flashnext-gguf-mtp0`; plugin fork. Not Hub |
-| `vllm/fork.md` / `inkling.md` / `serve-scripts.md` Inkling `#195`–`#211` | **Fork-source** | 22–25 Nov; five recipes after `#208`/`#211`. Not Hub. README 25 Nov v0.34.0. `#general` 23–24 Nov: not a 4-card Flash-Next replacement |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 25 Nov Hub vs 0.34 HEAD vs GHCR `#198` vs Inkling `#205`–`#211` vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs backlog |
+| `vllm/fork.md` / `inkling.md` / `serve-scripts.md` Inkling `#195`–`#216` | **Fork-source** | 22–25 Nov; five recipes after `#208`/`#211`; `#213`–`#216` KV/offload/LoopCD. Not Hub. README 25 Nov v0.34.0. `#general` 23–24 Nov: not a 4-card Flash-Next replacement |
+| `vllm/fork.md` / `serve-scripts.md` / `quantization.md` `#217` 27B AWQ | **Fork-source** | 25 Nov; unfused FA prefill / in-place GDN / LM-head GEMV on `27b-awq`. Author-host 2× c=8 147→190 tok/s. Not Hub |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 26 Nov Hub vs 0.34 HEAD vs GHCR `#198` vs Inkling `#205`–`#216` vs `#217` 27B vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs backlog |
 | `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; `#198` 24 Nov `:nightly-0.34.0-rocm7.14.0`; git-tag `:v0.34.0` is 19 Nov pre-Inkling. Anonymous GHCR pull not confirmed |
 | `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `troubleshooting/vllm.md` 0.33 long-run crash | **Community / Needs verify** | `#vllm-rdna` 24 Nov — one ~18 h crash on 0.33 Qwen3.8-27B; HEAD is now 0.34 |
@@ -556,7 +562,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `choose-a-stack.md` / `meta/resources.md` Strata `v620-gfx1030-tuned` | **Community / Needs verify** | `#strata` 18 Nov + public `andrewprock/Strata` `v620-gfx1030-tuned` / `README-gfx1030.md`. `STRATA_HC_MIX_H16=1` + `STRATA_PREFILL_MMQ=ON`. Author-host 1× V620 IQ3_S Qwen3.8 Flash-Next ~+2% PP vs vanilla 0.2.15-dev. Not a general gfx1030 port. No wiki serve recipe |
 | `choose-a-stack.md` / `meta/resources.md` Strata tool-call recovery | **Community / Needs verify** | `#strata` 7–9 Nov + Strata `docs/DETAILS.md`. `tool_call_recovery` on since 0.2.8. VS Code Copilot + QFN Q8 still dropped calls; pi.dev host had none. No serve recipe |
 | `choose-a-stack.md` / `meta/resources.md` Strata 2× QFN ballpark | **Community / Needs verify** | `#strata` 10 Nov — 2× V620 IQ3-class Qwen Flash-Next clustered ~1200–1600 PP / ~40–70 TG with 128 GB DRAM; one Q3 host ~800/40. 11 Nov: OS-level 2 MiB hugepages (`vm.nr_hugepages`) required for stability on one 2× host (Strata 0.2.7 DeepSeek note; not a JSON flag; container untested); that IQ3_S host ~1200–2000 PP / ~50–70 TG. Prefer QFN / q3.8fn over Mix-128G-class DeepSeek packs. 16 Nov: 0.2.14.1 vs 0.2.12 on one 2× V620 POWER8 S822LC IQ4_XS host — 16k PP ~1199→~1286 (2×), ~962→~1043 (1×); decode noise. Not a recipe |
-| `choose-a-stack.md` / `meta/resources.md` Strata/Maya Hy4 + Inkling | **Community / Needs verify** | `#strata` 23–24 Nov — Hy4 (quant unspecified) decode ~QFN, prefill ~250 PP 2× / ~525 4×, decode ~45–50 on Maya; hipBLAS ROCm 10 tables no PP gain. Inkling-2-Mini on Strata used 2 of 4 GPUs |
+| `choose-a-stack.md` / `meta/resources.md` Strata/Maya Hy4 + Inkling | **Community / Needs verify** | `#strata` 23–26 Nov — Hy4 (quant unspecified) decode ~QFN, prefill ~250 PP 2× / ~525 4×, decode ~45–50 on Maya; hipBLAS ROCm 10 tables no PP gain. 26 Nov: `--layer-split 0` ~350→~475–500 PP on one 4-card host; conversation cache on tmpfs; load stayed on one card. Inkling-2-Mini on Strata still 2-GPU locked |
 | `choose-a-stack.md` / `meta/resources.md` Cilla-v620 Maya fork | **Community / Needs verify** | `#general` 9 Nov + public `crispyging/cilla-v620` `release/cilla-v620`. README: DeepSeek-V4.1-Flash-1017, ROCm 7.2.4, Python 3.11, four-V620 opt-in LAUNCHING.md. No wiki serve recipe. Mixed first-tries; 8× untested. `#strata` 10 Nov: 2× V620 + 128 GB DDR4 Maya DeepSeek ~30 t/s / ~200 PP vs ~1.5k Qwen Flash PP on the same host. 11 Nov: Mix-128G-class DeepSeek packs a poor 2× fit; Engram on NVMe can drop decode to single digits |
 | `vllm/fork.md` / `fork-progress.md` RidgeFill `#155` | **Fork-source** | Public `#155` + `#vllm-rdna` 4–6 Nov. `VLLM_RDNA_RIDGEFILL` defaults off; quality gate not met 6 Nov; not a recipe |
 | `troubleshooting/vllm-flash-next.md` 8× PLE disk / vision TP8 | **Community / Needs verify** | `#vllm-rdna` / `#general` 5 Nov — Tyan S8030 ~128 GB needed `PLE=int4-disk`; vision-on crashed TP8. 6 Nov: TP8 expected better decode, TP=4,PP=2 better prefill. HEAD now ships `flashnext-tp8-mtp2` / `flashnext-tp4pp2-mtp2` (replace `PCI_BUSES`). 7–8 Nov: two hosts held both layouts at ~120 W / ~1900 MHz; `--enable-eplb` 64 redundant experts ate ~200–250k KV. 9 Nov: 8 and 32 replicas still not worth the KV loss (~1M tokens; one card ~24% busier). 10 Nov: freeze-after-soak to reclaim KV; linear layout ~20–25% imbalanced. 12 Nov: 400B traces still ~22% linear rank delta (drafter ~27%); local rebalance evened per-card power — local WIP. 22 Nov `#benchmarks` (recorded 13 Nov): community production TP=4×PP=2 (26,22) KV 15 GiB DENSE_INT8 150 W/1900 MHz numbers — **Community / Needs verify** |
@@ -610,7 +616,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `tuning/p2p.md` external Xpander / narrow uplink | **Community** | `#general` Sep 2026 — long-ctx collapse |
 | `tuning/p2p.md` layer vs tensor split explainer | **Community** | `#benchmarks` Sep 2026 |
 | `setup/installing-rocm.md` avoid mid-7.2.x (e.g. 7.2.4) | **Community** | Same RCCL pin as 7.2.1+; prefer 7.2.0 or 7.14.0 |
-| `setup/installing-rocm.md` / `troubleshooting/general.md` hipBLASLt gfx1030-unified | **Community / Needs verify** | `#general` 24–25 Nov — rocBLAS workaround still stands; public `BlivionIaG/rocm-libraries` `gfx1030-unified` exists. Not a Hub bake |
+| `setup/installing-rocm.md` / `troubleshooting/general.md` hipBLASLt gfx1030-unified | **Community / Needs verify** | `#general` / `#strata` 24–26 Nov — rocBLAS workaround still stands; public `BlivionIaG/rocm-libraries` `gfx1030-unified` (Tensile) exists. Not a Hub bake. vLLM Inkling recipes skip rocBLAS |
 | `setup/hardware.md` W6800 BIOS on V620 → 54 CU | **Community** | `#general` Sep 2026 PSA — stay on stock V620 VBIOS |
 | `setup/hardware.md` stock V620 VBIOS 500 vs 600 | **Community** | `#vllm-rdna` 9 Nov — `113-D6030500-100` (Apr) vs `113-D6030600-100` (Jun); mixed OK; perf tables identical; `rocm-smi --showvbios` / `amdvbflash -s` dump only. Public D60306 archive `baldpope/uncategorized` `amd_v620/` |
 | `setup/host-firmware.md` Dell Precision MMIO High / `mmiohsize` | **Community** | `#motherboard` / `#general` Sep 12–14 2026 — dump your own UEFI; 0x03 vs 0x04 |

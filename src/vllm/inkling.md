@@ -25,7 +25,7 @@ GHCR **`:v0.34.0`** is an older snapshot (19 Nov, **no Inkling**) — pull
 retraction. [Troubleshooting](../troubleshooting/vllm.md#033-long-run-crash).
 
 Prefer the in-tree vLLM recipes on **HEAD** (clone + [host venv](host-venv.md),
-or org GHCR [nightly](running.md#ghcr-nightly) after `#211`). `#general`
+or org GHCR [nightly](running.md#ghcr-nightly) after `#217`). `#general`
 (21–22 Nov) also had a **llama.cpp GGUF** path — [community llama.cpp](#llamacpp-gguf).
 
 ## Recipes
@@ -48,8 +48,8 @@ MODEL=/path/to/inkling2-mini VENV=/path/to/venv \
 |---|---|---|
 | `inkling2-mini-tp1` | **1× 32 GB** | Plain decode. `MAXLEN=194000` after [`#209`](https://github.com/opengfx1030/vllm-rdna/pull/209) (was 180k). `SEQS=16`, `FULL_AND_PIECEWISE`, prefix cache, one image/prompt. |
 | `inkling2-mini-tp1-dspark` | **1× 32 GB** | DSpark on. `MAXLEN=135000` (`ADAPTIVE=1` → `125000`). Pass `DRAFT_VOCAB=` for the 32k-id file from `tools/rdna/inkling2/draft_vocab.py`. |
-| `inkling2-mini-tp1-offload` | **1× 16 or 32 GB** | [`#211`](https://github.com/opengfx1030/vllm-rdna/pull/211). TP=1 expert spill (`EXPERT_SLOTS=48`). `MAXLEN=65536`. Simulated 16 GiB peak **12.94 GiB**. Optional `EXPERT_CACHE_COPY=native`. **TP>1 refused.** |
-| `inkling2-mini-tp2` | **2×** | DSpark **on by default** (`MAXLEN=720000`). `DSPARK=0` for the 1M cap (`MAXBAT=320`). `ADAPTIVE=1` / `DRAFT_VOCAB=` work at TP=2 after `#208`. |
+| `inkling2-mini-tp1-offload` | **1× 16 or 32 GB** | [`#211`](https://github.com/opengfx1030/vllm-rdna/pull/211). TP=1 expert spill (`EXPERT_SLOTS=48`). `MAXLEN=65536`. Simulated 16 GiB peak **12.94 GiB**. [`#214`](https://github.com/opengfx1030/vllm-rdna/pull/214) (25 Nov): `EXPERT_CACHE_COPY=native` and `EXPERT_CACHE_PREFETCH=1` are **defaults**. **TP>1 refused.** |
+| `inkling2-mini-tp2` | **2×** | DSpark **on by default**. [`#213`](https://github.com/opengfx1030/vllm-rdna/pull/213) (25 Nov): `MAXLEN=760000` (K=2; was 720k). `ADAPTIVE=1` → `720000`. `DSPARK=0` for the 1M cap (`MAXBAT=320`). |
 | `inkling2-mini-tp4` | **4×** | DSpark **on by default**; full **1,048,576** still fits. `DSPARK=0` for plain decode. |
 
 Pick the GPU with `HIP_VISIBLE_DEVICES=<index>` — do not copy another host’s
@@ -74,9 +74,12 @@ and the explore write-up
 
 Launcher knobs: `LOOPCD_ALPHA`, `LOOPCD_MODE=hidden|logits`, `LOOPCD_ADAPTIVE`,
 `LOOPCD_BETA`, `LOOPCD_BLEND_BLOCKS`, `LOOPCD_WEAK_PASS` (also `VLLM_INKLING2_LOOPCD_*`).
-Author-host: **hidden** `alpha=0.35` is near-free; **logits** `alpha=0.25`
-adaptive lifted a 20-problem Math+Code set **75% → 90%** and costs ~10% decode.
-**Fork-source**, not wiki-tested.
+[`#216`](https://github.com/opengfx1030/vllm-rdna/pull/216) (25 Nov):
+`VLLM_INKLING2_LOOPCD_ENABLE` defaults **1** so per-request `vllm_xargs` keep
+working; set **0** to strip the three graph-baked LoopCD launches (idle path
+is then cheaper). Author-host: **hidden** `alpha=0.35` is near-free; **logits**
+`alpha=0.25` adaptive lifted a 20-problem Math+Code set **75% → 90%** and costs
+~10% decode. **Fork-source**, not wiki-tested.
 
 ## Author-host numbers (Fork-source)
 
@@ -99,6 +102,13 @@ NVFP4 prefill used to fall back to a less-optimized kernel at TP=2/4 — Discord
 | TP=4 1k after `#205` | **~3884** tok/s (was ~3112) | — |
 | TP=4 DSpark, 1k c=1 (`#207`) | **~3867** tok/s | **~164** tok/s/req |
 | TP=1 offload `#211` (32 GB, native copy) | 1k **~512** / 16k **~645** | b=1 **~19** / b=8 **~65** tok/s |
+| TP=1 plain after [`#215`](https://github.com/opengfx1030/vllm-rdna/pull/215) KV floor | — | **~55.3** tok/s (unchanged); KV **7.08 → 9.08** GiB (**152k → 195k** tokens) |
+
+[`#215`](https://github.com/opengfx1030/vllm-rdna/pull/215) (25 Nov) drops the
+RDNA KV-margin floor from the CDNA-sized **3 GiB** default to **1 GiB** (512 MiB
+non-torch reserve). That is why the TP=1 boot above grew KV without a decode
+change. Recipe files may still pin `VLLM_KV_CACHE_MARGIN_FLOOR_MIB` (TP=2 uses
+**2048**; offload **1536**).
 
 TP=1 conversation grown to **~144k** with prefix cache (older `#196` table):
 new-token prefill falls from ~1800 to ~730 tok/s; decode from ~54 to ~36 tok/s.
@@ -123,9 +133,12 @@ Community**. Independent **BetterBench 0.6.1** weighted decode (23 Nov,
 **Community**): **~56** tok/s TP=1 / **~79** tok/s TP=2 — same ballpark as
 the older short-agent numbers. Not wiki-tested.
 
-`#strata` (23–25 Nov): **Inkling-2-Mini on Strata** only used **2 GPUs** on a
-4-card host and was slow (~250 PP / ~40 TG in a later try). Use these vLLM
-HEAD recipes, not Strata, for Inkling.
+`#strata` (23–26 Nov): **Inkling-2-Mini on Strata** is still **hard-locked to
+2 GPUs** on a 4-card host (~250 PP / ~40 TG in an early try; later Strata
+tuning reported ~680 PP / ~119 TG on a **single** card — **Community / Needs
+verify**, not a vLLM number). Use these vLLM HEAD recipes, not Strata, for
+Inkling. Hardcoded **bf16** prompt GEMMs on that path fall back badly on
+V620 — keep `STRATA_HIP_PROMPT_F16=1` (force FP16 I/O).
 
 ## llama.cpp GGUF {#llamacpp-gguf}
 
