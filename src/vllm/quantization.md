@@ -241,12 +241,14 @@ was called **somewhat competitive vs W4A16**. Merged
 prefill, fused add-norm, in-place GDN, and LM-head GEMV on that recipe. Author-host **2×**
 AWQ-INT4 c=8 **147 → 190** tok/s (bit-identical greedy). **Fork-source** on those hosts; Hub
 **`v0.31.0-extras`** may still leave the knobs off — check `PRINT=1`. Set `W4A8=0` to force
-W4A16 prefill. EXL3 still **needs optimizations**. **W8A8**
-was called theoretically the fastest int8 layout, not a current recipe.
-Open [`#221`](https://github.com/opengfx1030/vllm-rdna/pull/221) (26 Nov, `#vllm-rdna`)
-is an opt-in HIP W8A8 dense/HC prefill experiment (flags default off), with an
-author-host 4× Flash-Next claim of **2552 → 3627** tok/s cold PP at 16k —
-**Needs verify**, and that bench excluded the later all-reduce PR. Not merged.
+W4A16 prefill. EXL3 still **needs optimizations**. **W8A8** was called theoretically the fastest int8 layout. **Merged**
+[`#221`](https://github.com/opengfx1030/vllm-rdna/pull/221) (27 Nov, `#vllm-rdna`)
+is the HIP W8A8 dense/HC **prefill** path (flags default **off**). Recipe
+`flashnext-w8a8-mtp2` ([`#228`](https://github.com/opengfx1030/vllm-rdna/pull/228))
+turns them on. Author-host 4× Flash-Next **2552 → 3627** tok/s cold PP at 16k —
+**Fork-source** on that host, taken **before** merged [`#222`](https://github.com/opengfx1030/vllm-rdna/pull/222)
+was in the same tree; post-rebase receipt **+27–35%** agg prefill — **Needs verify**.
+Lossy (token-exact is the wrong gate). Day-to-day stays `flashnext-mtp2`.
 
 ## INT4 KV cache (`int4_fp16_block`, HEAD)
 
@@ -259,7 +261,15 @@ cannot pack the record **refuse** the dtype up front. Default FP16 KV is unchang
 **Not** in Hub `v0.31.0-extras`. MonoKernel + this dtype still **Needs verify**.
 `#vllm-rdna` (21 Oct): maintainer priority for longer context is still restoring the
 **INT8** KV HIP path ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)), not
-replacing day-to-day FP16 with experimental packs. Snapshot: [Fork progress](fork-progress.md).
+replacing day-to-day FP16 with experimental packs.
+
+`#vllm-rdna` (27 Nov): Qwen4Exp QSA on current HEAD can reject this layout at
+warmup (`cache records must not overlap`) — reported on **3× V620**
+`flashnext-pp3-mtp2` with `PLE=int4`. Draft
+[`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) tracks the fix. A
+community local stride-gate patch booted (~**399k → 1.25M** KV tokens, PPL
+**+0.2%**, decode **~−8%**) — **Needs verify**, **not** merged. Leave the dtype
+unset until `#226` lands. Snapshot: [Fork progress](fork-progress.md).
 
 ## LeapQuant (GDN recurrent state, HEAD `#168`) {#leapquant}
 

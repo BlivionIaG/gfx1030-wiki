@@ -101,6 +101,49 @@ arbitrary mid-September org pin as a drop-in for PP3.
 **gibberish**. Prefer GHCR `nightly-rocm7.14.0` after [`#172`](https://github.com/opengfx1030/vllm-rdna/pull/172).
 **Needs verify.**
 
+## Flash-Next PP3 MTP does not boot after the 0.34 rebase {#flash-next-pp3-mtp-034}
+
+`#vllm-rdna` (26–27 Nov): `RECIPE=flashnext-pp3-mtp2` on `rdna_extras` **v0.34**
+(`#217` / `93c59de2`) dies on the **last** PP stage after weights load:
+
+```text
+RuntimeError: Qwen4ExpMTP needs the target input embedding, but it is unavailable on this PP stage
+```
+
+Cause: upstream vLLM [`#60234`](https://github.com/vllm-project/vllm/pull/60234)
+made `embed_tokens` a `PPMissingLayer` on non-first ranks, which broke the
+fork’s assumption that the last-stage drafter could share the target embedding.
+**Merged** [`#225`](https://github.com/opengfx1030/vllm-rdna/pull/225) (27 Nov)
+gives `Qwen4ExpMTP` its own on-GPU embeddings under `PP>1` and stops copying a
+~1.2 GiB CPU `lm_head` placeholder onto the last stage.
+
+**What to do:** pull HEAD **after `#225`** (git tip after `#229` is `8d141bdc`),
+or wait for GHCR `nightly` / `:nightly-0.34.0-rocm7.14.0` past that merge.
+`flashnext-pp3` (MTP=0) was not the reported failure. Do not stay on `#217`
+for 3-card MTP. Hub **`v0.31.0-extras`** never had these recipes.
+
+This is a **boot** break, not [PP3 decode corruption](#flash-next-pp3-output-corruption)
+and not the [Sep 19 KeyError](#flash-next-pp3-graph-keyerror).
+
+## Flash-Next INT4 KV warmup: `cache records must not overlap` {#flash-next-int4-kv-overlap}
+
+`#vllm-rdna` (27 Nov): `--kv-cache-dtype int4_fp16_block` on Qwen4Exp QSA
+(`RECIPE=flashnext-pp3-mtp2`, 3× V620) sizes the cache then dies in
+`do_kv_cache_update` / `reshape_and_cache_int4_fp16_rdna2`:
+
+```text
+RuntimeError: cache records must not overlap
+```
+
+The writer’s stride gate does not accept the QSA per-slot interleaved layout.
+Draft [`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) tracks a fix
+(GitHub Issues are off on the fork). A community local patch booted — PPL
+**+0.2%**, decode **~−8%**, KV **~399k → ~1.25M** tokens — **Needs verify**,
+**not** merged.
+
+**What to do:** leave `--kv-cache-dtype` at the default FP16 until `#226`
+lands. This dtype was already experimental ([INT4 KV](../vllm/flash-next-serve.md#flash-next-int4-kv)).
+
 ## Flash-Next PP3 graph KeyError on small prefill (`b33f9b6`) {#flash-next-pp3-graph-keyerror}
 
 `#vllm-rdna` (Sep 19): community test of

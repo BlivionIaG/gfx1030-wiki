@@ -41,10 +41,13 @@ below the 4-card vLLM class. `#vllm-rdna` (16 Oct): MonoKernel alone does **not*
 resident Flash-Next fit 2 cards.
 
 **3× V620:** vLLM wants **PP=3** (even TP). Current `rdna_extras` HEAD (merged
-[`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct) ships
+[`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct, plus
+[`#225`](https://github.com/opengfx1030/vllm-rdna/pull/225), 27 Nov) ships
 `RECIPE=flashnext-pp3` / `flashnext-pp3-mtp2` — [PP3 recipes](./flash-next-serve.md#flash-next-3x-pp3).
-Hub **`v0.31.0-extras`** (11 Oct bake) **does not** include those recipes. Older Sep 15–16 pins
-corrupted PP3 decode on `rdna_extras` —
+Hub **`v0.31.0-extras`** (11 Oct bake) **does not** include those recipes. MTP2 on a
+**0.34** tree **before `#225`** does not boot —
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-mtp-034).
+Older Sep 15–16 pins corrupted PP3 decode on `rdna_extras` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption).
 The Sep 17–18 leapdragon overlay is a **snapshot** —
 [overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
