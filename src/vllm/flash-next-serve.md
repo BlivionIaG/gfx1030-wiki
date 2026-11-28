@@ -352,7 +352,15 @@ Packed INT4 + FP16 per-32-channel block scales; native QSA dequant in registers.
 Other attention backends refuse the dtype. Default FP16 KV unchanged. **Not** Hub.
 MonoKernel + this dtype **Needs verify**. `#vllm-rdna` (21 Oct): INT8 KV restore
 ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)) remains the stated
-day-to-day priority. Details: [Quantization](quantization.md#int4-kv-cache-int4_fp16_block-head),
+day-to-day priority.
+
+**Merged** [`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) (27 Nov): QSA
+`BLNHC` / `slot_outer` is accepted, so this dtype **boots** on HEAD after that merge.
+Author-host 4× `flashnext-mtp0`: **2.90×** KV (**297k → 865k** tokens). For concurrent
+INT4 KV, raise `MAXBAT` to **≥2560** (INT4 `block_size=2048` plus recipe `MAXBAT=2048`
+serializes mixed prefill). Default FP16 is still the day-to-day dtype. Details:
+[Quantization](quantization.md#int4-kv-cache-int4_fp16_block-head),
+[overlap](../troubleshooting/vllm-flash-next.md#flash-next-int4-kv-overlap),
 [Fork progress](fork-progress.md).
 
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}
@@ -522,6 +530,12 @@ PP3 serve **spit gibberish**. Prefer org GHCR
 host venv for PP3. Maintainer: **no vLLM gain** moving the day-to-day box to ROCm
 10 (TunableOp redo). Community llama.cpp **did** see a ROCm 10 bump — not a vLLM
 recipe.
+
+`#vllm-rdna` (26–27 Nov): after the **v0.34** rebase, `flashnext-pp3-mtp2` on
+`#217` (`93c59de2`) died on the last PP stage (`Qwen4ExpMTP needs the target
+input embedding`). **Merged** [`#225`](https://github.com/opengfx1030/vllm-rdna/pull/225)
+(27 Nov) restores that boot. Pull HEAD **after `#225`** for 3-card MTP. Symptom:
+[PP3 0.34](../troubleshooting/vllm-flash-next.md#flash-next-pp3-mtp-034).
 
 Author-host 16k/1k (`#general` 13 Oct, **Community** — not wiki-tested):
 

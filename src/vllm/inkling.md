@@ -25,7 +25,7 @@ GHCR **`:v0.34.0`** is an older snapshot (19 Nov, **no Inkling**) — pull
 retraction. [Troubleshooting](../troubleshooting/vllm.md#033-long-run-crash).
 
 Prefer the in-tree vLLM recipes on **HEAD** (clone + [host venv](host-venv.md),
-or org GHCR [nightly](running.md#ghcr-nightly) after `#217`). `#general`
+or org GHCR [nightly](running.md#ghcr-nightly) after `#225`). `#general`
 (21–22 Nov) also had a **llama.cpp GGUF** path — [community llama.cpp](#llamacpp-gguf).
 
 ## Recipes

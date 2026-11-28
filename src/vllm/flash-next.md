@@ -41,10 +41,13 @@ below the 4-card vLLM class. `#vllm-rdna` (16 Oct): MonoKernel alone does **not*
 resident Flash-Next fit 2 cards.
 
 **3× V620:** vLLM wants **PP=3** (even TP). Current `rdna_extras` HEAD (merged
-[`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct) ships
+[`#96`](https://github.com/opengfx1030/vllm-rdna/pull/96), 13 Oct, plus
+[`#225`](https://github.com/opengfx1030/vllm-rdna/pull/225), 27 Nov) ships
 `RECIPE=flashnext-pp3` / `flashnext-pp3-mtp2` — [PP3 recipes](./flash-next-serve.md#flash-next-3x-pp3).
-Hub **`v0.31.0-extras`** (11 Oct bake) **does not** include those recipes. Older Sep 15–16 pins
-corrupted PP3 decode on `rdna_extras` —
+Hub **`v0.31.0-extras`** (11 Oct bake) **does not** include those recipes. MTP2 on a
+**0.34** tree **before `#225`** does not boot —
+[troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-mtp-034).
+Older Sep 15–16 pins corrupted PP3 decode on `rdna_extras` —
 [troubleshooting](../troubleshooting/vllm-flash-next.md#flash-next-pp3-output-corruption).
 The Sep 17–18 leapdragon overlay is a **snapshot** —
 [overlay](./flash-next-serve.md#flash-next-3x-moe-hip-overlay).
@@ -183,6 +186,11 @@ stream** plus prefix / radix cache unless you have measured overflow on `#24`. M
 `VLLM_RDNA_DYNAMIC_PREFILL=1` so those interval / threshold knobs self-tune for mixed load —
 **Needs verify**, not a default serve recipe
 ([troubleshooting](../troubleshooting/vllm.md#prefill-blocks-decode)).
+`#vllm-rdna` (27 Nov): still the pointer for **more than one agent**; one 4× HEAD host
+reported **~80** tok/s with two agents. Same thread: HEAD **>3k** tok/s PP and
+**100–170** tok/s TG with MTP vs a leapdragon-era image at **~1900** PP / **~68** TG.
+**Community / Needs verify.** Merged [`#227`](https://github.com/opengfx1030/vllm-rdna/pull/227)
+(27 Nov) is the HIP decode kernel path on HEAD (default on).
 
 `#vllm-rdna` (Sep 17): the **logged** hybrid KV token count can be **~2.5× too high** versus a
 measured peak — size `--max-model-len` from a real request, not the banner

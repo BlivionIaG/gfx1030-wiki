@@ -67,7 +67,8 @@ The first nightly was announced with **CUDA graphs broken**; pull a digest after
 current LeapQuant + HI2 HEAD. After [`#189`](https://github.com/opengfx1030/vllm-rdna/pull/189)
 the image also carries [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf-plugin)
 (gfx1030), so `RECIPE=flashnext-gguf-mtp0` can run in it. Inkling recipes need a digest
-**after `#217`** (25 Nov). `#vllm-rdna` (16 Nov): maintainer said the GHCR packages were
+**after `#217`** (25 Nov). For PP3 MTP, `#221`/`#222` kernels, INT4 KV `#226`, and
+HIP decode `#227`, pull **after `#227`** (27 Nov, tip `53f15741`). `#vllm-rdna` (16 Nov): maintainer said the GHCR packages were
 made **public**; this digest run’s anonymous manifest HEAD still returned **401** — treat
 anonymous pull as **Needs verify**. GHCR may still require org package access.
 

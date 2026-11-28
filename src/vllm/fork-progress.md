@@ -2,8 +2,8 @@
 
 > **WIP snapshot:** Readable status of
 > [`opengfx1030/vllm-rdna`](https://github.com/opengfx1030/vllm-rdna) `rdna_extras`.
-> Dated **26 Nov 2026** from public merges + `#vllm-rdna` / `#announcements` /
-> `#benchmarks` / `#general` / `#strata`.
+> Dated **28 Nov 2026** from public merges + `#vllm-rdna` / `#announcements` /
+> `#benchmarks` / `#general` / `#strata` / `#bios`.
 > Kernel file lists and older chronicle rows stay on [Fork landscape](fork.md).
 > See [Verification status](../reference/verification.md#vllm-fork-progressmd).
 
@@ -12,7 +12,7 @@
 | Layer | What you get |
 |---|---|
 | **Hub `v0.31.0-extras`** (11 Oct 2026) | Day-to-day Docker — [Running](running.md), [Onboard](onboarding.md) |
-| **`rdna_extras` HEAD** | **v0.34.0** as of 26 Nov — clone + [host venv](host-venv.md) + [`serve_rdna.sh`](serve-scripts.md) |
+| **`rdna_extras` HEAD** | **v0.34.0** as of 28 Nov — clone + [host venv](host-venv.md) + [`serve_rdna.sh`](serve-scripts.md) |
 | **Org GHCR `nightly`** | Source CI snapshot of HEAD — [Running](running.md#ghcr-nightly). Not a Hub bake. |
 | **Open drafts** | Backlog / WIP — not a recipe until merged |
 
@@ -119,7 +119,30 @@ is still **0.31**. `#vllm-rdna` / `#general` (21 Nov) “0.34” talk is now
 | [`#214`](https://github.com/opengfx1030/vllm-rdna/pull/214) (25 Nov) | Offload prefetch | `EXPERT_CACHE_COPY=native` and `EXPERT_CACHE_PREFETCH=1` are recipe **defaults**. **Not** Hub. |
 | [`#215`](https://github.com/opengfx1030/vllm-rdna/pull/215) (25 Nov) | RDNA KV-margin floor | Engine default **1 GiB** on gfx10x (CDNA stays 3 GiB). Author-host TP=1 Inkling KV **7.08 → 9.08** GiB; decode **~55.3** unchanged. **Not** Hub. |
 | [`#216`](https://github.com/opengfx1030/vllm-rdna/pull/216) (25 Nov) | LoopCD idle skip | `VLLM_INKLING2_LOOPCD_ENABLE` default **1**; set **0** to strip graph-baked LoopCD launches. **Not** Hub. |
-| [`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217) (25 Nov) | `27b-awq` RDNA2 switches + HI2 MoE | Recipe now sets unfused FA prefill, fused add-norm, in-place GDN, LM-head GEMV. Author-host **2×** 27B AWQ c=8 **147 → 190** tok/s. **Not** Hub. |
+| [`#217`](https://github.com/opengfx1030/vllm-rdna/pull/217) (25 Nov) | `27b-awq` RDNA2 switches + HI2 MoE | Recipe now sets unfused FA prefill, fused add-norm, in-place GDN, LM-head GEMV. Author-host **2×** 27B AWQ c=8 **147 → 190** tok/s. **Not** Hub. `RDNA_AR=1` with `VLLM_RDNA_AR_MAX_KB=256` and `VLLM_RDNA_AR_ONESHOT_KB=256`. |
+
+## On HEAD since 26–28 Nov (kernels + PP3 + INT4 KV + decode)
+
+`#vllm-rdna` (26 Nov, ~22:00 UTC) asked for lossy kernels to still report how much
+token loss there is, including W8A8 prefill where token-exact is the wrong gate.
+Merged [`#224`](https://github.com/opengfx1030/vllm-rdna/pull/224) (26 Nov 22:16 UTC)
+puts that in the contributing contract. Git tip after
+[`#227`](https://github.com/opengfx1030/vllm-rdna/pull/227) (27 Nov 15:59 UTC) is
+`53f15741`. ROCm **7.14.0**, torch **2.12.0+rocm7.14.0**, Triton **3.7.1** remain
+the wiki serve pin. gfx1030 stays off torch **2.15+** and Triton **3.9+**.
+The `#227` author-host receipt used **ROCm 10.0** / torch **2.13** — do not treat
+that as a new pin. `RECIPE=27b-awq` still sets `RDNA_AR=1` with both AR caps at
+**256** KiB.
+
+| Landed | What | Notes |
+|---|---|---|
+| [`#222`](https://github.com/opengfx1030/vllm-rdna/pull/222) (27 Nov 00:15 UTC) | Wave-7 BAR1 P2P `rdna_ar`, `moe_mxfp8` `BK=192`, opt-in Inkling MoE offload | Default numerics unchanged. Offload flags default **0**. Draft [`#223`](https://github.com/opengfx1030/vllm-rdna/pull/223) holds the monokernel split. **Not** Hub. |
+| [`#221`](https://github.com/opengfx1030/vllm-rdna/pull/221) (27 Nov 05:41 UTC) | HIP W8A8 dense/HC prefill + QSA pipe KV fix + grouped MTP MoE prefill | Flags default **0**. QSA `>4.29 GiB` path is exact. Author-host 4× 16k PP **2552 → 3627** tok/s — **Fork-source**, taken before `#222` was in the same tree. **Not** Hub. |
+| [`#228`](https://github.com/opengfx1030/vllm-rdna/pull/228) (27 Nov 06:53 UTC) | `RECIPE=flashnext-w8a8-mtp2` + long-context / passkey receipt cells | Sources `flashnext-mtp2` and turns the three W8A8 flags **on**. Default `flashnext-mtp2` stays off. Tools/recipes only. **Not** Hub. |
+| [`#225`](https://github.com/opengfx1030/vllm-rdna/pull/225) (27 Nov 06:59 UTC) | Restore PP=3 Qwen4Exp MTP after v0.34 `#60234` | `flashnext-pp3-mtp2` on `#217` (`93c59de2`) does **not** boot. Pull HEAD **after this**. [PP3 0.34](../troubleshooting/vllm-flash-next.md#flash-next-pp3-mtp-034). |
+| [`#229`](https://github.com/opengfx1030/vllm-rdna/pull/229) (27 Nov 07:45 UTC) | Enforce ≥64k cells + passkey needle on Ready runtime PRs | CI/docs only (`check_pr_contract.py`). |
+| [`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) (27 Nov 09:48 UTC) | Accept QSA `BLNHC` / `slot_outer` layout for `int4_fp16_block` | Unlocks INT4 KV on Flash-Next QSA. Author-host 4× `flashnext-mtp0`: **297,756 → 864,517** tokens (**2.90×**), PPL **+0.396%**, passkey **3/3** at 32k/64k/128k. Concurrent `MAXBAT=2048` serializes (INT4 `block_size=2048`); use **`MAXBAT≥2560`**. Default FP16 unchanged. **Not** Hub. [INT4 KV](quantization.md#int4-kv-cache-int4_fp16_block-head). |
+| [`#227`](https://github.com/opengfx1030/vllm-rdna/pull/227) (27 Nov 15:59 UTC) | HIP decode kernels: INT8 GEMV/SE/HC `M=9..32`, Wave32 QSA sort, fp32-scale MoE, GDN vec | Default **on** (`VLLM_RDNA_DECODE_I8_MAX=32`, `VLLM_RDNA_HC_I8_MAX=16`; set both to **8** to roll back). Author-host 4× Flash-Next MTP-2: c=4 decode **38.1 → 62.2** tok/s/req (**+63%**); c=8 **+31%**. Receipt is **Flash-Next W4A16 TP4**, not Inkling (`#vllm-rdna` 27 Nov). **Not** Hub. |
 
 ## Open backlog (selected)
 
@@ -135,7 +158,8 @@ Do **not** treat drafts as recipes. Full list:
 | MonoKernel PP3 | Draft [`#116`](https://github.com/opengfx1030/vllm-rdna/pull/116) | Do not combine `--monokernel` with `flashnext-pp3*` yet |
 | EXL3 Flash-Next MTP / vision / MoE cut | Drafts [`#122`](https://github.com/opengfx1030/vllm-rdna/pull/122) / [`#123`](https://github.com/opengfx1030/vllm-rdna/pull/123) / [`#124`](https://github.com/opengfx1030/vllm-rdna/pull/124) | `flashnext-exl3` is MTP=0 for now |
 | DFlash2 BF16 GEMV opts | Draft [`#135`](https://github.com/opengfx1030/vllm-rdna/pull/135) | Follow-up to `#132` |
-| W8A8 sdot4 dense/MoE | Draft [`#93`](https://github.com/opengfx1030/vllm-rdna/pull/93) | Explore — not day-to-day |
+| W8A8 sdot4 dense/MoE | Draft [`#93`](https://github.com/opengfx1030/vllm-rdna/pull/93) | Explore — not day-to-day. Merged `#221` is the HIP W8A8 **prefill** path (opt-in recipe `flashnext-w8a8-mtp2`) |
+| Inkling decode MoE monokernel | Draft [`#223`](https://github.com/opengfx1030/vllm-rdna/pull/223) | Split out of `#222`. **Not** a recipe. |
 | Disagg prefill/decode | Open [`#23`](https://github.com/opengfx1030/vllm-rdna/pull/23) | Cross-PLX KV bridge — Needs verify |
 | GLM-5.3 / Glm5Next | Drafts [`#51`](https://github.com/opengfx1030/vllm-rdna/pull/51) / [`#133`](https://github.com/opengfx1030/vllm-rdna/pull/133) | Correctness WIP |
 | Tiered expert budgets + hybrid KV paging | Draft [`#148`](https://github.com/opengfx1030/vllm-rdna/pull/148) | `#vllm-rdna` (30 Oct): follow-up to merged `#146`. Live paging **stalls**; PR stays **draft** until mixed-workload gaps look acceptable. **Not** a recipe. |
@@ -146,17 +170,18 @@ Do **not** treat drafts as recipes. Full list:
 `rdna_extras` (bf16→fp16 cast, logits all-gather, EP routing). In-tree
 `RECIPE=dsv4-flash` still **Needs verify** — [serve](flash-next-serve.md#deepseek-v4-flash).
 
-## Practical defaults (26 Nov)
+## Practical defaults (28 Nov)
 
 | Goal | Prefer |
 |---|---|
 | Docker / least friction | Hub **`v0.31.0-extras`** (still the published bake) |
-| HEAD / 0.34 kernels in Docker | Org GHCR **`nightly`** / `:nightly-0.34.0-rocm7.14.0` — pull a digest **after `#217`** (25 Nov 27B switches / Inkling KV floor), or clone. Do **not** use `:v0.34.0` for Inkling (19 Nov). Anonymous GHCR pull **Needs verify**. |
-| 4× Flash-Next day-to-day on HEAD | `RECIPE=flashnext-mtp2` (+ HIP defaults from `#130`) |
-| Faster Flash-Next decode experiment | `EXTRA_ARGS="--monokernel"` — A/B ITL; regenerate TunableOp if PP cliffs |
-| 3× Flash-Next | `RECIPE=flashnext-pp3` or `flashnext-pp3-mtp2` (HEAD only; 16 Nov: not recently re-tested — prefer `nightly-rocm7.14.0`) |
+| HEAD / 0.34 kernels in Docker | Org GHCR **`nightly`** / `:nightly-0.34.0-rocm7.14.0` — pull a digest **after `#227`** (27 Nov HIP decode + `#226` INT4 KV + `#225` PP3 MTP), or clone tip `53f15741`. Do **not** use `:v0.34.0` for Inkling (19 Nov). Anonymous GHCR pull **Needs verify**. |
+| 4× Flash-Next day-to-day on HEAD | `RECIPE=flashnext-mtp2` (+ HIP defaults from `#130`; `#227` decode kernels are **on**). W8A8 prefill stays **off** unless you pick `flashnext-w8a8-mtp2`. `#vllm-rdna` (27 Nov): one 4× host **>3k** tok/s PP and **100–170** tok/s TG with MTP; two agents **~80** tok/s with [`#36`](https://github.com/opengfx1030/vllm-rdna/pull/36) `VLLM_RDNA_DYNAMIC_PREFILL=1`. **Community**. Leapdragon-era images still sit around **~1900** PP / **~68** TG. |
+| Faster Flash-Next decode experiment | HEAD `#227` is already the default HIP decode path. `EXTRA_ARGS="--monokernel"` remains an ITL A/B. Set `VLLM_RDNA_DECODE_I8_MAX=8` and `VLLM_RDNA_HC_I8_MAX=8` to roll `#227` back. |
+| 3× Flash-Next | `RECIPE=flashnext-pp3` or `flashnext-pp3-mtp2` — HEAD **after `#225`**. `#217` / `93c59de2` MTP2 does **not** boot. Prefer `nightly-rocm7.14.0` after that merge. |
+| Opt-in W8A8 Flash-Next prefill | `RECIPE=flashnext-w8a8-mtp2` (`#228`, after `#221`). Lossy. `#vllm-rdna` (27 Nov): W8A8 vs W4A16 **felt similar** (no bench). **Needs verify**. **Not** Hub. |
 | Flash-Next GGUF (HEAD) | `RECIPE=flashnext-gguf-mtp0` + `GGUF_DIR=` (plugin fork, not PyPI). **Not** Hub. |
-| Longer KV on QSA path | `--kv-cache-dtype int4_fp16_block` (HEAD; opt-in) |
+| Longer KV on QSA path | HEAD **after `#226`**: `--kv-cache-dtype int4_fp16_block`. Raise `MAXBAT` to **≥2560** for concurrent INT4 KV. Default FP16 is still the day-to-day dtype. |
 | 2× Flash-Next (weights do not fit) | HEAD `tools/rdna/mono/serve_offload.sh` (`#146`) — **Needs verify** on a second host. llama.cpp RAM/MoE offload remains the non-HEAD path. |
 | 27B AWQ prefill | `RECIPE=27b-awq` with HEAD `W4A8=1` (recipe default after `#140`) plus `#217` RDNA2 switches (unfused FA prefill / in-place GDN). **Not** Hub. |
 | Spec draft A/B | Native **MTP-2** first; `flashnext-dflash2` for short/single-user experiments |
