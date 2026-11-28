@@ -186,6 +186,11 @@ stream** plus prefix / radix cache unless you have measured overflow on `#24`. M
 `VLLM_RDNA_DYNAMIC_PREFILL=1` so those interval / threshold knobs self-tune for mixed load —
 **Needs verify**, not a default serve recipe
 ([troubleshooting](../troubleshooting/vllm.md#prefill-blocks-decode)).
+`#vllm-rdna` (27 Nov): still the pointer for **more than one agent**; one 4× HEAD host
+reported **~80** tok/s with two agents. Same thread: HEAD **>3k** tok/s PP and
+**100–170** tok/s TG with MTP vs a leapdragon-era image at **~1900** PP / **~68** TG.
+**Community / Needs verify.** Merged [`#227`](https://github.com/opengfx1030/vllm-rdna/pull/227)
+(27 Nov) is the HIP decode kernel path on HEAD (default on).
 
 `#vllm-rdna` (Sep 17): the **logged** hybrid KV token count can be **~2.5× too high** versus a
 measured peak — size `--max-model-len` from a real request, not the banner

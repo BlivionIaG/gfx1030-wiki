@@ -354,11 +354,13 @@ MonoKernel + this dtype **Needs verify**. `#vllm-rdna` (21 Oct): INT8 KV restore
 ([draft `#71`](https://github.com/opengfx1030/vllm-rdna/pull/71)) remains the stated
 day-to-day priority.
 
-`#vllm-rdna` (27 Nov): on current HEAD this dtype can **fail QSA warmup**
-(`RuntimeError: cache records must not overlap`) on Flash-Next PP3 MTP2. Draft
-[`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) tracks the fix. Do
-**not** treat it as a working day-to-day switch until that lands. Details:
+**Merged** [`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) (27 Nov): QSA
+`BLNHC` / `slot_outer` is accepted, so this dtype **boots** on HEAD after that merge.
+Author-host 4× `flashnext-mtp0`: **2.90×** KV (**297k → 865k** tokens). For concurrent
+INT4 KV, raise `MAXBAT` to **≥2560** (INT4 `block_size=2048` plus recipe `MAXBAT=2048`
+serializes mixed prefill). Default FP16 is still the day-to-day dtype. Details:
 [Quantization](quantization.md#int4-kv-cache-int4_fp16_block-head),
+[overlap](../troubleshooting/vllm-flash-next.md#flash-next-int4-kv-overlap),
 [Fork progress](fork-progress.md).
 
 ### 4× V620 Flash-Next serve (`rdna_extras`, PIECEWISE, Sep 17) {#flash-next-4x-piecewise}

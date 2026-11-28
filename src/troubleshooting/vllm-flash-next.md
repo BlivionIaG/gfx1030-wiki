@@ -117,7 +117,7 @@ fork’s assumption that the last-stage drafter could share the target embedding
 gives `Qwen4ExpMTP` its own on-GPU embeddings under `PP>1` and stops copying a
 ~1.2 GiB CPU `lm_head` placeholder onto the last stage.
 
-**What to do:** pull HEAD **after `#225`** (git tip after `#229` is `8d141bdc`),
+**What to do:** pull HEAD **after `#225`** (git tip after `#227` is `53f15741`),
 or wait for GHCR `nightly` / `:nightly-0.34.0-rocm7.14.0` past that merge.
 `flashnext-pp3` (MTP=0) was not the reported failure. Do not stay on `#217`
 for 3-card MTP. Hub **`v0.31.0-extras`** never had these recipes.
@@ -135,14 +135,16 @@ and not the [Sep 19 KeyError](#flash-next-pp3-graph-keyerror).
 RuntimeError: cache records must not overlap
 ```
 
-The writer’s stride gate does not accept the QSA per-slot interleaved layout.
-Draft [`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226) tracks a fix
-(GitHub Issues are off on the fork). A community local patch booted — PPL
-**+0.2%**, decode **~−8%**, KV **~399k → ~1.25M** tokens — **Needs verify**,
-**not** merged.
+The writer’s stride gate did not accept QSA’s per-slot interleaved (`BLNHC` /
+`slot_outer`) layout. **Merged** [`#226`](https://github.com/opengfx1030/vllm-rdna/pull/226)
+(27 Nov 09:48 UTC) adds that layout. Author-host 4× `flashnext-mtp0`: KV **2.90×**
+(**297,756 → 864,517** tokens), PPL **+0.396%**. `#vllm-rdna` (27 Nov) community 3×
+PP3 boot before the merge: ~**399k → 1.25M**, PPL **+0.2%**, decode **~−8%**.
 
-**What to do:** leave `--kv-cache-dtype` at the default FP16 until `#226`
-lands. This dtype was already experimental ([INT4 KV](../vllm/flash-next-serve.md#flash-next-int4-kv)).
+**What to do:** pull HEAD **after `#226`** (git tip after `#227` is `53f15741`).
+For concurrent INT4 KV, set **`MAXBAT≥2560`** so a 2048-token block still fits
+next to active decoders. Default FP16 does not need that bump. This dtype remains
+opt-in ([INT4 KV](../vllm/flash-next-serve.md#flash-next-int4-kv)).
 
 ## Flash-Next PP3 graph KeyError on small prefill (`b33f9b6`) {#flash-next-pp3-graph-keyerror}
 

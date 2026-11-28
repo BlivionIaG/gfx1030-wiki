@@ -24,7 +24,7 @@ builds [`opengfx1030/vllm-gguf-plugin`](https://github.com/opengfx1030/vllm-gguf
 for **gfx1030** (pinned `GGUF_PLUGIN_REF`) so `flashnext-gguf-mtp0` works in the image.
 [`#198`](https://github.com/opengfx1030/vllm-rdna/pull/198) (24 Nov): also
 `:nightly-0.34.0-rocm7.14.0`. Git-tag **`:v0.34.0`** is 19 Nov (**no Inkling**) — pull
-`:nightly` after `#225` (27 Nov) for current HEAD.
+`:nightly` after `#227` (27 Nov) for current HEAD.
 
 ## Layout
 

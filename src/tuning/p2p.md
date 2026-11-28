@@ -161,7 +161,10 @@ faster token generation if links are narrow or the host is a single monolithic P
 On Ice Lake, **disabling VT-d / IOMMU broke P2P** even though some generic docs say IOMMU-off is more
 permissive. Leave IOMMU **on**, then run the toolbox readiness script and ACS checks. Fedora Server
 **44** + kernel **6.19** + the powerfix has been reported working on 4× V620 (community; not the
-Fedora 43 AMD validation).
+Fedora 43 AMD validation). `#bios` (27 Nov): a CMOS reset on an **HP Z4 G4** left **Intel VT-d
+off** and also dropped `STRATA_HIP_PROMPT_F16=1` from the Strata config — Strata prefill **halved**
+until both were restored. Do not disable VT-d to “help” inference, and re-set
+`STRATA_HIP_PROMPT_F16=1` after a BIOS/CMOS reset.
 
 ### PLX / PCIe switches
 

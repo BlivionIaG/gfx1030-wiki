@@ -263,8 +263,8 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | DFlash2 vs MTP-2 agentic | **Community / Needs verify** | `#vllm-rdna` 22 Oct — maintainer MTP-2 still ahead; DFlash2 can win short / single-user |
 | EXL3 Flash-Next `#117` | **Fork-source** | `#117` merged 17 Oct; `RECIPE=flashnext-exl3` / `PLE=exl3`; MTP=0. Not Hub |
 | MTP-2 MonoKernel `#137` | **Fork-source** | `#137` merged 24 Oct — sticky-fault containment; still opt-in `--monokernel`. Not Hub |
-| INT4 KV `int4_fp16_block` `#138` | **Fork-source** | `#138` merged 25 Oct — opt-in; native QSA path; other backends refuse. Not Hub. `#vllm-rdna` 27 Nov: QSA warmup `cache records must not overlap` on current HEAD; draft `#226` |
-| INT4 KV QSA stride gate `#226` | **Needs verify** | `#vllm-rdna` 27 Nov + draft `#226`. Community local patch ~399k→1.25M KV, PPL +0.2%, decode ~−8%. Not merged. Not a recipe |
+| INT4 KV `int4_fp16_block` `#138` | **Fork-source** | `#138` merged 25 Oct — opt-in; native QSA path; other backends refuse. Not Hub |
+| INT4 KV QSA stride gate `#226` | **Fork-source** | Merged 27 Nov 09:48 UTC. Accepts QSA `BLNHC` / `slot_outer`. Author-host 4× `flashnext-mtp0` 297,756→864,517 tokens (2.90×), PPL +0.396%, passkey 3/3. Concurrent `MAXBAT≥2560`. Community 3× PP3 ~399k→1.25M / PPL +0.2% / decode ~−8% is **Needs verify**. Not Hub |
 | INT4 KV + MonoKernel | **Needs verify** | `#138` documents non-mono QSA; mono combo not claimed |
 | INT8 KV restore `#71` | **Needs verify** | Draft; `#vllm-rdna` 21 Oct maintainer priority |
 | fp16 SSM + W4A8 default `#140` | **Fork-source** | `#140` merged 26 Oct; `27b-awq` `W4A8=1`; author-host 860→1075 PP / 42.5→52.3 agg. Not Hub |
@@ -275,7 +275,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 
 | Statement | Status | Verify how |
 |---|---|---|
-| Snapshot dated 27 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` / `#benchmarks` / `#general` |
+| Snapshot dated 28 Nov 2026 | **Fork-source / Community** | Public merges on `rdna_extras` + `#announcements` / `#vllm-rdna` / `#benchmarks` / `#general` / `#bios` |
 | LeapQuant `#168` / `#170` / `#172` on HEAD | **Fork-source** | `#168` 14 Nov recipe; `#170` 15 Nov flag rename; `#172` 16 Nov GDN boot fix. Not Hub |
 | HI2 `#171` 27B TP=2 recipes | **Fork-source** | Merged 15 Nov; `27b-hi2-tp2` / `27b-hi2-tp2-mtp2`. 2× only. Not Hub |
 | HI2 2× X99 second-host bench | **Community / Needs verify** | `#benchmarks` 20 Nov — `RECIPE=27b-hi2-tp2`, ROCm 7.2.4, MAXBAT=256, PCIe 3.0 x8+x16. Decode ~44 t/s at 1k c=1 vs `#171` ~45; PP/TTFT slower. Not a retraction of the 7.14 scoreboard |
@@ -288,9 +288,9 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | HIP W8A8 prefill `#221` | **Fork-source / Needs verify** | Merged 27 Nov 05:41 UTC. Opt-in flags default 0. Author 4× 16k PP 2552→3627 and +32.1% c=8 (before `#222` in-tree). Post-rebase +27–35% agg prefill. Recipe `flashnext-w8a8-mtp2` is `#228`. Not Hub |
 | Wave-7 BAR1 AR `#222` | **Fork-source** | Merged 27 Nov 00:15 UTC. Does not replace `#217` 256 KiB AR on `27b-awq`. Draft `#223` holds the monokernel split |
 | PP3 MTP 0.34 restore `#225` | **Fork-source** | Merged 27 Nov 06:59 UTC. `#vllm-rdna` same window. Pull after this for `flashnext-pp3-mtp2` |
-| `flashnext-w8a8-mtp2` + long-ctx receipt `#228`/`#229` | **Fork-source** | Merged 27 Nov. Opt-in recipe; CI enforces ≥64k / passkey on Ready runtime PRs. Tip `8d141bdc`. Not a Hub bake |
-| Open `#227` HIP decode | **Needs verify** | `#vllm-rdna` 27 Nov. Stacked on `#221`; dirty vs HEAD. Author c=4 decode +52%. Not a recipe |
-| Draft `#226` INT4 KV | **Needs verify** | `#vllm-rdna` 27 Nov tracking draft. QSA `cache records must not overlap`. Not merged |
+| `flashnext-w8a8-mtp2` + long-ctx receipt `#228`/`#229` | **Fork-source** | Merged 27 Nov. Opt-in recipe; CI enforces ≥64k / passkey on Ready runtime PRs. Not a Hub bake |
+| HIP decode `#227` | **Fork-source / Needs verify** | Merged 27 Nov 15:59 UTC. Default on (`DECODE_I8_MAX=32`, `HC_I8_MAX=16`). Author-host 4× Flash-Next MTP-2 c=4 38.1→62.2 tok/s/req. Receipt on ROCm 10.0 / torch 2.13; Flash-Next W4A16 TP4, not Inkling (`#vllm-rdna` 27 Nov). Community 4× HEAD >3k PP / 100–170 TG MTP; 2 agents ~80 tok/s with `#36`. Tip `53f15741`. Not Hub |
+| INT4 KV `#226` on HEAD | **Fork-source** | Merged 27 Nov 09:48 UTC. QSA overlap warmup is fixed. See `#138`/`#226` rows above |
 | HEAD v0.34.0 | **Fork-source** | Public README 25 Nov names v0.34.0. Hub bake still 0.31. GHCR `:v0.34.0` is 19 Nov pre-Inkling |
 
 ### `inkling.md`
@@ -534,10 +534,11 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `vllm/fork.md` / `inkling.md` / `serve-scripts.md` Inkling `#195`–`#216` | **Fork-source** | 22–25 Nov; five recipes after `#208`/`#211`; `#213`–`#216` KV/offload/LoopCD. Not Hub. README 25 Nov v0.34.0. `#general` 23–24 Nov: not a 4-card Flash-Next replacement |
 | `vllm/fork.md` / `serve-scripts.md` / `quantization.md` `#217` 27B AWQ | **Fork-source** | 25 Nov; unfused FA prefill / in-place GDN / LM-head GEMV on `27b-awq`. `RDNA_AR=1` and both AR caps 256. Author-host 2× c=8 147→190 tok/s. Not Hub. Caps unchanged after `#222` |
 | `vllm/fork.md` / `fork-progress.md` `#224` token-loss contract | **Fork-source** | 26 Nov 22:16 UTC. Parent `93c59de2`. `.github/` + `tools/rdna/check_pr_contract.py`. `#vllm-rdna` same hour. Follow-ups `#228`/`#229` 27 Nov |
-| `vllm/fork.md` / `fork-progress.md` / `quantization.md` `#221` / `#222` | **Fork-source / Needs verify** | Merged 27 Nov. `#221` opt-in HIP W8A8 prefill (author 2552→3627 tok/s at 16k, before `#222` in-tree). `#222` Wave-7 BAR1 AR, not the live 256 KiB caps. Recipe `flashnext-w8a8-mtp2` is `#228`. Draft `#223` is the monokernel split. Open `#227` decode is not a recipe |
+| `vllm/fork.md` / `fork-progress.md` / `quantization.md` `#221` / `#222` | **Fork-source / Needs verify** | Merged 27 Nov. `#221` opt-in HIP W8A8 prefill (author 2552→3627 tok/s at 16k, before `#222` in-tree). `#222` Wave-7 BAR1 AR, not the live 256 KiB caps. Recipe `flashnext-w8a8-mtp2` is `#228`. Draft `#223` is the monokernel split. `#vllm-rdna` 27 Nov: W8A8 vs W4A16 felt similar (no bench) |
+| `vllm/fork.md` / `fork-progress.md` HIP decode `#227` | **Fork-source / Needs verify** | Merged 27 Nov 15:59 UTC. Default on. Author-host 4× c=4 decode +63%. Community HEAD >3k PP / 100–170 TG. Not Hub |
 | `troubleshooting/vllm-flash-next.md` PP3 MTP 0.34 `#225` | **Fork-source** | `#vllm-rdna` 26–27 Nov + merged `#225`. Last-stage embedding missing until HEAD after that PR |
-| `troubleshooting/vllm-flash-next.md` INT4 KV overlap `#226` | **Needs verify** | `#vllm-rdna` 27 Nov. Draft only. Community local stride-gate patch not merged |
-| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 27 Nov Hub vs 0.34 HEAD vs GHCR `#198` vs Inkling `#205`–`#216` vs `#217` 27B vs `#221`/`#222` kernels vs `#225` PP3 vs `#228` W8A8 recipe vs `#224`/`#229` CI vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs open `#226`/`#227` |
+| `troubleshooting/vllm-flash-next.md` INT4 KV overlap `#226` | **Fork-source** | Merged 27 Nov. QSA `slot_outer` accepted. Concurrent INT4 KV wants `MAXBAT≥2560`. Community 3× PP3 numbers **Needs verify** |
+| `vllm/fork-progress.md` snapshot | **Fork-source / Community** | 28 Nov Hub vs 0.34 HEAD vs GHCR `#198` vs Inkling `#205`–`#216` vs `#217` 27B vs `#221`/`#222`/`#227` kernels vs `#226` INT4 KV vs `#225` PP3 vs `#228` W8A8 recipe vs `#224`/`#229` CI vs GGUF `#189` vs EPLB `#175` vs TunableOp `#173` vs draft `#223` |
 | `vllm/running.md` / `images.md` GHCR nightly | **Fork-source / Needs verify** | `#vllm-rdna` 1 Nov + CI `#151`/`#154`; `#198` 24 Nov `:nightly-0.34.0-rocm7.14.0`; git-tag `:v0.34.0` is 19 Nov pre-Inkling. Anonymous GHCR pull not confirmed |
 | `troubleshooting/vllm.md` 0.33 PLE CUDA graphs | **Fork-source** | `#vllm-rdna` 1–2 Nov + public PLE FULL/PIECEWISE fix |
 | `troubleshooting/vllm.md` 0.33 long-run crash | **Community / Needs verify** | `#vllm-rdna` 24 Nov — one ~18 h crash on 0.33 Qwen3.8-27B; HEAD is now 0.34 |
@@ -555,7 +556,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `troubleshooting/vllm.md` dual W6800X Duo 16 Nov | **Community / Needs verify** | `#vllm-rdna` 16 Nov — peak ~72 tok/s, ~40 avg at c=4, PP ~1500 short / ~2330 at 200k ingest. Quant unstated. Not a V620 recipe |
 | `vllm/quantization.md` W4A8 somewhat competitive | **Needs verify** | `#vllm-rdna` Oct 9 — 0.31 test line |
 | `vllm/quantization.md` W4A8 `#140` author-host table | **Fork-source** | `#140` 26 Oct — 27B 860→1075 PP / 42.5→52.3 agg; Hub may lag |
-| `vllm/quantization.md` INT4 KV `#138` | **Fork-source** | `#138` 25 Oct — `int4_fp16_block`; native QSA; not Hub. `#vllm-rdna` 27 Nov QSA overlap until `#226` |
+| `vllm/quantization.md` INT4 KV `#138` / `#226` | **Fork-source** | `#138` 25 Oct — `int4_fp16_block`; native QSA; not Hub. `#226` 27 Nov accepts QSA `slot_outer`; 4× 2.90× KV. Concurrent `MAXBAT≥2560` |
 | `troubleshooting/vllm.md` mixed stall / CUDA-graph range | **Needs verify** | `#vllm-rdna` Oct 9–10 — no public flag; DSV4 expected after |
 | `vllm/flash-next-serve.md` DSV4 on extras WIP | **Needs verify** | `#vllm-rdna` Oct 10 — will work after stall fix; stay on yiminyuan tree |
 | `llama-cpp/rdna2-serving.md` froggeric tool calls | **Needs verify** | `#general` Oct 9 — OG Qwen3.8 + Open WebUI |
@@ -636,6 +637,7 @@ they were written against (`recipes.md`, `overview.md`, `configuration.md`).
 | `setup/host-firmware.md` Dell Precision MMIO High / `mmiohsize` | **Community** | `#motherboard` / `#general` Sep 12–14 2026 — dump your own UEFI; 0x03 vs 0x04 |
 | `setup/host-firmware.md` T7820 4× V620 + PEX880xx POSTed after SR-IOV off | **Needs verify** | Single-host `#motherboard` Sep 14 2026 — board-specific hidden vars |
 | `setup/host-firmware.md` CMOS loss re-enables SR-IOV / disables ReBAR | **Community** | `#general` Sep 23 — MMIO / missing GPUs until BIOS restored |
+| `setup/host-firmware.md` / `tuning/p2p.md` CMOS VT-d off halves Strata PP | **Community / Needs verify** | `#bios` 27 Nov — Z4 G4 CMOS reset disabled Intel VT-d and dropped `STRATA_HIP_PROMPT_F16=1`; Strata prefill halved until both restored |
 | `setup/host-firmware.md` 256 GB MMIO window for 4× V620 | **Community** | `#motherboard` — 64 GB too small; no known 128 GB option |
 | `tuning/p2p.md` 4-slot vs 5-slot PLX card width | **Community** | `#general` Sep 12 2026 |
 | `tuning/p2p.md` 5 GPUs → TP=4 + 1 standalone | **Community** | `#general` Sep 11 2026 |
